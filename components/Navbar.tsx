@@ -14,6 +14,10 @@ import {
   FiLogOut,
   FiPackage,
 } from "react-icons/fi";
+import { FaRegArrowAltCircleRight } from "react-icons/fa";
+
+import { MdKeyboardArrowDown } from "react-icons/md";
+
 import NavbarHeadSliderLine from "./NavbarHeadSliderLine";
 
 import { useCartStore } from "@/store/cartStore";
@@ -28,6 +32,7 @@ interface Category {
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -115,7 +120,7 @@ export default function Navbar() {
     <>
       <NavbarHeadSliderLine />
       <nav
-        className="sticky top-0 z-9991 w-full bg-white/90 border-b border-gray-100 font-[inherit]"
+        className="sticky top-0 z-9991 w-full bg-white border-b border-gray-100 font-[inherit]"
         style={{
           backgroundColor: "var(--navbar-bg, rgba(255, 255, 255, 0.88))",
           color: "var(--navbar-text, #111827)",
@@ -125,17 +130,8 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-20 py-2">
             {/* Left items */}
             <div className="flex items-center gap-4 shrink-0 z-10">
-              <button
-                onClick={() => router.push("/search")}
-                className="inline-flex items-center justify-center text-yellow-500 hover:text-yellow-600 cursor-pointer transition-colors"
-                title="Search products"
-                aria-label="Search products"
-              >
-                <FiSearch size={20} />
-              </button>
-
               <div className="relative hidden md:block group">
-                <button className="inline-flex items-center gap-1 text-[15px] font-medium text-yellow-500 hover:text-yellow-600 transition-colors cursor-pointer">
+                <button className="inline-flex items-center gap-1 text-[15px] font-medium  text-black hover:text-gray-600 transition-colors cursor-pointer">
                   Categories
                   <FiChevronDown size={16} />
                 </button>
@@ -160,6 +156,21 @@ export default function Navbar() {
                   </div>
                 </div>
               </div>
+
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden opacity-80 hover:opacity-100"
+              >
+                {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+              </button>
+              <button
+                onClick={() => router.push("/search")}
+                className="inline-flex items-center justify-center text-black  hover:text-gray-600 cursor-pointer transition-colors"
+                title="Search products"
+                aria-label="Search products"
+              >
+                <FiSearch size={20} />
+              </button>
             </div>
 
             {/* Exact Centered Logo */}
@@ -182,21 +193,21 @@ export default function Navbar() {
             <div className="flex items-center gap-4 shrink-0 z-10">
               <Link
                 href="/about"
-                className="hidden md:inline-flex items-center text-[15px] font-medium text-yellow-500 hover:text-yellow-600 transition-colors"
+                className="hidden md:inline-flex items-center text-[15px] font-medium  text-black hover:text-gray-600 transition-colors"
               >
                 About Us
               </Link>
 
               <Link
                 href="/contact"
-                className="hidden md:inline-flex items-center text-[15px] font-medium text-yellow-500 hover:text-yellow-600 transition-colors"
+                className="hidden md:inline-flex items-center text-[15px] font-medium text-black hover:text-gray-600 transition-colors"
               >
                 Contact Us
               </Link>
 
               <button
                 onClick={() => useCartStore.getState().openCart()}
-                className="relative inline-flex items-center justify-center text-yellow-500 hover:text-yellow-600 transition-colors cursor-pointer"
+                className="relative inline-flex items-center justify-center  text-black hover:text-gray-600 transition-colors cursor-pointer"
                 aria-label="Open cart"
               >
                 <FiShoppingBag size={23} />
@@ -212,7 +223,7 @@ export default function Navbar() {
 
               {session ? (
                 <div className="relative hidden md:block group">
-                  <button className="flex items-center space-x-2 text-yellow-500 hover:text-yellow-600 transition-colors">
+                  <button className="flex items-center space-x-2  text-black hover:text-gray-600 transition-colors">
                     {session.user.image ? (
                       <img
                         src={session.user.image}
@@ -221,7 +232,7 @@ export default function Navbar() {
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                        <FiUser size={20} className="text-yellow-600" />
+                        <FiUser size={20} className="text-black" />
                       </div>
                     )}
                   </button>
@@ -271,18 +282,12 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/auth/signin"
-                  className="hidden md:inline-flex items-center text-[15px] font-semibold text-yellow-500 hover:text-yellow-600 transition-colors"
+                  className="hidden md:inline-flex items-center text-[15px] font-semibold  text-black hover:text-gray-600 transition-colors"
                 >
                   Sign In
                 </Link>
               )}
-
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden opacity-80 hover:opacity-100"
-              >
-                {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
+              
             </div>
           </div>
         </div>
@@ -299,11 +304,11 @@ export default function Navbar() {
 
       {/* Slide-in Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-[80vw] max-w-sm bg-white/95 backdrop-blur-xl z-999999 flex flex-col md:hidden font-[inherit] ${
+        className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out rounded-tr-3xl overflow-hidden w-[80vw] max-w-sm bg-amber-50 backdrop-blur-xl z-999999 flex flex-col md:hidden font-[inherit] ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-linear-to-r from-white to-gray-50/80 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b  ">
           {session ? (
             <div className="flex items-center gap-3">
               {session.user.image ? (
@@ -338,34 +343,42 @@ export default function Navbar() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="space-y-2">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-gray-400 font-semibold px-1">
-              Categories
-            </p>
-            <div className="flex flex-col gap-2">
-              <Link
-                href="/products"
-                className="block rounded-2xl px-3 py-3 bg-gray-50/90 text-gray-800 hover:bg-gray-100"
-                onClick={() => setIsMobileMenuOpen(false)}
+          <div className="categories flex flex-col gap-2">
+            <div className="flex flex-col ">
+              {/* Categories Toggle */}
+              <div
+                onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+                className="flex items-center   text-gray-900 font-medium rounded-lg hover:bg-gray-200 cursor-pointer"
               >
-                All Products
-              </Link>
-              {flatCategories.map((cat) => (
-                <Link
-                  key={cat._id}
-                  href={`/products?category=${cat._id}`}
-                  className="block rounded-2xl px-3 py-3 bg-gray-50/90 text-gray-800 hover:bg-gray-100"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {cat.name}
-                </Link>
-              ))}
+                Categories
+                <MdKeyboardArrowDown
+                  className={`transition-transform duration-300 ${
+                    isCategoriesOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+
+              {/* Categories List */}
+              {isCategoriesOpen && (
+                <div className="flex flex-col gap-2">
+                  {flatCategories.map((cat) => (
+                    <Link
+                      key={cat._id}
+                      href={`/products?category=${cat._id}`}
+                      className="flex items-center gap-2 rounded-2xl px-3 py-3 text-xs text-gray-800 hover:bg-gray-50"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      < FaRegArrowAltCircleRight/> {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <Link
             href="/products"
-            className="block py-2 text-yellow-500 hover:text-yellow-600 border-b border-gray-50"
+            className="block py-2 text-black hover:text-gray-600 border-b border-gray-50"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Products
@@ -373,7 +386,7 @@ export default function Navbar() {
 
           <Link
             href="/about"
-            className="block py-2 text-yellow-500 hover:text-yellow-600 border-b border-gray-50"
+            className="block py-2  text-black hover:text-gray-600 border-b border-gray-50"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             About Us
@@ -381,7 +394,7 @@ export default function Navbar() {
 
           <Link
             href="/contact"
-            className="block py-2 text-yellow-500 hover:text-yellow-600 border-b border-gray-50"
+            className="block py-2 text-black hover:text-gray-600 border-b border-gray-50"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Contact Us
@@ -390,7 +403,7 @@ export default function Navbar() {
           {session?.user.role === "admin" && (
             <Link
               href="/admin"
-              className="block py-2 text-yellow-500 hover:text-yellow-600 border-b border-gray-50"
+              className="block py-2 text-black hover:text-gray-600 border-b border-gray-50"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Admin
@@ -402,7 +415,7 @@ export default function Navbar() {
               useCartStore.getState().openCart();
               setIsMobileMenuOpen(false);
             }}
-            className="block w-full text-left py-2 text-yellow-500 hover:text-yellow-600 cursor-pointer"
+            className="block w-full text-left py-2 text-black hover:text-gray-600 cursor-pointer"
           >
             Cart {totalItems > 0 && `(${totalItems})`}
           </button>
@@ -411,14 +424,14 @@ export default function Navbar() {
             <>
               <Link
                 href="/profile"
-                className="block py-2 text-yellow-500 hover:text-yellow-600"
+                className="block py-2 text-black hover:text-gray-600"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Profile
               </Link>
               <Link
                 href="/orders"
-                className="block py-2 text-yellow-500 hover:text-yellow-600"
+                className="block py-2 text-black hover:text-gray-600"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 My Orders

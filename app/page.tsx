@@ -4,6 +4,7 @@ import HeroSlider from "@/components/HeroSlider";
 import ProductsContent from "@/components/home/ProductsContent";
 import FAQAccordion from "@/components/FAQAccordion";
 import About from "@/components/About";
+import Testimonials from "@/components/Testimonial";
 
 async function getSliders() {
   try {
@@ -42,7 +43,9 @@ export default async function ProductsPage() {
       <Suspense fallback={null}>
         <ProductsContent />
       </Suspense>
+      <Testimonials/>
       <FAQAccordion />
+
     </>
   );
 }
