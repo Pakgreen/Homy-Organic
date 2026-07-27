@@ -73,7 +73,7 @@ export default function HeroSlider({
         className={`relative overflow-hidden w-full ${isTop ? "px-0 py-0" : "px-4 sm:px-6 lg:px-8 py-4"}`}
       >
         <div
-          className={`w-full bg-gray-200 animate-pulse overflow-hidden ${
+          className={`w-full mt-3 bg-gray-200 animate-pulse overflow-hidden ${
             isTop
               ? "aspect-16/9 sm:aspect-21/9 min-h-[250px] sm:min-h-[400px] rounded-none"
               : "h-[22vh] sm:h-[38vh] md:h-[45vh] min-h-[180px] max-h-[380px] rounded-2xl sm:rounded-3xl"
