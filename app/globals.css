@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #2563eb;      /* Blue primary color */
+  --primary-dark: #1d4ed8; /* Blue darker for hover */
+  --primary-light: #3b82f6; /* Blue lighter */
+}
+
+body {
+  color: rgb(0 0 0);
+  background-color: rgb(255 255 255);
+}
+
+button {
+  @apply rounded-full;
+}
+
+.btn {
+  @apply px-6 py-2 text-sm font-medium transition-colors duration-150 uppercase tracking-wide cursor-pointer;
+}
+
+.btn-primary {
+  @apply text-white cursor-pointer;
+  background-color: var(--primary-color, #2563eb);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-color-dark, #1d4ed8);
+}
+
+.btn-secondary {
+  @apply text-black border transition-colors duration-150;
+  background-color: var(--secondary-color, white);
+  border-color: var(--primary-color, #2563eb);
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-color, #2563eb);
+  color: white;
+}
+
+.btn-outline {
+  @apply bg-transparent text-white border-2 transition-colors duration-150;
+  border-color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #2563eb);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-color, #2563eb);
+  color: white;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+  flex-shrink: 0;
+  padding-right: 2.5rem; /* Gap size */
+}
+
+.btn-danger {
+  @apply bg-white text-black border border-black hover:bg-black hover:text-white;
+}
+
+.input {
+  @apply w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:border-gray-300;
+}
+
+.input:focus {
+  border-color: var(--primary-color, #2563eb);
+  box-shadow: 0 0 0 1px var(--primary-color, #2563eb);
+}
+
+.card {
+  @apply bg-white shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200;
+}
+
+.gradient-bg {
+  @apply bg-black;
+}
+
+/* ========================================================
+   DYNAMIC GLOBAL THEME PREFERENCES FROM ADMIN PANEL
+======================================================== */
+:root {
+  --primary-color: #000000;
+  --heading-color: #000000;
+  --text-color: #374151;
+  --btn-bg: #000000;
+  --btn-text: #ffffff;
+  --background-color: #ffffff;
+  --footer-bg: #ffffff;
+  --footer-text: #374151;
+}
+
+/* Overriding Body & Typography defaults */
+body {
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading-color) !important;
+}
+
+/* Targeting standard hardcoded utility classes gently to map custom themes */
+.text-black, .text-gray-900 {
+  color: var(--heading-color) !important;
+}
+
+.text-gray-500, .text-gray-600 {
+  color: var(--text-color) !important;
+}
+
+.bg-black {
+  background-color: var(--btn-bg) !important;
+}
+
+button.bg-black, button[type="submit"], .btn-primary {
+  background-color: var(--btn-bg) !important;
+  color: var(--btn-text) !important;
+}
+
+/* Overriding explicit white backgrounds to match main theme */
+.bg-white {
+  background-color: var(--background-color) !important;
+}
+
+footer.bg-white {
+  background-color: var(--footer-bg) !important;
+}
+
+footer.bg-white, footer.bg-white * {
+  color: var(--footer-text) !important;
+}
+

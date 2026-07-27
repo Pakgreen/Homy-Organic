@@ -1,0 +1,466 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/store/cartStore";
+import { formatPrice } from "@/lib/utils";
+import axios from "axios";
+import LocalImageUpload from "@/components/LocalImageUpload";
+import { useSession } from "next-auth/react";
+
+export default function CheckoutPage() {
+  const router = useRouter();
+  const { items, clearCart, getTotalPrice } = useCartStore();
+  const { data: session } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [paymentDetails, setPaymentDetails] = useState("");
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    address: "",
+    phone: "",
+    paymentReference: "",
+    paymentProofUrl: "",
+  });
+
+  useEffect(() => {
+    setMounted(true);
+    if (items.length === 0) {
+      router.push("/cart");
+    }
+  }, [items, router]);
+
+  useEffect(() => {
+    const fetchSiteSettings = async () => {
+      try {
+        const res = await axios.get("/api/settings/site");
+        if (res.data?.paymentAccountDetails) {
+          setPaymentDetails(res.data.paymentAccountDetails);
+        }
+      } catch (error) {
+        console.error("Site settings fetch error:", error);
+      }
+    };
+    fetchSiteSettings();
+  }, []);
+
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get("/api/user/profile");
+        const profile = res.data || {};
+        const addr = profile.address || {};
+        const formattedAddress = [
+          addr.street,
+          addr.city,
+          addr.state,
+          addr.zipCode,
+          addr.country,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        setFormData((prev) => ({
+          ...prev,
+          fullName: profile.name || prev.fullName,
+          email: profile.email || prev.email,
+          phone: profile.phone || prev.phone,
+          address: formattedAddress || prev.address,
+        }));
+      } catch (error) {
+        console.error("Profile fetch error:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [session]);
+
+  const subtotal = getTotalPrice();
+
+  const deliveryPrice = 0;
+  const total = subtotal + deliveryPrice;
+
+  // Basic client-side validation to block malformed orders
+  const validateForm = () => {
+    const trimmedName = formData.fullName.trim();
+    if (!/^[A-Za-z\s]{3,60}$/.test(trimmedName)) {
+      return false;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
+      return false;
+    }
+
+    if (formData.address.trim().length < 8) {
+      return false;
+    }
+
+    const digitsOnlyPhone = formData.phone.replace(/[^0-9]/g, "");
+    if (digitsOnlyPhone.length < 10 || digitsOnlyPhone.length > 15) {
+      return false;
+    }
+
+    if (paymentMethod === "Prepaid") {
+      const reference = formData.paymentReference.trim();
+      if (!/^[A-Za-z0-9-]{8,25}$/.test(reference)) {
+        toast.error("Invalid transaction ID");
+        return false;
+      }
+
+      if (!formData.paymentProofUrl) {
+        toast.error("Upload the payment screenshot");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Validate cart items aren't empty
+      if (!items || items.length === 0) {
+        toast.error("Your cart is empty");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!validateForm()) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      const orderData = {
+        orderItems: items.map((item) => ({
+          product: item._id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          image: item.image,
+        })),
+        shippingAddress: {
+          fullName: formData.fullName,
+          address: formData.address,
+          phone: formData.phone,
+          city: "",
+        },
+        contactEmail: formData.email,
+        paymentMethod,
+        paymentReference: formData.paymentReference,
+        paymentProofUrl: formData.paymentProofUrl,
+        itemsPrice: subtotal,
+        shippingPrice: deliveryPrice,
+        taxPrice: 0,
+        totalPrice: total,
+      };
+
+      const res = await axios.post("/api/orders", orderData);
+      toast.success("Order placed successfully!");
+      clearCart();
+      router.push(`/orders/${res.data._id}`);
+    } catch (error: any) {
+      const errorMsg =
+        error.response?.data?.error || error.message || "Failed to place order";
+      toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!mounted || items.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
+        Loading...
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col gap-2 mb-10">
+          <p className="text-[11px] uppercase tracking-widest text-gray-500 font-bold">
+            Checkout
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-black tracking-tight mb-2">
+            Confirm your order
+          </h1>
+          <p className="text-sm text-gray-700 font-medium mb-1">
+            Review your details and place your order.
+          </p>
+          <p className="text-[11px] uppercase tracking-widest text-black font-bold border-b border-gray-200 pb-6">
+            Choose Cash on Delivery or prepay via Bank Transfer.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Checkout Form */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="border border-gray-200 bg-white p-6 md:p-8">
+              <h2 className="text-xs uppercase tracking-widest text-black font-bold mb-6">
+                Delivery Details
+              </h2>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-[11px] uppercase tracking-widest text-gray-700 font-bold mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullName: e.target.value })
+                    }
+                    className="w-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-normal placeholder:text-gray-400"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-widest text-gray-700 font-bold mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="w-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-normal placeholder:text-gray-400"
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-widest text-gray-700 font-bold mb-2">
+                    Address *
+                  </label>
+                  <textarea
+                    required
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    className="w-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none transition-all resize-y placeholder:font-normal placeholder:text-gray-400"
+                    placeholder="Enter your address"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-widest text-gray-700 font-bold mb-2">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className="w-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-normal placeholder:text-gray-400"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <h3 className="text-xs uppercase tracking-widest text-black font-bold mb-4">
+                    Payment Method
+                  </h3>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="Cash on Delivery"
+                        checked={paymentMethod === "Cash on Delivery"}
+                        onChange={() => setPaymentMethod("Cash on Delivery")}
+                        className="accent-black focus:ring-black"
+                      />
+                      <span className="text-sm font-bold text-gray-800">
+                        Cash on Delivery
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="Prepaid"
+                        checked={paymentMethod === "Prepaid"}
+                        onChange={() => setPaymentMethod("Prepaid")}
+                        className="accent-black focus:ring-black"
+                      />
+                      <span className="text-sm font-bold text-gray-800">
+                        Prepaid Transfer
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {paymentMethod === "Prepaid" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-gray-200">
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-widest text-gray-700 font-bold mb-2">
+                        Transaction ID *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.paymentReference}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            paymentReference: e.target.value,
+                          })
+                        }
+                        className="w-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-normal placeholder:text-gray-400"
+                        placeholder="e.g. TXN123456789"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-2 uppercase tracking-wide font-medium">
+                        Please paste transaction ID above.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-widest text-gray-700 font-bold mb-2">
+                        Payment Screenshot *
+                      </label>
+                      <div className="border border-gray-200 p-2">
+                        <LocalImageUpload
+                          value={formData.paymentProofUrl}
+                          onChange={(url) =>
+                            setFormData({ ...formData, paymentProofUrl: url })
+                          }
+                          onRemove={() =>
+                            setFormData({ ...formData, paymentProofUrl: "" })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-black text-white text-xs tracking-[0.2em] font-bold uppercase py-4 hover:bg-gray-900 transition-colors disabled:opacity-60 cursor-pointer"
+                  >
+                    {isSubmitting ? "Placing Order..." : "Place Order"}
+                  </button>
+                  <p className="text-[11px] text-gray-500 font-medium mt-3 text-center uppercase tracking-wide">
+                    {paymentMethod === "Prepaid"
+                      ? "Upload receipt to avoid rejection."
+                      : "Pay by cash upon delivery."}
+                  </p>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="border border-gray-200 bg-white p-6 md:p-8 sticky top-6">
+              <h2 className="text-xs uppercase tracking-widest text-black font-bold mb-6">
+                Order Summary
+              </h2>
+
+              <div className="space-y-6 mb-8">
+                {items.map((item) => (
+                  <div
+                    key={item._id}
+                    className="flex justify-between items-center text-sm"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-white border border-gray-200 flex items-center justify-center p-1">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300">
+                              <span className="text-xs">No img</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Quantity Badge */}
+                        <div className="absolute -top-2 -right-2 bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold z-10">
+                          {item.quantity}
+                        </div>
+                      </div>
+                      <span className="text-gray-800 font-bold uppercase tracking-wider text-xs pr-4">
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className="font-bold text-black border-l border-gray-100 pl-4">
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
+                  </div>
+                ))}
+
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <div className="flex justify-between text-xs text-gray-600 uppercase tracking-widest font-bold">
+                    <span>Subtotal</span>
+                    <span className="font-bold text-black normal-case tracking-normal">
+                      {formatPrice(subtotal)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-600 uppercase tracking-widest font-bold">
+                    <span>Delivery</span>
+                    <span className="font-bold text-black normal-case tracking-normal">
+                      {formatPrice(deliveryPrice)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
+                  <span className="text-sm font-bold text-black uppercase tracking-widest">
+                    Total
+                  </span>
+                  <span className="text-xl font-bold text-black">
+                    {formatPrice(total)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 p-4">
+                <p className="text-xs uppercase tracking-widest text-black mb-2 font-bold">
+                  Payment Details
+                </p>
+                {paymentMethod === "Prepaid" ? (
+                  <p className="text-xs text-black whitespace-pre-wrap font-bold leading-relaxed">
+                    {paymentDetails || "No payment details configured yet."}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-gray-700 font-medium">
+                    Pay via cash upon receiving your order at the provided
+                    address.
+                  </p>
+                )}
+                {paymentMethod === "Prepaid" && (
+                  <p className="text-[10px] text-gray-500 font-bold mt-4 pt-3 border-t border-gray-200 uppercase">
+                    Send payment, note the transaction ID, and upload the
+                    screenshot to submit.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

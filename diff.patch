@@ -1,0 +1,3599 @@
+diff --git a/app/admin/banner/page.tsx b/app/admin/banner/page.tsx
+index b25b4c7..7ab76f2 100644
+--- a/app/admin/banner/page.tsx
++++ b/app/admin/banner/page.tsx
+@@ -2,7 +2,6 @@
+ 
+ import { useEffect, useState } from "react";
+ import axios from "axios";
+-import toast from "react-hot-toast";
+ 
+ export default function AdminBannerPage() {
+   const [text, setText] = useState("");
+@@ -17,7 +16,6 @@ export default function AdminBannerPage() {
+       })
+       .catch((err) => {
+         console.error(err);
+-        toast.error("Failed to load banner");
+       })
+       .finally(() => setIsLoading(false));
+   }, []);
+@@ -26,10 +24,8 @@ export default function AdminBannerPage() {
+     setIsSaving(true);
+     try {
+       await axios.put("/api/banner", { text });
+-      toast.success("Banner updated");
+     } catch (err: any) {
+-      console.error(err);
+-      toast.error(err?.response?.data?.error || "Failed to save banner");
++      console.error(err)
+     } finally {
+       setIsSaving(false);
+     }
+diff --git a/app/admin/categories/page.tsx b/app/admin/categories/page.tsx
+index 1ac9518..32c9917 100644
+--- a/app/admin/categories/page.tsx
++++ b/app/admin/categories/page.tsx
+@@ -1,17 +1,17 @@
+-'use client';
++"use client";
+ 
+-import { useEffect, useState } from 'react';
+-import axios from 'axios';
+-import toast from 'react-hot-toast';
+-import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
++import { useEffect, useState } from "react";
++import axios from "axios"   
++import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
+ 
+ export default function AdminCategoriesPage() {
+   const [categories, setCategories] = useState<any[]>([]);
+   const [showModal, setShowModal] = useState(false);
+   const [editingCategory, setEditingCategory] = useState<any>(null);
+   const [formData, setFormData] = useState({
+-    name: '',
+-    description: '',
++    name: "",
++    description: "",
++    showInNav: true,
+   });
+ 
+   useEffect(() => {
+@@ -20,11 +20,13 @@ export default function AdminCategoriesPage() {
+ 
+   const fetchCategories = async () => {
+     try {
+-      const res = await axios.get('/api/categories');
+-      const data = Array.isArray(res.data) ? res.data : res.data.categories || [];
++      const res = await axios.get("/api/categories");
++      const data = Array.isArray(res.data)
++        ? res.data
++        : res.data.categories || [];
+       setCategories(data);
+     } catch (error) {
+-      toast.error('Failed to fetch categories');
++      console.error("Failed to fetch categories:", error);
+     }
+   };
+ 
+@@ -33,28 +35,26 @@ export default function AdminCategoriesPage() {
+     try {
+       if (editingCategory) {
+         await axios.put(`/api/categories/${editingCategory._id}`, formData);
+-        toast.success('Category updated successfully');
+       } else {
+-        await axios.post('/api/categories', formData);
+-        toast.success('Category created successfully');
++        await axios.post("/api/categories", formData);
+       }
+       setShowModal(false);
+       setEditingCategory(null);
+       resetForm();
+       fetchCategories();
+     } catch (error: any) {
+-      toast.error(error.response?.data?.error || 'Failed to save category');
++      console.error("Category save error:", error);
+     }
+   };
+ 
+   const handleDelete = async (id: string) => {
+-    if (!confirm('Are you sure? This will affect products in this category!')) return;
++    if (!confirm("Are you sure? This will affect products in this category!"))
++      return;
+     try {
+       await axios.delete(`/api/categories/${id}`);
+-      toast.success('Category deleted successfully');
+       fetchCategories();
+     } catch (error) {
+-      toast.error('Failed to delete category');
++      console.error("Category delete error:", error); 
+     }
+   };
+ 
+@@ -62,15 +62,17 @@ export default function AdminCategoriesPage() {
+     setEditingCategory(category);
+     setFormData({
+       name: category.name,
+-      description: category.description || '',
++      description: category.description || "",
++      showInNav: category.showInNav !== undefined ? category.showInNav : true,
+     });
+     setShowModal(true);
+   };
+ 
+   const resetForm = () => {
+     setFormData({
+-      name: '',
+-      description: '',
++      name: "",
++      description: "",
++      showInNav: true,
+     });
+   };
+ 
+@@ -92,14 +94,21 @@ export default function AdminCategoriesPage() {
+ 
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+         {categories.map((category: any) => (
+-          <div key={category._id} className="card p-5 border border-gray-100 hover:shadow-md transition">
++          <div
++            key={category._id}
++            className="card p-5 border border-gray-100 hover:shadow-md transition"
++          >
+             <div className="space-y-2">
+               <div className="flex items-start justify-between gap-2">
+                 <h3 className="font-semibold text-lg">{category.name}</h3>
+-                <span className="text-xs text-gray-500">Category</span>
++                <span
++                  className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${category.showInNav !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
++                >
++                  {category.showInNav !== false ? "In Nav" : "Hidden"}
++                </span>
+               </div>
+               <p className="text-sm text-gray-700 line-clamp-2">
+-                {category.description || 'No description provided.'}
++                {category.description || "No description provided."}
+               </p>
+             </div>
+ 
+@@ -126,8 +135,12 @@ export default function AdminCategoriesPage() {
+           <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-xl border border-gray-100 font-semibold mx-auto mt-6 sm:mt-10">
+             <div className="flex items-start justify-between gap-3 mb-6">
+               <div className="space-y-1">
+-                <div className="text-xs uppercase tracking-wide text-blue-600 font-semibold">Category</div>
+-                <h3 className="text-xl font-extrabold">{editingCategory ? 'Edit Category' : 'Add New Category'}</h3>
++                <div className="text-xs uppercase tracking-wide text-blue-600 font-semibold">
++                  Category
++                </div>
++                <h3 className="text-xl font-extrabold">
++                  {editingCategory ? "Edit Category" : "Add New Category"}
++                </h3>
+               </div>
+               <button
+                 onClick={() => {
+@@ -145,31 +158,63 @@ export default function AdminCategoriesPage() {
+             <form onSubmit={handleSubmit} className="space-y-5">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+-                  <label className="block text-gray-900 font-extrabold">Category Name *</label>
++                  <label className="block text-gray-900 font-extrabold">
++                    Category Name *
++                  </label>
+                   <input
+                     type="text"
+                     required
+                     value={formData.name}
+-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
++                    onChange={(e) =>
++                      setFormData({ ...formData, name: e.target.value })
++                    }
+                     className="input"
+                     placeholder="e.g. Electronics"
+                   />
+                 </div>
+ 
+-                <div className="space-y-2">
+-                  <label className="block text-gray-900 font-extrabold">Description</label>
++                <div className="space-y-2 col-span-2">
++                  <label className="block text-gray-900 font-extrabold">
++                    Description
++                  </label>
+                   <textarea
+                     value={formData.description}
+-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
++                    onChange={(e) =>
++                      setFormData({ ...formData, description: e.target.value })
++                    }
+                     className="input min-h-20"
+                     placeholder="Optional short description"
+                   />
+                 </div>
++
++                <div className="space-y-2 col-span-2">
++                  <label className="flex items-center gap-2 cursor-pointer text-gray-900 font-extrabold">
++                    <input
++                      type="checkbox"
++                      checked={formData.showInNav}
++                      onChange={(e) =>
++                        setFormData({
++                          ...formData,
++                          showInNav: e.target.checked,
++                        })
++                      }
++                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
++                    />
++                    <span>Show in Navigation Bar</span>
++                  </label>
++                  <p className="text-xs text-gray-500 font-normal ml-6">
++                    If checked, this category will appear in the main navigation
++                    menu.
++                  </p>
++                </div>
+               </div>
+ 
+               <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 border-t border-gray-100 pt-4">
+-                <button type="submit" className="btn btn-primary flex-1 text-sm py-2">
+-                  {editingCategory ? 'Update Category' : 'Create Category'}
++                <button
++                  type="submit"
++                  className="btn btn-primary flex-1 text-sm py-2"
++                >
++                  {editingCategory ? "Update Category" : "Create Category"}
+                 </button>
+                 <button
+                   type="button"
+diff --git a/app/admin/orders/[id]/page.tsx b/app/admin/orders/[id]/page.tsx
+index 4bde8bf..8541630 100644
+--- a/app/admin/orders/[id]/page.tsx
++++ b/app/admin/orders/[id]/page.tsx
+@@ -3,7 +3,6 @@
+ import { useEffect, useState } from "react";
+ import { useParams } from "next/navigation";
+ import axios from "axios";
+-import toast from "react-hot-toast";
+ import { formatPrice, formatDate } from "@/lib/utils";
+ import { FiCopy } from "react-icons/fi";
+ import {
+@@ -46,7 +45,7 @@ export default function AdminOrderDetailPage() {
+       setPaymentRef(refFallback);
+       setPaymentProof(proofFallback);
+     } catch (error) {
+-      toast.error("Failed to fetch order");
++      console.error("Failed to fetch order:", error);
+     }
+   };
+ 
+@@ -57,10 +56,10 @@ export default function AdminOrderDetailPage() {
+         trackingNumber,
+         isPaid,
+       });
+-      toast.success("Order updated successfully");
++      console.log("Order updated successfully");
+       fetchOrder();
+     } catch (error) {
+-      toast.error("Failed to update order");
++      console.error("Failed to update order:", error);
+     }
+   };
+ 
+@@ -80,7 +79,7 @@ export default function AdminOrderDetailPage() {
+       link.remove();
+       URL.revokeObjectURL(url);
+     } catch (error) {
+-      toast.error("Could not download proof. Try opening the image.");
++      console.error("Could not download proof. Try opening the image.", error);
+     } finally {
+       setIsDownloading(false);
+     }
+@@ -100,54 +99,81 @@ export default function AdminOrderDetailPage() {
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="flex flex-col items-start">
+                 <p className="text-gray-600 text-sm">Order ID</p>
+-                <button 
+-                  onClick={() => { navigator.clipboard.writeText(order._id || ''); toast.success("Order ID copied!"); }}
++                <button
++                  onClick={() => {
++                    navigator.clipboard.writeText(order._id || "");
++                  }}
+                   className="group flex items-center gap-2 font-mono text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors"
+                   title="Click to copy Order ID"
+                 >
+                   <span>{order._id}</span>
+-                  <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                  <FiCopy
++                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                    size={14}
++                  />
+                 </button>
+               </div>
+               <div className="flex flex-col items-start">
+                 <p className="text-gray-600 text-sm">Date</p>
+-                <button 
+-                  onClick={() => { navigator.clipboard.writeText(formatDate(order.createdAt) || ''); toast.success("Date copied!"); }}
++                <button
++                  onClick={() => {
++                    navigator.clipboard.writeText(
++                      formatDate(order.createdAt) || "",
++                    );
++                  }}
+                   className="group flex items-center gap-2 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors"
+                   title="Click to copy Date"
+                 >
+                   <span>{formatDate(order.createdAt)}</span>
+-                  <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                  <FiCopy
++                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                    size={14}
++                  />
+                 </button>
+               </div>
+               <div className="flex flex-col items-start">
+                 <p className="text-gray-600 text-sm">Customer</p>
+-                <button 
+-                  onClick={() => { navigator.clipboard.writeText(order.user?.name || ''); toast.success("Customer name copied!"); }}
++                <button
++                  onClick={() => {
++                    navigator.clipboard.writeText(order.user?.name || "");
++                  }}
+                   className="group flex items-center gap-2 font-medium text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors"
+                   title="Click to copy Name"
+                 >
+                   <span>{order.user?.name}</span>
+-                  <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                  <FiCopy
++                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                    size={14}
++                  />
+                 </button>
+-                <button 
+-                  onClick={() => { navigator.clipboard.writeText(order.user?.email || ''); toast.success("Customer email copied!"); }}
++                <button
++                  onClick={() => {
++                    navigator.clipboard.writeText(order.user?.email || "");
++                  }}
+                   className="group flex items-center gap-2 text-sm text-gray-500 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors mt-0.5"
+                   title="Click to copy Email"
+                 >
+                   <span>{order.user?.email}</span>
+-                  <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                  <FiCopy
++                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                    size={14}
++                  />
+                 </button>
+               </div>
+               <div className="flex flex-col items-start">
+                 <p className="text-gray-600 text-sm">Payment Method</p>
+-                <button 
+-                  onClick={() => { navigator.clipboard.writeText(order.paymentMethod || ''); toast.success("Payment method copied!"); }}
++                <button
++                  onClick={() => {
++                    navigator.clipboard.writeText(order.paymentMethod || "");
++                  }}
+                   className="group flex items-center gap-2 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors"
+                   title="Click to copy Payment Method"
+                 >
+                   <span>{order.paymentMethod}</span>
+-                  <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                  <FiCopy
++                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                    size={14}
++                  />
+                 </button>
+               </div>
+             </div>
+@@ -212,11 +238,10 @@ export default function AdminOrderDetailPage() {
+           <div className="card p-6">
+             <div className="flex justify-between items-start mb-4">
+               <h3 className="font-bold text-lg">Shipping Address</h3>
+-              <button 
++              <button
+                 onClick={() => {
+                   const details = `${order.shippingAddress.fullName}\n${order.shippingAddress.address}\n${order.shippingAddress.city}, ${order.shippingAddress.postalCode}\n${order.shippingAddress.country}\nPhone: ${order.shippingAddress.phone}`;
+                   navigator.clipboard.writeText(details);
+-                  toast.success("Shipping details copied!");
+                 }}
+                 className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-md font-semibold transition cursor-pointer"
+                 title="Copy full shipping details"
+@@ -225,46 +250,79 @@ export default function AdminOrderDetailPage() {
+               </button>
+             </div>
+             <div className="flex flex-col items-start gap-1">
+-              <button 
+-                onClick={() => { navigator.clipboard.writeText(order.shippingAddress.fullName || ''); toast.success("Name copied!"); }}
++              <button
++                onClick={() => {
++                  navigator.clipboard.writeText(
++                    order.shippingAddress.fullName || "",
++                  );
++                }}
+                 className="group flex items-center gap-2 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors mb-0.5"
+               >
+                 <span>{order.shippingAddress.fullName}</span>
+-                <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                <FiCopy
++                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                  size={14}
++                />
+               </button>
+-              <button 
+-                onClick={() => { navigator.clipboard.writeText(order.shippingAddress.address || ''); toast.success("Address copied!"); }}
++              <button
++                onClick={() => {
++                  navigator.clipboard.writeText(
++                    order.shippingAddress.address || "",
++                  );
++                }}
+                 className="group flex items-center gap-2 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors mb-0.5"
+               >
+                 <span>{order.shippingAddress.address}</span>
+-                <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                <FiCopy
++                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                  size={14}
++                />
+               </button>
+-              <button 
+-                onClick={() => { navigator.clipboard.writeText(`${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`); toast.success("City/Postal copied!"); }}
++              <button
++                onClick={() => {
++                  navigator.clipboard.writeText(
++                    `${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`,
++                  );
++                }}
+                 className="group flex items-center gap-2 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors mb-0.5"
+               >
+-                <span>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</span>
+-                <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                <span>
++                  {order.shippingAddress.city},{" "}
++                  {order.shippingAddress.postalCode}
++                </span>
++                <FiCopy
++                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                  size={14}
++                />
+               </button>
+-              <button 
+-                onClick={() => { navigator.clipboard.writeText(order.shippingAddress.country || ''); toast.success("Country copied!"); }}
++              <button
++                onClick={() => {
++                  navigator.clipboard.writeText(
++                    order.shippingAddress.country || "",
++                  );
++                }}
+                 className="group flex items-center gap-2 text-left cursor-pointer hover:text-blue-600 hover:underline focus:outline-none transition-colors mb-1"
+               >
+                 <span>{order.shippingAddress.country}</span>
+-                <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                <FiCopy
++                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                  size={14}
++                />
+               </button>
+               <p className="text-gray-600 flex items-center gap-1 mt-1">
+-                Phone: 
+-                <button 
++                Phone:
++                <button
+                   onClick={() => {
+                     navigator.clipboard.writeText(order.shippingAddress.phone);
+-                    toast.success("Phone number copied!");
+                   }}
+                   className="group flex items-center gap-2 font-medium hover:text-blue-600 hover:underline cursor-pointer transition-colors focus:outline-none"
+                   title="Click to copy"
+                 >
+                   <span>{order.shippingAddress.phone}</span>
+-                  <FiCopy className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity" size={14} />
++                  <FiCopy
++                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
++                    size={14}
++                  />
+                 </button>
+               </p>
+             </div>
+@@ -349,11 +407,14 @@ export default function AdminOrderDetailPage() {
+                 <label className="text-gray-700">Mark as Paid</label>
+               </div>
+ 
+-              <button onClick={handleUpdate} className="w-full  btn rounded-full btn-primary">
++              <button
++                onClick={handleUpdate}
++                className="w-full  btn rounded-full btn-primary"
++              >
+                 Update Order
+               </button>
+             </div>
+-          </div>  
++          </div>
+ 
+           {/* Order Summary */}
+           <div className="card p-6">
+@@ -384,23 +445,26 @@ export default function AdminOrderDetailPage() {
+ 
+       {/* Image Modal */}
+       {isModalOpen && paymentProof && (
+-        <div 
++        <div
+           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm"
+           onClick={() => setIsModalOpen(false)}
+         >
+-          <div className="relative max-w-5xl w-full flex flex-col justify-center items-center" onClick={(e) => e.stopPropagation()}>
++          <div
++            className="relative max-w-5xl w-full flex flex-col justify-center items-center"
++            onClick={(e) => e.stopPropagation()}
++          >
+             <div className="w-full flex justify-end mb-4">
+-              <button 
++              <button
+                 className="text-white hover:text-yellow-400 bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center text-3xl transition-colors cursor-pointer"
+                 onClick={() => setIsModalOpen(false)}
+               >
+                 &times;
+               </button>
+             </div>
+-            <img 
+-              src={paymentProof} 
+-              alt="Payment proof full" 
+-              className="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl bg-black" 
++            <img
++              src={paymentProof}
++              alt="Payment proof full"
++              className="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl bg-black"
+             />
+           </div>
+         </div>
+diff --git a/app/admin/orders/page.tsx b/app/admin/orders/page.tsx
+index 18149c7..b8d0474 100644
+--- a/app/admin/orders/page.tsx
++++ b/app/admin/orders/page.tsx
+@@ -2,7 +2,6 @@
+ 
+ import { useEffect, useState } from "react";
+ import axios from "axios";
+-import toast from "react-hot-toast";
+ import Link from "next/link";
+ import { formatPrice, formatDate } from "@/lib/utils";
+ import {
+@@ -26,7 +25,7 @@ export default function AdminOrdersPage() {
+       const data = Array.isArray(res.data) ? res.data : res.data.orders || [];
+       setOrders(data);
+     } catch (error) {
+-      toast.error("Failed to fetch orders");
++      console.error("Failed to fetch orders:", error);
+     } finally {
+       setIsLoading(false);
+     }
+diff --git a/app/admin/products/page.tsx b/app/admin/products/page.tsx
+index b0655c2..1f1784f 100644
+--- a/app/admin/products/page.tsx
++++ b/app/admin/products/page.tsx
+@@ -2,7 +2,6 @@
+ 
+ import { useEffect, useState } from "react";
+ import axios from "axios";
+-import toast from "react-hot-toast";
+ import { formatPrice } from "@/lib/utils";
+ import { FiEdit, FiTrash2, FiPlus, FiLoader, FiX } from "react-icons/fi";
+ import Link from "next/link";
+@@ -49,10 +48,6 @@ export default function AdminProductsPage() {
+         "Failed to fetch products:",
+         error.response?.data || error.message,
+       );
+-      toast.error(
+-        "Failed to fetch products: " +
+-          (error.response?.data?.error || error.message),
+-      );
+     } finally {
+       setIsLoading(false);
+     }
+@@ -76,7 +71,7 @@ export default function AdminProductsPage() {
+     const priceNumber = Number(formData.price);
+     const originalPriceNumber = Number(formData.originalPrice);
+     if (!priceNumber || priceNumber <= 0) {
+-      toast.error("Price must be greater than 0");
++      
+       return;
+     }
+     if (
+@@ -85,7 +80,7 @@ export default function AdminProductsPage() {
+         originalPriceNumber <= 0 ||
+         originalPriceNumber <= priceNumber)
+     ) {
+-      toast.error("Old price must be greater than current price");
++      
+       return;
+     }
+ 
+@@ -99,17 +94,17 @@ export default function AdminProductsPage() {
+     try {
+       if (editingProduct) {
+         await axios.put(`/api/products/${editingProduct._id}`, payload);
+-        toast.success("Product updated successfully");
++        
+       } else {
+         await axios.post("/api/products", payload);
+-        toast.success("Product created successfully");
++        
+       }
+       setShowModal(false);
+       setEditingProduct(null);
+       resetForm();
+       fetchProducts();
+     } catch (error: any) {
+-      toast.error(error.response?.data?.error || "Failed to save product");
++      
+     }
+   };
+ 
+@@ -117,10 +112,10 @@ export default function AdminProductsPage() {
+     if (!confirm("Are you sure you want to delete this product?")) return;
+     try {
+       await axios.delete(`/api/products/${id}`);
+-      toast.success("Product deleted successfully");
++      
+       fetchProducts();
+     } catch (error) {
+-      toast.error("Failed to delete product");
++      
+     }
+   };
+ 
+@@ -161,7 +156,7 @@ export default function AdminProductsPage() {
+     try {
+       for (const file of Array.from(files)) {
+         if (!file.type.startsWith("image/")) {
+-          toast.error(`${file.name} is not an image file`);
++          
+           continue;
+         }
+ 
+@@ -184,10 +179,10 @@ export default function AdminProductsPage() {
+           ...prev,
+           images: [...prev.images, ...uploadedUrls],
+         }));
+-        toast.success(`${uploadedUrls.length} image(s) uploaded`);
++         uploaded`);
+       }
+     } catch (error: any) {
+-      toast.error(error.response?.data?.error || "Failed to upload image(s)");
++      ");
+     } finally {
+       setIsUploadingImages(false);
+     }
+@@ -260,6 +255,7 @@ export default function AdminProductsPage() {
+               <table className="w-full text-sm">
+                 <thead>
+                   <tr className="border-b bg-gray-50 text-gray-700">
++                    <th className="text-left py-3 px-4">Image</th>
+                     <th className="text-left py-3 px-4">Name</th>
+                     <th className="text-left py-3 px-4">Category</th>
+                     <th className="text-left py-3 px-4">Price</th>
+@@ -270,6 +266,23 @@ export default function AdminProductsPage() {
+                 <tbody>
+                   {products.map((product: any) => (
+                     <tr key={product._id} className="border-b hover:bg-gray-50">
++                      <td className="py-3 px-4">
++                        <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden relative border border-gray-200">
++                          {product.images && product.images.length > 0 ? (
++                            <img
++                              src={product.images[0]}
++                              alt={product.name}
++                              className="object-cover w-full h-full"
++                            />
++                          ) : (
++                            <div className="w-full h-full flex items-center justify-center text-gray-400">
++                              <span className="text-[10px] font-medium">
++                                No Img
++                              </span>
++                            </div>
++                          )}
++                        </div>
++                      </td>
+                       <td className="py-3 px-4 font-semibold text-gray-900">
+                         {product.name}
+                       </td>
+@@ -331,18 +344,60 @@ export default function AdminProductsPage() {
+               {products.map((product: any) => (
+                 <div
+                   key={product._id}
+-                  className="border border-gray-200 rounded-xl p-4 shadow-sm bg-gray-50"
++                  className="border border-gray-200 rounded-xl p-4 shadow-sm bg-gray-50 flex gap-4"
+                 >
+-                  <div className="flex items-start justify-between gap-3">
++                  <div className="shrink-0 w-20 h-20 bg-white rounded-lg overflow-hidden border border-gray-200">
++                    {product.images && product.images.length > 0 ? (
++                      <img
++                        src={product.images[0]}
++                        alt={product.name}
++                        className="object-cover w-full h-full"
++                      />
++                    ) : (
++                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
++                        <span className="text-[10px] font-medium">No Img</span>
++                      </div>
++                    )}
++                  </div>
++                  <div className="flex-1 flex flex-col justify-between">
+                     <div>
+-                      <p className="text-sm text-gray-500">
++                      <p className="text-xs text-gray-500 mb-0.5">
+                         {product.category?.name || "N/A"}
+                       </p>
+-                      <h3 className="text-lg font-bold text-gray-900">
++                      <h3 className="text-base font-bold text-gray-900 leading-tight">
+                         {product.name}
+                       </h3>
++                      <div className="mt-1 flex flex-col gap-1 text-sm text-gray-700">
++                        <div className="flex items-center gap-2">
++                          <span className="font-semibold text-gray-900">
++                            {formatPrice(product.price)}
++                          </span>
++                          {typeof (
++                            product.originalPrice ?? product.oldPrice
++                          ) === "number" &&
++                            (product.originalPrice ?? product.oldPrice) >
++                              product.price && (
++                              <span className="text-xs text-gray-400 line-through">
++                                {formatPrice(
++                                  product.originalPrice ?? product.oldPrice,
++                                )}
++                              </span>
++                            )}
++                        </div>
++                      </div>
++                      <div className="mt-1">
++                        {product.isFeatured ? (
++                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-semibold">
++                            ★ Featured
++                          </span>
++                        ) : (
++                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] font-semibold">
++                            Standard
++                          </span>
++                        )}
++                      </div>
+                     </div>
+-                    <div className="flex items-center gap-2">
++                    <div className="flex items-center gap-3">
+                       <button
+                         onClick={() => handleEdit(product)}
+                         className="text-blue-600 hover:text-blue-700"
+@@ -359,34 +414,6 @@ export default function AdminProductsPage() {
+                       </button>
+                     </div>
+                   </div>
+-                  <div className="mt-3 flex items-center justify-between text-sm text-gray-700">
+-                    <div className="flex items-center gap-2">
+-                      <span className="font-semibold text-gray-900">
+-                        {formatPrice(product.price)}
+-                      </span>
+-                      {typeof (product.originalPrice ?? product.oldPrice) ===
+-                        "number" &&
+-                        (product.originalPrice ?? product.oldPrice) >
+-                          product.price && (
+-                          <span className="text-xs text-gray-400 line-through">
+-                            {formatPrice(
+-                              product.originalPrice ?? product.oldPrice,
+-                            )}
+-                          </span>
+-                        )}
+-                    </div>
+-                  </div>
+-                  <div className="mt-2">
+-                    {product.isFeatured ? (
+-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+-                        Featured
+-                      </span>
+-                    ) : (
+-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
+-                        Standard
+-                      </span>
+-                    )}
+-                  </div>
+                 </div>
+               ))}
+             </div>
+diff --git a/app/admin/sliders/page.tsx b/app/admin/sliders/page.tsx
+index deec881..098614f 100644
+--- a/app/admin/sliders/page.tsx
++++ b/app/admin/sliders/page.tsx
+@@ -1,16 +1,16 @@
+-'use client';
++"use client";
+ 
+-import { useEffect, useState } from 'react';
+-import axios from 'axios';
+-import toast from 'react-hot-toast';
+-import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
+-import LocalImageUpload from '@/components/LocalImageUpload';
+-import Image from 'next/image';
++import { useEffect, useState } from "react";
++import axios from "axios";
++import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
++import LocalImageUpload from "@/components/LocalImageUpload";
++import Image from "next/image";
+ 
+ interface Slider {
+   _id: string;
+   title: string;
+   image: string;
++  position: string;
+   buttonText: string;
+   buttonLink: string;
+   isActive: boolean;
+@@ -23,10 +23,11 @@ export default function AdminSlidersPage() {
+   const [showModal, setShowModal] = useState(false);
+   const [editingSlider, setEditingSlider] = useState<Slider | null>(null);
+   const [formData, setFormData] = useState({
+-    title: '',
+-    image: '',
+-    buttonText: '',
+-    buttonLink: '',
++    title: "",
++    image: "",
++    position: "top",
++    buttonText: "",
++    buttonLink: "",
+     isActive: true,
+   });
+ 
+@@ -38,12 +39,11 @@ export default function AdminSlidersPage() {
+     setIsLoading(true);
+     try {
+       // Fetch all sliders (including inactive) for admin panel
+-      const res = await axios.get('/api/sliders?all=true');
++      const res = await axios.get("/api/sliders?all=true");
+       // Handle both formats: array directly or object with sliders property
+       const data = Array.isArray(res.data) ? res.data : res.data.sliders || [];
+       setSliders(data);
+     } catch (error) {
+-      toast.error('Failed to fetch sliders');
+     } finally {
+       setIsLoading(false);
+     }
+@@ -57,33 +57,29 @@ export default function AdminSlidersPage() {
+         await axios.put(`/api/sliders/${editingSlider._id}`, {
+           ...formData,
+         });
+-        toast.success('Slider updated successfully');
+       } else {
+-        await axios.post('/api/sliders', {
++        await axios.post("/api/sliders", {
+           ...formData,
+         });
+-        toast.success('Slider created successfully');
+       }
+       setShowModal(false);
+       setEditingSlider(null);
+       resetForm();
+       await fetchSliders();
+     } catch (error: any) {
+-      toast.error(error.response?.data?.error || 'Failed to save slider');
+     } finally {
+       setIsLoading(false);
+     }
+   };
+ 
+   const handleDelete = async (id: string) => {
+-    if (!confirm('Are you sure you want to delete this slider?')) return;
++    if (!confirm("Are you sure you want to delete this slider?")) return;
+     setIsLoading(true);
+     try {
+       await axios.delete(`/api/sliders/${id}`);
+-      toast.success('Slider deleted successfully');
++
+       await fetchSliders();
+     } catch (error) {
+-      toast.error('Failed to delete slider');
+     } finally {
+       setIsLoading(false);
+     }
+@@ -94,8 +90,9 @@ export default function AdminSlidersPage() {
+     setFormData({
+       title: slider.title,
+       image: slider.image,
+-      buttonText: '',
+-      buttonLink: '',
++      position: slider.position || "top",
++      buttonText: "",
++      buttonLink: "",
+       isActive: slider.isActive,
+     });
+     setShowModal(true);
+@@ -103,10 +100,11 @@ export default function AdminSlidersPage() {
+ 
+   const resetForm = () => {
+     setFormData({
+-      title: '',
+-      image: '',
+-      buttonText: '',
+-      buttonLink: '',
++      title: "",
++      image: "",
++      position: "top",
++      buttonText: "",
++      buttonLink: "",
+       isActive: true,
+     });
+   };
+@@ -165,10 +163,20 @@ export default function AdminSlidersPage() {
+               )}
+             </div>
+             <div className="p-4">
+-              <h3 className="text-lg font-semibold line-clamp-1">{slider.title || 'Untitled'}</h3>
+-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
+-                <span className="text-sm text-gray-600">Hero Slide</span>
+-                <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
++              <h3 className="text-lg font-semibold line-clamp-1">
++                {slider.title || "Untitled"}
++              </h3>
++              <div className="flex flex-col gap-2 mt-2">
++                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded w-fit">
++                  {slider.position === "after_row_1"
++                    ? "After 1st Row"
++                    : slider.position === "after_row_2"
++                      ? "After 2nd Row"
++                      : slider.position === "after_row_3"
++                        ? "After 3rd Row"
++                        : "Top (Main Hero)"}
++                </span>
++                <div className="flex flex-col sm:flex-row w-full gap-2">
+                   <button
+                     onClick={() => handleEdit(slider)}
+                     className="w-full sm:w-auto btn btn-secondary text-sm py-2 flex items-center justify-center"
+@@ -194,19 +202,34 @@ export default function AdminSlidersPage() {
+           <div className="bg-white rounded-lg w-full max-w-[360px] sm:max-w-md md:max-w-2xl max-h-[90vh] overflow-y-auto">
+             <div className="p-3 sm:p-6">
+               <h3 className="text-base sm:text-xl font-bold mb-3">
+-                {editingSlider ? 'Edit Slider' : 'Add New Slider'}
++                {editingSlider ? "Edit Slider" : "Add New Slider"}
+               </h3>
+ 
+               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+-                <div className="space-y-2">
+-                  <label className="block text-gray-700 font-medium">Slider Image</label>
+-                  <div className="w-full max-w-[320px] mx-auto">
+-                    <div className="aspect-video">
+-                      <LocalImageUpload
+-                        value={formData.image}
+-                        onChange={(url) => setFormData({ ...formData, image: url })}
+-                        onRemove={() => setFormData({ ...formData, image: '' })}
+-                      />
++                <div className="space-y-4">
++                  <div>
++                    <label className="block text-gray-700 font-medium mb-1">
++                      Slider Image
++                    </label>
++                    <p className="text-xs text-gray-500 mb-2">
++                      Accurate dimension for best view:{" "}
++                      <strong className="text-gray-700">
++                        1920 x 800 pixels (or 3:1 width/height ratio)
++                      </strong>
++                      . Smaller sizes like 1200 x 500 px will also work well.
++                    </p>
++                    <div className="w-full max-w-[320px] mx-auto">
++                      <div className="aspect-video">
++                        <LocalImageUpload
++                          value={formData.image}
++                          onChange={(url) =>
++                            setFormData({ ...formData, image: url })
++                          }
++                          onRemove={() =>
++                            setFormData({ ...formData, image: "" })
++                          }
++                        />
++                      </div>
+                     </div>
+                   </div>
+                 </div>
+@@ -215,26 +238,61 @@ export default function AdminSlidersPage() {
+                   <input
+                     type="checkbox"
+                     checked={formData.isActive}
+-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
++                    onChange={(e) =>
++                      setFormData({ ...formData, isActive: e.target.checked })
++                    }
+                     className="mr-2"
+                   />
+                   <label className="text-gray-700">Active</label>
+                 </div>
+ 
++                <div className="space-y-4">
++                  <div>
++                    <label className="block text-gray-700 font-medium mb-1">
++                      Position
++                    </label>
++                    <select
++                      value={formData.position || "top"}
++                      onChange={(e) =>
++                        setFormData({ ...formData, position: e.target.value })
++                      }
++                      className="w-full border rounded px-3 py-2"
++                    >
++                      <option value="top">Top (Main Hero)</option>
++                      <option value="after_row_1">
++                        After 1st Category Row
++                      </option>
++                      <option value="after_row_2">
++                        After 2nd Category Row
++                      </option>
++                      <option value="after_row_3">
++                        After 3rd Category Row
++                      </option>
++                    </select>
++                  </div>
++                </div>
++
+                 <div>
+-                  <label className="block text-gray-700 font-medium mb-2">Title</label>
++                  <label className="block text-gray-700 font-medium mb-2">
++                    Title
++                  </label>
+                   <input
+                     type="text"
+                     value={formData.title}
+-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
++                    onChange={(e) =>
++                      setFormData({ ...formData, title: e.target.value })
++                    }
+                     className="w-full input"
+                     required
+                   />
+                 </div>
+ 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
+-                  <button type="submit" className="btn btn-primary w-full text-sm py-2">
+-                    {editingSlider ? 'Update Slider' : 'Create Slider'}
++                  <button
++                    type="submit"
++                    className="btn btn-primary w-full text-sm py-2"
++                  >
++                    {editingSlider ? "Update Slider" : "Create Slider"}
+                   </button>
+                   <button
+                     type="button"
+diff --git a/app/api/categories/[id]/route.ts b/app/api/categories/[id]/route.ts
+index 8cb3ca3..760da66 100644
+--- a/app/api/categories/[id]/route.ts
++++ b/app/api/categories/[id]/route.ts
+@@ -1,28 +1,28 @@
+-import { NextRequest, NextResponse } from 'next/server';
+-import connectDB from '@/lib/mongodb';
+-import Category from '@/models/Category';
+-import { getServerSession } from 'next-auth';
+-import { authOptions } from '@/lib/auth';
+-import { generateSlug } from '@/lib/utils';
++import { NextRequest, NextResponse } from "next/server";
++import connectDB from "@/lib/mongodb";
++import Category from "@/models/Category";
++import { getServerSession } from "next-auth";
++import { authOptions } from "@/lib/auth";
++import { generateSlug } from "@/lib/utils";
+ 
+ // GET single category
+ export async function GET(
+   req: NextRequest,
+-  { params }: { params: Promise<{ id: string }> }
++  { params }: { params: Promise<{ id: string }> },
+ ) {
+   try {
+     await connectDB();
+ 
+     const { id } = await params;
+-    
++
+     // Validate MongoDB ID format
+     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+       return NextResponse.json(
+-        { 
+-          error: 'Invalid category ID',
+-          code: 'INVALID_ID'
++        {
++          error: "Invalid category ID",
++          code: "INVALID_ID",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+@@ -30,24 +30,27 @@ export async function GET(
+ 
+     if (!category) {
+       return NextResponse.json(
+-        { 
+-          error: 'Category not found',
+-          code: 'NOT_FOUND'
++        {
++          error: "Category not found",
++          code: "NOT_FOUND",
+         },
+-        { status: 404 }
++        { status: 404 },
+       );
+     }
+ 
+     return NextResponse.json(category);
+   } catch (error: any) {
+-    console.error('Get category error:', error);
++    console.error("Get category error:", error);
+     return NextResponse.json(
+-      { 
+-        error: error?.message || 'Failed to fetch category',
+-        code: 'CATEGORY_FETCH_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++      {
++        error: error?.message || "Failed to fetch category",
++        code: "CATEGORY_FETCH_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: 500 }
++      { status: 500 },
+     );
+   }
+ }
+@@ -55,37 +58,37 @@ export async function GET(
+ // PUT - Update category (Admin only)
+ export async function PUT(
+   req: NextRequest,
+-  { params }: { params: Promise<{ id: string }> }
++  { params }: { params: Promise<{ id: string }> },
+ ) {
+   try {
+     const session = await getServerSession(authOptions);
+ 
+     if (!session) {
+       return NextResponse.json(
+-        { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-        { status: 401 }
++        { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++        { status: 401 },
+       );
+     }
+ 
+-    if (session.user.role !== 'admin') {
++    if (session.user.role !== "admin") {
+       return NextResponse.json(
+-        { error: 'Admin access required', code: 'FORBIDDEN' },
+-        { status: 403 }
++        { error: "Admin access required", code: "FORBIDDEN" },
++        { status: 403 },
+       );
+     }
+ 
+     await connectDB();
+ 
+     const { id } = await params;
+-    
++
+     // Validate MongoDB ID format
+     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+       return NextResponse.json(
+-        { 
+-          error: 'Invalid category ID',
+-          code: 'INVALID_ID'
++        {
++          error: "Invalid category ID",
++          code: "INVALID_ID",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+@@ -96,9 +99,12 @@ export async function PUT(
+       updateData.name = data.name;
+       updateData.slug = generateSlug(data.name);
+     }
+-    if (typeof data.description === 'string') {
++    if (typeof data.description === "string") {
+       updateData.description = data.description;
+     }
++    if (typeof data.showInNav === "boolean") {
++      updateData.showInNav = data.showInNav;
++    }
+     const category = await Category.findByIdAndUpdate(id, updateData, {
+       new: true,
+       runValidators: true,
+@@ -106,33 +112,36 @@ export async function PUT(
+ 
+     if (!category) {
+       return NextResponse.json(
+-        { 
+-          error: 'Category not found',
+-          code: 'NOT_FOUND'
++        {
++          error: "Category not found",
++          code: "NOT_FOUND",
+         },
+-        { status: 404 }
++        { status: 404 },
+       );
+     }
+ 
+     return NextResponse.json(category);
+   } catch (error: any) {
+-    console.error('Update category error:', error);
+-    
++    console.error("Update category error:", error);
++
+     let statusCode = 500;
+-    let errorMessage = error?.message || 'Failed to update category';
+-    
+-    if (error?.name === 'ValidationError') {
++    let errorMessage = error?.message || "Failed to update category";
++
++    if (error?.name === "ValidationError") {
+       statusCode = 400;
+-      errorMessage = `Validation error: ${Object.keys(error.errors).join(', ')}`;
++      errorMessage = `Validation error: ${Object.keys(error.errors).join(", ")}`;
+     }
+-    
++
+     return NextResponse.json(
+-      { 
++      {
+         error: errorMessage,
+-        code: 'CATEGORY_UPDATE_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++        code: "CATEGORY_UPDATE_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: statusCode }
++      { status: statusCode },
+     );
+   }
+ }
+@@ -140,37 +149,37 @@ export async function PUT(
+ // DELETE category (Admin only)
+ export async function DELETE(
+   req: NextRequest,
+-  { params }: { params: Promise<{ id: string }> }
++  { params }: { params: Promise<{ id: string }> },
+ ) {
+   try {
+     const session = await getServerSession(authOptions);
+ 
+     if (!session) {
+       return NextResponse.json(
+-        { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-        { status: 401 }
++        { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++        { status: 401 },
+       );
+     }
+ 
+-    if (session.user.role !== 'admin') {
++    if (session.user.role !== "admin") {
+       return NextResponse.json(
+-        { error: 'Admin access required', code: 'FORBIDDEN' },
+-        { status: 403 }
++        { error: "Admin access required", code: "FORBIDDEN" },
++        { status: 403 },
+       );
+     }
+ 
+     await connectDB();
+ 
+     const { id } = await params;
+-    
++
+     // Validate MongoDB ID format
+     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+       return NextResponse.json(
+-        { 
+-          error: 'Invalid category ID',
+-          code: 'INVALID_ID'
++        {
++          error: "Invalid category ID",
++          code: "INVALID_ID",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+@@ -178,30 +187,33 @@ export async function DELETE(
+ 
+     if (!category) {
+       return NextResponse.json(
+-        { 
+-          error: 'Category not found',
+-          code: 'NOT_FOUND'
++        {
++          error: "Category not found",
++          code: "NOT_FOUND",
+         },
+-        { status: 404 }
++        { status: 404 },
+       );
+     }
+ 
+     // Delete category from database
+     await Category.findByIdAndDelete(id);
+ 
+-    return NextResponse.json({ 
+-      message: 'Category deleted successfully',
+-      deletedId: id
++    return NextResponse.json({
++      message: "Category deleted successfully",
++      deletedId: id,
+     });
+   } catch (error: any) {
+-    console.error('Delete category error:', error);
++    console.error("Delete category error:", error);
+     return NextResponse.json(
+-      { 
+-        error: error?.message || 'Failed to delete category',
+-        code: 'CATEGORY_DELETE_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++      {
++        error: error?.message || "Failed to delete category",
++        code: "CATEGORY_DELETE_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: 500 }
++      { status: 500 },
+     );
+   }
+ }
+diff --git a/app/api/categories/route.ts b/app/api/categories/route.ts
+index f500c9e..af63026 100644
+--- a/app/api/categories/route.ts
++++ b/app/api/categories/route.ts
+@@ -1,9 +1,9 @@
+-import { NextRequest, NextResponse } from 'next/server';
+-import connectDB from '@/lib/mongodb';
+-import Category from '@/models/Category';
+-import { getServerSession } from 'next-auth';
+-import { authOptions } from '@/lib/auth';
+-import { generateSlug } from '@/lib/utils';
++import { NextRequest, NextResponse } from "next/server";
++import connectDB from "@/lib/mongodb";
++import Category from "@/models/Category";
++import { getServerSession } from "next-auth";
++import { authOptions } from "@/lib/auth";
++import { generateSlug } from "@/lib/utils";
+ 
+ // GET all categories
+ export async function GET(req: NextRequest) {
+@@ -14,17 +14,20 @@ export async function GET(req: NextRequest) {
+ 
+     return NextResponse.json({
+       categories,
+-      count: categories.length
++      count: categories.length,
+     });
+   } catch (error: any) {
+-    console.error('Get categories error:', error);
++    console.error("Get categories error:", error);
+     return NextResponse.json(
+-      { 
+-        error: error?.message || 'Failed to fetch categories',
+-        code: 'CATEGORY_FETCH_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++      {
++        error: error?.message || "Failed to fetch categories",
++        code: "CATEGORY_FETCH_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: 500 }
++      { status: 500 },
+     );
+   }
+ }
+@@ -36,30 +39,30 @@ export async function POST(req: NextRequest) {
+ 
+     if (!session) {
+       return NextResponse.json(
+-        { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-        { status: 401 }
++        { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++        { status: 401 },
+       );
+     }
+ 
+-    if (session.user.role !== 'admin') {
++    if (session.user.role !== "admin") {
+       return NextResponse.json(
+-        { error: 'Admin access required', code: 'FORBIDDEN' },
+-        { status: 403 }
++        { error: "Admin access required", code: "FORBIDDEN" },
++        { status: 403 },
+       );
+     }
+ 
+     await connectDB();
+ 
+     const data = await req.json();
+-    const { name, description } = data;
++    const { name, description, showInNav } = data;
+ 
+     if (!name) {
+       return NextResponse.json(
+-        { 
+-          error: 'Category name is required',
+-          code: 'VALIDATION_ERROR'
++        {
++          error: "Category name is required",
++          code: "VALIDATION_ERROR",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+@@ -69,30 +72,34 @@ export async function POST(req: NextRequest) {
+       name,
+       description,
+       slug,
++      showInNav: showInNav !== undefined ? showInNav : true,
+     });
+ 
+     return NextResponse.json(category, { status: 201 });
+   } catch (error: any) {
+-    console.error('Create category error:', error);
+-    
++    console.error("Create category error:", error);
++
+     let statusCode = 500;
+-    let errorMessage = error?.message || 'Failed to create category';
+-    
+-    if (error?.name === 'ValidationError') {
++    let errorMessage = error?.message || "Failed to create category";
++
++    if (error?.name === "ValidationError") {
+       statusCode = 400;
+-      errorMessage = `Validation error: ${Object.keys(error.errors).join(', ')}`;
++      errorMessage = `Validation error: ${Object.keys(error.errors).join(", ")}`;
+     } else if (error?.code === 11000) {
+       statusCode = 409;
+-      errorMessage = 'Category with this slug already exists';
++      errorMessage = "Category with this slug already exists";
+     }
+-    
++
+     return NextResponse.json(
+-      { 
++      {
+         error: errorMessage,
+-        code: 'CATEGORY_CREATE_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++        code: "CATEGORY_CREATE_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: statusCode }
++      { status: statusCode },
+     );
+   }
+ }
+diff --git a/app/api/sliders/[id]/route.ts b/app/api/sliders/[id]/route.ts
+index 4e7cdf5..461a63e 100644
+--- a/app/api/sliders/[id]/route.ts
++++ b/app/api/sliders/[id]/route.ts
+@@ -1,44 +1,44 @@
+-import { NextRequest, NextResponse } from 'next/server';
+-import connectDB from '@/lib/mongodb';
+-import Slider from '@/models/Slider';
+-import { getServerSession } from 'next-auth';
+-import { authOptions } from '@/lib/auth';
+-import { deleteFromCloudinary } from '@/lib/cloudinary';
++import { NextRequest, NextResponse } from "next/server";
++import connectDB from "@/lib/mongodb";
++import Slider from "@/models/Slider";
++import { getServerSession } from "next-auth";
++import { authOptions } from "@/lib/auth";
++import { deleteFromCloudinary } from "@/lib/cloudinary";
+ 
+ // PUT - Update slider (Admin only)
+ export async function PUT(
+   req: NextRequest,
+-  { params }: { params: Promise<{ id: string }> }
++  { params }: { params: Promise<{ id: string }> },
+ ) {
+   try {
+     const session = await getServerSession(authOptions);
+ 
+     if (!session) {
+       return NextResponse.json(
+-        { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-        { status: 401 }
++        { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++        { status: 401 },
+       );
+     }
+ 
+-    if (session.user.role !== 'admin') {
++    if (session.user.role !== "admin") {
+       return NextResponse.json(
+-        { error: 'Admin access required', code: 'FORBIDDEN' },
+-        { status: 403 }
++        { error: "Admin access required", code: "FORBIDDEN" },
++        { status: 403 },
+       );
+     }
+ 
+     await connectDB();
+ 
+     const { id } = await params;
+-    
++
+     // Validate MongoDB ID format
+     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+       return NextResponse.json(
+-        { 
+-          error: 'Invalid slider ID',
+-          code: 'INVALID_ID'
++        {
++          error: "Invalid slider ID",
++          code: "INVALID_ID",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+@@ -48,21 +48,24 @@ export async function PUT(
+ 
+     if (!existing) {
+       return NextResponse.json(
+-        { 
+-          error: 'Slider not found',
+-          code: 'NOT_FOUND'
++        {
++          error: "Slider not found",
++          code: "NOT_FOUND",
+         },
+-        { status: 404 }
++        { status: 404 },
+       );
+     }
+ 
+     const updateData: Record<string, any> = {};
+-    if (typeof data.title === 'string') updateData.title = data.title;
+-    if (typeof data.image === 'string') updateData.image = data.image;
+-    if (typeof data.buttonText === 'string') updateData.buttonText = data.buttonText;
+-    if (typeof data.buttonLink === 'string') updateData.buttonLink = data.buttonLink;
+-    if (typeof data.isActive === 'boolean') updateData.isActive = data.isActive;
+-    if (typeof data.order === 'number') updateData.order = data.order;
++    if (typeof data.title === "string") updateData.title = data.title;
++    if (typeof data.image === "string") updateData.image = data.image;
++    if (typeof data.buttonText === "string")
++      updateData.buttonText = data.buttonText;
++    if (typeof data.buttonLink === "string")
++      updateData.buttonLink = data.buttonLink;
++    if (typeof data.position === "string") updateData.position = data.position;
++    if (typeof data.isActive === "boolean") updateData.isActive = data.isActive;
++    if (typeof data.order === "number") updateData.order = data.order;
+ 
+     const slider = await Slider.findByIdAndUpdate(id, updateData, {
+       new: true,
+@@ -75,41 +78,44 @@ export async function PUT(
+       updateData.image &&
+       existing.image &&
+       existing.image !== updateData.image &&
+-      existing.image.includes('cloudinary.com')
++      existing.image.includes("cloudinary.com")
+     ) {
+       await deleteFromCloudinary(existing.image);
+-      console.log('🗑️ Deleted old slider image from Cloudinary');
++      console.log("🗑️ Deleted old slider image from Cloudinary");
+     }
+ 
+     if (!slider) {
+       return NextResponse.json(
+-        { 
+-          error: 'Slider not found',
+-          code: 'NOT_FOUND'
++        {
++          error: "Slider not found",
++          code: "NOT_FOUND",
+         },
+-        { status: 404 }
++        { status: 404 },
+       );
+     }
+ 
+     return NextResponse.json(slider);
+   } catch (error: any) {
+-    console.error('Update slider error:', error);
+-    
++    console.error("Update slider error:", error);
++
+     let statusCode = 500;
+-    let errorMessage = error?.message || 'Failed to update slider';
+-    
+-    if (error?.name === 'ValidationError') {
++    let errorMessage = error?.message || "Failed to update slider";
++
++    if (error?.name === "ValidationError") {
+       statusCode = 400;
+-      errorMessage = `Validation error: ${Object.keys(error.errors).join(', ')}`;
++      errorMessage = `Validation error: ${Object.keys(error.errors).join(", ")}`;
+     }
+-    
++
+     return NextResponse.json(
+-      { 
++      {
+         error: errorMessage,
+-        code: 'SLIDER_UPDATE_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++        code: "SLIDER_UPDATE_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: statusCode }
++      { status: statusCode },
+     );
+   }
+ }
+@@ -117,37 +123,37 @@ export async function PUT(
+ // DELETE slider (Admin only)
+ export async function DELETE(
+   req: NextRequest,
+-  { params }: { params: Promise<{ id: string }> }
++  { params }: { params: Promise<{ id: string }> },
+ ) {
+   try {
+     const session = await getServerSession(authOptions);
+ 
+     if (!session) {
+       return NextResponse.json(
+-        { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-        { status: 401 }
++        { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++        { status: 401 },
+       );
+     }
+ 
+-    if (session.user.role !== 'admin') {
++    if (session.user.role !== "admin") {
+       return NextResponse.json(
+-        { error: 'Admin access required', code: 'FORBIDDEN' },
+-        { status: 403 }
++        { error: "Admin access required", code: "FORBIDDEN" },
++        { status: 403 },
+       );
+     }
+ 
+     await connectDB();
+ 
+     const { id } = await params;
+-    
++
+     // Validate MongoDB ID format
+     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+       return NextResponse.json(
+-        { 
+-          error: 'Invalid slider ID',
+-          code: 'INVALID_ID'
++        {
++          error: "Invalid slider ID",
++          code: "INVALID_ID",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+@@ -155,36 +161,39 @@ export async function DELETE(
+ 
+     if (!slider) {
+       return NextResponse.json(
+-        { 
+-          error: 'Slider not found',
+-          code: 'NOT_FOUND'
++        {
++          error: "Slider not found",
++          code: "NOT_FOUND",
+         },
+-        { status: 404 }
++        { status: 404 },
+       );
+     }
+ 
+     // Delete image from Cloudinary
+-    if (slider.image && slider.image.includes('cloudinary.com')) {
++    if (slider.image && slider.image.includes("cloudinary.com")) {
+       await deleteFromCloudinary(slider.image);
+-      console.log('🗑️ Deleted slider image from Cloudinary');
++      console.log("🗑️ Deleted slider image from Cloudinary");
+     }
+ 
+     // Delete slider from database
+     await Slider.findByIdAndDelete(id);
+ 
+-    return NextResponse.json({ 
+-      message: 'Slider deleted successfully',
+-      deletedId: id
++    return NextResponse.json({
++      message: "Slider deleted successfully",
++      deletedId: id,
+     });
+   } catch (error: any) {
+-    console.error('Delete slider error:', error);
++    console.error("Delete slider error:", error);
+     return NextResponse.json(
+-      { 
+-        error: error?.message || 'Failed to delete slider',
+-        code: 'SLIDER_DELETE_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++      {
++        error: error?.message || "Failed to delete slider",
++        code: "SLIDER_DELETE_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: 500 }
++      { status: 500 },
+     );
+   }
+ }
+diff --git a/app/api/sliders/route.ts b/app/api/sliders/route.ts
+index ff545ae..2ddff94 100644
+--- a/app/api/sliders/route.ts
++++ b/app/api/sliders/route.ts
+@@ -1,8 +1,8 @@
+-import { NextRequest, NextResponse } from 'next/server';
+-import connectDB from '@/lib/mongodb';
+-import Slider from '@/models/Slider';
+-import { getServerSession } from 'next-auth';
+-import { authOptions } from '@/lib/auth';
++import { NextRequest, NextResponse } from "next/server";
++import connectDB from "@/lib/mongodb";
++import Slider from "@/models/Slider";
++import { getServerSession } from "next-auth";
++import { authOptions } from "@/lib/auth";
+ 
+ // GET all sliders
+ export async function GET(req: NextRequest) {
+@@ -10,47 +10,50 @@ export async function GET(req: NextRequest) {
+     await connectDB();
+ 
+     const { searchParams } = new URL(req.url);
+-    const all = searchParams.get('all');
++    const all = searchParams.get("all");
+ 
+-    if (all === 'true') {
++    if (all === "true") {
+       const session = await getServerSession(authOptions);
+       if (!session) {
+         return NextResponse.json(
+-          { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-          { status: 401 }
++          { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++          { status: 401 },
+         );
+       }
+-      if (session.user.role !== 'admin') {
++      if (session.user.role !== "admin") {
+         return NextResponse.json(
+-          { error: 'Admin access required', code: 'FORBIDDEN' },
+-          { status: 403 }
++          { error: "Admin access required", code: "FORBIDDEN" },
++          { status: 403 },
+         );
+       }
+       // Return all sliders for admin
+-      const sliders = await Slider.find().sort('order');
++      const sliders = await Slider.find().sort("order");
+       return NextResponse.json({
+         sliders,
+         count: sliders.length,
+-        adminView: true
++        adminView: true,
+       });
+     }
+ 
+     // Return only active sliders for frontend
+-    const sliders = await Slider.find({ isActive: true }).sort('order');
++    const sliders = await Slider.find({ isActive: true }).sort("order");
+ 
+     return NextResponse.json({
+       sliders,
+-      count: sliders.length
++      count: sliders.length,
+     });
+   } catch (error: any) {
+-    console.error('Get sliders error:', error);
++    console.error("Get sliders error:", error);
+     return NextResponse.json(
+-      { 
+-        error: error?.message || 'Failed to fetch sliders',
+-        code: 'SLIDER_FETCH_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++      {
++        error: error?.message || "Failed to fetch sliders",
++        code: "SLIDER_FETCH_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: 500 }
++      { status: 500 },
+     );
+   }
+ }
+@@ -62,35 +65,35 @@ export async function POST(req: NextRequest) {
+ 
+     if (!session) {
+       return NextResponse.json(
+-        { error: 'Authentication required', code: 'NOT_AUTHENTICATED' },
+-        { status: 401 }
++        { error: "Authentication required", code: "NOT_AUTHENTICATED" },
++        { status: 401 },
+       );
+     }
+ 
+-    if (session.user.role !== 'admin') {
++    if (session.user.role !== "admin") {
+       return NextResponse.json(
+-        { error: 'Admin access required', code: 'FORBIDDEN' },
+-        { status: 403 }
++        { error: "Admin access required", code: "FORBIDDEN" },
++        { status: 403 },
+       );
+     }
+ 
+     await connectDB();
+ 
+     const data = await req.json();
+-    
++
+     // Validate required fields
+     if (!data.title || !data.image) {
+       return NextResponse.json(
+-        { 
+-          error: 'Title and image are required',
+-          code: 'VALIDATION_ERROR'
++        {
++          error: "Title and image are required",
++          code: "VALIDATION_ERROR",
+         },
+-        { status: 400 }
++        { status: 400 },
+       );
+     }
+ 
+     // Get max order
+-    const maxSlider = await Slider.findOne().sort('-order');
++    const maxSlider = await Slider.findOne().sort("-order");
+     const nextOrder = maxSlider ? maxSlider.order + 1 : 0;
+ 
+     const slider = await Slider.create({
+@@ -98,29 +101,33 @@ export async function POST(req: NextRequest) {
+       image: data.image,
+       buttonText: data.buttonText,
+       buttonLink: data.buttonLink,
++      position: data.position || "top",
+       isActive: data.isActive ?? true,
+       order: nextOrder,
+     });
+ 
+     return NextResponse.json(slider, { status: 201 });
+   } catch (error: any) {
+-    console.error('Create slider error:', error);
+-    
++    console.error("Create slider error:", error);
++
+     let statusCode = 500;
+-    let errorMessage = error?.message || 'Failed to create slider';
+-    
+-    if (error?.name === 'ValidationError') {
++    let errorMessage = error?.message || "Failed to create slider";
++
++    if (error?.name === "ValidationError") {
+       statusCode = 400;
+-      errorMessage = `Validation error: ${Object.keys(error.errors).join(', ')}`;
++      errorMessage = `Validation error: ${Object.keys(error.errors).join(", ")}`;
+     }
+-    
++
+     return NextResponse.json(
+-      { 
++      {
+         error: errorMessage,
+-        code: 'SLIDER_CREATE_ERROR',
+-        details: process.env.NODE_ENV === 'development' ? error?.toString() : undefined
++        code: "SLIDER_CREATE_ERROR",
++        details:
++          process.env.NODE_ENV === "development"
++            ? error?.toString()
++            : undefined,
+       },
+-      { status: statusCode }
++      { status: statusCode },
+     );
+   }
+ }
+diff --git a/app/cart/page.tsx b/app/cart/page.tsx
+index f424fd3..7b9cf8c 100644
+--- a/app/cart/page.tsx
++++ b/app/cart/page.tsx
+@@ -1,184 +1,21 @@
+ "use client";
+ 
++import { useEffect } from "react";
++import { useRouter } from "next/navigation";
+ import { useCartStore } from "@/store/cartStore";
+-import { useEffect, useState } from "react";
+-import Link from "next/link";
+-import Image from "next/image";
+-import { formatPrice } from "@/lib/utils";
+-import { MdDelete } from "react-icons/md";
+-import { FiPlus, FiMinus } from "react-icons/fi";
+ 
+ export default function CartPage() {
+-  const { items, removeItem, updateQuantity } = useCartStore();
+-  const [mounted, setMounted] = useState(false);
++  const router = useRouter();
++  const openCart = useCartStore((state) => state.openCart);
+ 
+   useEffect(() => {
+-    setMounted(true);
+-  }, []);
+-
+-  if (!mounted) {
+-    return (
+-      <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
+-        Loading...
+-      </div>
+-    );
+-  }
+-
+-  // Empty Cart
+-  if (items.length === 0) {
+-    return (
+-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-white text-gray-900">
+-        <div className="text-center space-y-4">
+-          <h1 className="text-3xl font-bold">Your Cart is Empty</h1>
+-          <p className="text-gray-500">
+-            No products in your cart yet. Let's add some!
+-          </p>
+-          <Link
+-            href="/products"
+-            className="inline-flex items-center justify-center bg-black text-white px-6 py-3 rounded-full hover:bg-gray-900 transition"
+-          >
+-            Continue Shopping
+-          </Link>
+-        </div>
+-      </div>
+-    );
+-  }
+-
+-  // Cart with items
+-  const total = items.reduce(
+-    (sum, item) => sum + item.price * item.quantity,
+-    0,
+-  );
++    openCart();
++    router.replace("/");
++  }, [openCart, router]);
+ 
+   return (
+-    <div className="min-h-screen py-6 sm:py-12 px-3 sm:px-4 bg-white text-gray-900">
+-      <div className="max-w-6xl mx-auto">
+-        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8">
+-          Shopping Cart
+-        </h1>
+-
+-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+-          {/* Cart Items */}
+-          <div className="lg:col-span-2">
+-            <div className="space-y-3 sm:space-y-4">
+-              {items.map((item) => (
+-                <div
+-                  key={item._id}
+-                  className="flex flex-col sm:flex-row gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition"
+-                >
+-                  {/* Product Image & Details Container */}
+-                  <div className="flex gap-3 sm:gap-4 flex-grow">
+-                    {/* Product Image */}
+-                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+-                      <Image
+-                        src={item.image || "/placeholder.png"}
+-                        alt={item.name}
+-                        fill
+-                        sizes="(max-width: 640px) 80px, 96px"
+-                        className="object-cover rounded-md"
+-                      />
+-                    </div>
+-
+-                    {/* Product Details */}
+-                    <div className="flex-grow min-w-0">
+-                      <Link
+-                        href={`/products/${item._id}`}
+-                        className="text-base sm:text-lg font-semibold hover:text-gray-900 transition line-clamp-2"
+-                      >
+-                        {item.name}
+-                      </Link>
+-                      <p className="text-gray-600 text-sm mt-1">
+-                        {formatPrice(item.price)}
+-                      </p>
+-                    </div>
+-                  </div>
+-
+-                  {/* Quantity Controls & Price Container */}
+-                  <div className="flex items-center justify-between sm:flex-col sm:items-center sm:justify-between sm:min-w-[120px]">
+-                    {/* Quantity Controls */}
+-                    <div className="flex items-center gap-2 border border-gray-300 rounded-md bg-gray-50">
+-                      <button
+-                        onClick={() =>
+-                          updateQuantity(
+-                            item._id,
+-                            Math.max(1, item.quantity - 1),
+-                          )
+-                        }
+-                        className="p-1.5 sm:p-1 hover:bg-gray-200 transition"
+-                        title="Decrease quantity"
+-                      >
+-                        <FiMinus size={14} className="text-gray-800" />
+-                      </button>
+-                      <span className="px-2 sm:px-3 py-1 min-w-[35px] sm:min-w-[40px] text-center font-medium text-sm">
+-                        {item.quantity}
+-                      </span>
+-                      <button
+-                        onClick={() =>
+-                          updateQuantity(item._id, item.quantity + 1)
+-                        }
+-                        className="p-1.5 sm:p-1 hover:bg-gray-200 transition"
+-                        title="Increase quantity"
+-                      >
+-                        <FiPlus size={14} className="text-gray-800" />
+-                      </button>
+-                    </div>
+-
+-                    {/* Item Total & Remove */}
+-                    <div className="flex items-center gap-3 sm:flex-col sm:gap-2 sm:text-right">
+-                      <p className="text-base sm:text-lg font-bold text-gray-900">
+-                        {formatPrice(item.price * item.quantity)}
+-                      </p>
+-                      {/* Remove Button */}
+-                      <button
+-                        onClick={() => removeItem(item._id)}
+-                        className="text-red-400 cursor-pointer hover:text-red-500 transition"
+-                        title="Remove from cart"
+-                      >
+-                        <MdDelete size={20} />
+-                      </button>
+-                    </div>
+-                  </div>
+-                </div>
+-              ))}
+-            </div>
+-
+-            {/* Continue Shopping */}
+-            <div className="mt-4 sm:mt-6">
+-              <Link
+-                href="/products"
+-                className="inline-block text-gray-700 hover:text-black font-medium text-sm sm:text-base"
+-              >
+-                ← Continue Shopping
+-              </Link>
+-            </div>
+-          </div>
+-
+-          {/* Summary Sidebar */}
+-          <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200 h-fit lg:sticky lg:top-4">
+-            <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">
+-              Order Summary
+-            </h2>
+-
+-            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+-              <div className="flex justify-between text-sm text-gray-700">
+-                <span>Subtotal ({items.length} items)</span>
+-                <span>{formatPrice(total)}</span>
+-              </div>
+-              <div className="border-t border-gray-200 pt-3 sm:pt-4 flex justify-between font-bold text-base sm:text-lg">
+-                <span>Total</span>
+-                <span>{formatPrice(total)}</span>
+-              </div>
+-            </div>
+-
+-            <Link
+-              href="/checkout"
+-              className="w-full block bg-black text-white text-center py-2.5 sm:py-3 rounded-full hover:bg-gray-900 transition font-semibold text-sm sm:text-base"
+-            >
+-              Proceed to Checkout
+-            </Link>
+-          </div>
+-        </div>
+-      </div>
++    <div className="min-h-[50vh] flex items-center justify-center">
++      <div className="animate-pulse text-gray-500">Loading cart...</div>
+     </div>
+   );
+ }
+diff --git a/app/checkout/page.tsx b/app/checkout/page.tsx
+index d3ca4e4..2df78ca 100644
+--- a/app/checkout/page.tsx
++++ b/app/checkout/page.tsx
+@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
+ import { useCartStore } from "@/store/cartStore";
+ import { formatPrice } from "@/lib/utils";
+ import axios from "axios";
+-import toast from "react-hot-toast";
+ import LocalImageUpload from "@/components/LocalImageUpload";
+ import { useSession } from "next-auth/react";
+ 
+@@ -74,34 +73,28 @@ export default function CheckoutPage() {
+   const validateForm = () => {
+     const trimmedName = formData.fullName.trim();
+     if (!/^[A-Za-z\s]{3,60}$/.test(trimmedName)) {
+-      toast.error("Enter a valid full name (letters and spaces only)");
+       return false;
+     }
+ 
+     if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
+-      toast.error("Enter a valid email address");
+       return false;
+     }
+ 
+     if (formData.address.trim().length < 8) {
+-      toast.error("Address is too short");
+       return false;
+     }
+ 
+     const digitsOnlyPhone = formData.phone.replace(/[^0-9]/g, "");
+     if (digitsOnlyPhone.length < 10 || digitsOnlyPhone.length > 15) {
+-      toast.error("Enter a valid phone number");
+       return false;
+     }
+ 
+     const reference = formData.paymentReference.trim();
+     if (!/^[A-Za-z0-9-]{8,25}$/.test(reference)) {
+-      toast.error("Enter a valid JazzCash transaction ID");
+       return false;
+     }
+ 
+     if (!formData.paymentProofUrl) {
+-      toast.error("Upload the payment screenshot");
+       return false;
+     }
+ 
+@@ -115,7 +108,6 @@ export default function CheckoutPage() {
+     try {
+       // Validate cart items aren't empty
+       if (!items || items.length === 0) {
+-        toast.error("Your cart is empty");
+         setIsSubmitting(false);
+         return;
+       }
+@@ -152,7 +144,6 @@ export default function CheckoutPage() {
+       console.log("Sending order data:", orderData);
+       const res = await axios.post("/api/orders", orderData);
+       console.log("Order created successfully:", res.data);
+-      toast.success("Order placed successfully!");
+       clearCart();
+       router.push(`/orders/${res.data._id}`);
+     } catch (error: any) {
+@@ -161,7 +152,6 @@ export default function CheckoutPage() {
+       console.error("Error data:", error.response?.data);
+       const errorMsg =
+         error.response?.data?.error || error.message || "Failed to place order";
+-      toast.error(errorMsg);
+       alert(`Order Error: ${errorMsg}\n\nCheck console for details.`);
+     } finally {
+       setIsSubmitting(false);
+diff --git a/app/layout.tsx b/app/layout.tsx
+index b60f75f..de94601 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -1,12 +1,12 @@
+ import type { Metadata } from "next";
+-import { Inter } from "next/font/google";
++import { Outfit } from "next/font/google";
+ import "./globals.css";
+ import Navbar from "@/components/Navbar";
+ import Footer from "@/components/Footer";
+ import ThemeProvider from "@/components/ThemeProvider";
+-import { Toaster } from "react-hot-toast";
+ import AuthProvider from "@/components/AuthProvider";
+ import BottomNav from "@/components/BottomNav";
++import CartDrawer from "@/components/CartDrawer";
+ 
+ // Disable Next.js caching across the app so every request fetches fresh data.
+ export const fetchCache = "force-no-store";
+@@ -23,7 +23,7 @@ const logoPath = "/logo.png";
+ const faviconPath = "/logo.png";
+ const logoUrl = new URL(logoPath, siteUrl).toString();
+ 
+-const inter = Inter({ subsets: ["latin"] });
++const outfit = Outfit({ subsets: ["latin"] });
+ 
+ export const metadata: Metadata = {
+   metadataBase: new URL(siteUrl),
+@@ -107,11 +107,12 @@ export default function RootLayout({
+         />
+       </head>
+       <body
+-        className={`${inter.className} overflow-x-hidden`}
++        className={`${outfit.className} overflow-x-hidden`}
+         suppressHydrationWarning
+       >
+         <AuthProvider>
+           <ThemeProvider />
++          <CartDrawer />
+ 
+           <div className="flex flex-col min-h-screen">
+             <Navbar />
+@@ -119,30 +120,6 @@ export default function RootLayout({
+             <Footer />
+           </div>
+           <BottomNav />
+-          <Toaster
+-            position="top-right"
+-            toastOptions={{
+-              style: {
+-                background: "#0f0f0f",
+-                color: "#f8fafc",
+-                border: "1px solid #1f2937",
+-                boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+-                borderRadius: "12px",
+-              },
+-              success: {
+-                iconTheme: {
+-                  primary: "#22c55e",
+-                  secondary: "#0f0f0f",
+-                },
+-              },
+-              error: {
+-                iconTheme: {
+-                  primary: "#ef4444",
+-                  secondary: "#0f0f0f",
+-                },
+-              },
+-            }}
+-          />
+         </AuthProvider>
+       </body>
+     </html>
+diff --git a/app/orders/page.tsx b/app/orders/page.tsx
+index d3c1785..4f2c61b 100644
+--- a/app/orders/page.tsx
++++ b/app/orders/page.tsx
+@@ -1,3 +1,4 @@
++
+ "use client";
+ 
+ import { useEffect, useState } from "react";
+diff --git a/app/page.tsx b/app/page.tsx
+index a9c9ddf..b108563 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -26,11 +26,14 @@ async function getSliders() {
+ }
+ 
+ export default async function ProductsPage() {
+-  const sliders = await getSliders();
++  const allSliders = await getSliders();
++  const heroSliders = allSliders.filter(
++    (s: any) => !s.position || s.position === "top",
++  );
+ 
+   return (
+     <>
+-      <HeroSlider initialSliders={sliders} />
++      <HeroSlider initialSliders={heroSliders} position="top" />
+       <Suspense fallback={null}>
+         <ProductsContent />
+       </Suspense>
+diff --git a/app/products/[id]/ProductClient.tsx b/app/products/[id]/ProductClient.tsx
+index 86728e3..3c83eaa 100644
+--- a/app/products/[id]/ProductClient.tsx
++++ b/app/products/[id]/ProductClient.tsx
+@@ -7,7 +7,6 @@ import { FiShoppingCart, FiMinus, FiPlus, FiShare2 } from "react-icons/fi";
+ import { useCartStore } from "@/store/cartStore";
+ import { formatPrice } from "@/lib/utils";
+ import axios from "axios";
+-import toast from "react-hot-toast";
+ 
+ function ProductSkeleton() {
+   return (
+@@ -85,7 +84,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
+       quantity,
+       image: product.images[0] || "",
+     });
+-    toast.success(`Added ${quantity} item(s) to cart!`);
++     to cart!`);
+   };
+ 
+   const handleShare = async () => {
+@@ -95,7 +94,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
+     try {
+       if (navigator.clipboard?.writeText) {
+         await navigator.clipboard.writeText(url);
+-        toast.success("Link copied");
++        
+       } else {
+         const textarea = document.createElement("textarea");
+         textarea.value = url;
+@@ -103,10 +102,10 @@ export default function ProductClient({ productId }: ProductClientProps) {
+         textarea.select();
+         document.execCommand("copy");
+         document.body.removeChild(textarea);
+-        toast.success("Link copied");
++        
+       }
+     } catch (_err) {
+-      toast.success("Link copied");
++      
+     }
+ 
+     if (shareTimeoutRef.current) {
+diff --git a/app/profile/page.tsx b/app/profile/page.tsx
+index ab547e5..2c9db0e 100644
+--- a/app/profile/page.tsx
++++ b/app/profile/page.tsx
+@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
+ import { useSession } from "next-auth/react";
+ import { useRouter } from "next/navigation";
+ import axios from "axios";
+-import toast from "react-hot-toast";
++
+ import Image from "next/image";
+ import {
+   FiUser,
+@@ -77,7 +77,6 @@ export default function ProfilePage() {
+     if (!file) return;
+ 
+     if (!file.type.startsWith("image/")) {
+-      toast.error("Please select an image file");
+       return;
+     }
+ 
+@@ -97,10 +96,9 @@ export default function ProfilePage() {
+       await axios.put("/api/user/profile", { avatar: imageUrl });
+       await update();
+       setIsDirty(false);
+-      toast.success("Profile picture updated!");
+     } catch (error) {
+       console.error("Upload error:", error);
+-      toast.error("Failed to upload image");
++    
+     } finally {
+       setIsUploading(false);
+     }
+@@ -108,7 +106,7 @@ export default function ProfilePage() {
+ 
+   const handleSubmit = async (e: React.FormEvent) => {
+     e.preventDefault();
+-    if (!isDirty) return toast("No changes to save");
++    if (!isDirty) return 
+     setIsLoading(true);
+ 
+     try {
+@@ -128,17 +126,15 @@ export default function ProfilePage() {
+       }
+ 
+       if (Object.keys(payload).length === 0) {
+-        toast("No changes to save");
+         setIsLoading(false);
+         return;
+       }
+ 
+       await axios.put("/api/user/profile", payload);
+-      toast.success("Profile updated successfully!");
+       setInitialForm(formData);
+       setIsDirty(false);
+     } catch (error: any) {
+-      toast.error(error.response?.data?.error || "Failed to update profile");
++      console.error("Profile update error:", error);
+     } finally {
+       setIsLoading(false);
+     }
+diff --git a/components/BottomNav.tsx b/components/BottomNav.tsx
+index 6fa11fb..3602a59 100644
+--- a/components/BottomNav.tsx
++++ b/components/BottomNav.tsx
+@@ -54,9 +54,9 @@ export default function BottomNav() {
+           </Link>
+ 
+           {/* Cart */}
+-          <Link
+-            href="/cart"
+-            className="relative flex flex-col items-center justify-center w-1/4 h-full hover:bg-gray-50 transition-colors cursor-pointer"
++          <button
++            onClick={() => useCartStore.getState().openCart()}
++            className="relative flex flex-col items-center justify-center w-1/4 h-full hover:bg-gray-50 transition-colors cursor-pointer border-none bg-transparent"
+           >
+             <FiShoppingCart size={24} className="text-black" />
+             {totalItems > 0 && (
+@@ -70,7 +70,7 @@ export default function BottomNav() {
+               </span>
+             )}
+             <span className="text-xs text-gray-600 mt-1">Cart</span>
+-          </Link>
++          </button>
+ 
+           {/* Profile (replaces menu) */}
+           <Link
+diff --git a/components/HeroSlider.tsx b/components/HeroSlider.tsx
+index 30bb214..885624b 100644
+--- a/components/HeroSlider.tsx
++++ b/components/HeroSlider.tsx
+@@ -20,9 +20,13 @@ interface SliderItem {
+ 
+ interface HeroSliderProps {
+   initialSliders?: SliderItem[];
++  position?: string;
+ }
+ 
+-export default function HeroSlider({ initialSliders = [] }: HeroSliderProps) {
++export default function HeroSlider({
++  initialSliders = [],
++  position = "top",
++}: HeroSliderProps) {
+   const [sliders, setSliders] = useState<SliderItem[]>(initialSliders);
+   const [isLoading, setIsLoading] = useState(initialSliders.length === 0);
+ 
+@@ -37,9 +41,14 @@ export default function HeroSlider({ initialSliders = [] }: HeroSliderProps) {
+       const res = await axios.get("/api/sliders");
+       // Handle both formats: array directly or object with sliders property
+       let data = Array.isArray(res.data) ? res.data : res.data.sliders || [];
+-      // Filter out sliders without images
++      // Filter out sliders without images and by position
+       data = data.filter(
+-        (slider: SliderItem) => slider.image && slider.image.trim() !== "",
++        (slider: any) =>
++          slider.image &&
++          slider.image.trim() !== "" &&
++          (position === "top"
++            ? !slider.position || slider.position === "top"
++            : slider.position === position),
+       );
+       setSliders(data);
+     } catch (error) {
+@@ -49,16 +58,20 @@ export default function HeroSlider({ initialSliders = [] }: HeroSliderProps) {
+     }
+   };
+ 
+-  if (isLoading || sliders.length === 0) {
++  if (isLoading) {
+     return (
+-      <section className="relative overflow-hidden w-full hidden sm:block">
+-        <div className="w-full h-[35vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] max-h-205 bg-gray-200 animate-pulse" />
++      <section className="relative overflow-hidden w-full">
++        <div className="w-full h-[22vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] max-h-[600px] bg-gray-200 animate-pulse" />
+       </section>
+     );
+   }
+ 
++  if (sliders.length === 0) {
++    return null;
++  }
++
+   return (
+-    <section className="relative overflow-hidden w-full hidden sm:block">
++    <section className="relative overflow-hidden w-full">
+       <Swiper
+         modules={[Autoplay, Pagination]}
+         autoplay={{
+@@ -72,7 +85,7 @@ export default function HeroSlider({ initialSliders = [] }: HeroSliderProps) {
+         navigation={false}
+         loop={sliders.length > 1}
+         key={sliders.map((s) => s._id).join("-")}
+-        className="w-screen sm:w-full max-w-none h-[45vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] max-h-205"
++        className="w-full h-[22vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] max-h-[600px] bg-gray-100"
+         slidesPerView={1}
+         spaceBetween={0}
+         centeredSlides={false}
+diff --git a/components/Navbar.tsx b/components/Navbar.tsx
+index 3e71c4e..c6c860d 100644
+--- a/components/Navbar.tsx
++++ b/components/Navbar.tsx
+@@ -15,6 +15,7 @@ import NavbarHeadSliderLine from "./NavbarHeadSliderLine";
+ interface Category {
+   _id: string;
+   name: string;
++  showInNav?: boolean;
+ }
+ 
+ export default function Navbar() {
+@@ -85,269 +86,281 @@ export default function Navbar() {
+     );
+   }
+ 
+-  const flatCategories = categories.slice(0, 10);
++  const flatCategories = categories
++    .filter((c) => c.showInNav !== false)
++    .slice(0, 10);
+ 
+   return (
+-    <nav className="sticky md:relative top-0 z-9999 bg-white/90 backdrop-blur border-b border-gray-100 shadow-sm text-gray-900">
+-      <NavbarHeadSliderLine />
+-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+-        <div className="flex justify-between items-center h-30 relative">
+-          {/* Left Section */}
+-          <div className="flex flex-1 justify-start items-center">
+-            {/* Minimal Search Icon (opens full-page search) */}
+-            <button
+-              onClick={() => router.push("/search")}
+-              className="text-gray-700 hover:text-gray-900 transition-colors mr-4 cursor-pointer"
+-              title="Search products"
+-            >
+-              <FiSearch size={22} />
+-            </button>
+-
+-            {/* Mobile Logo intentionally omitted here — centered below on small screens */}
+-          </div>
+-
+-          {/* Center Section: Desktop Logo */}
+-          <div className="hidden md:flex shrink-0 justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+-            <Link
+-              href="/"
+-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+-            >
+-              <Image
+-                src="/homyorganic.png"
+-                alt="Homy Orgaic"
+-                width={90}
+-                height={48}
+-                priority
+-                sizes="90px"
+-                style={{ height: "auto", width: "auto" }}
+-              />
+-            </Link>
+-          </div>
++    <>
++      <nav className="sticky md:relative top-0 z-[9991] bg-white/90 backdrop-blur border-b border-gray-100 shadow-sm text-gray-900">
++        <NavbarHeadSliderLine />
++        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
++          <div className="flex justify-between items-center h-32 md:h-36 relative">
++            {/* Left Section */}
++            <div className="flex flex-1 justify-start items-center">
++              {/* Minimal Search Icon (opens full-page search) */}
++              <button
++                onClick={() => router.push("/search")}
++                className="text-gray-700 hover:text-gray-900 transition-colors mr-4 cursor-pointer"
++                title="Search products"
++              >
++                <FiSearch size={22} />
++              </button>
+ 
+-          {/* Mobile Centered Logo */}
+-          <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+-            <Link
+-              href="/"
+-              className="flex items-center gap-3 hover:opacity-80 transition-opacity pointer-events-auto"
+-            >
+-              <Image
+-                src="/homyorganic.png"
+-                alt="Homy Orgaic"
+-                width={90}
+-                height={48}
+-                priority
+-                sizes="90px"
+-                style={{ height: "auto", width: "auto" }}
+-              />
+-            </Link>
+-          </div>
++              {/* Mobile Logo intentionally omitted here — centered below on small screens */}
++            </div>
+ 
+-          {/* Right Section: Desktop Menu & Mobile Menu Toggle */}
+-          <div className="flex flex-1 justify-end items-center space-x-6">
+-            {/* Desktop Menu */}
+-            <div className="hidden md:flex items-center space-x-6">
++            {/* Center Section: Desktop Logo & Categories */}
++            <div className="hidden md:flex flex-col items-center shrink-0 justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] max-w-3xl pointer-events-none mt-1">
+               <Link
+-                href="/products"
+-                className="text-sm font-medium text-gray-700 hover:text-gray-900 cursor-pointer"
++                href="/"
++                className="flex items-center justify-center hover:opacity-80 transition-opacity mb-2 pointer-events-auto"
+               >
+-                Products
++                <Image
++                  src="/homyorganic.png"
++                  alt="Homy Orgaic"
++                  width={90}
++                  height={48}
++                  priority
++                  sizes="90px"
++                  style={{ height: "auto", width: "auto" }}
++                />
+               </Link>
+-
+               {flatCategories.length > 0 && (
+-                <div className="relative group">
+-                  <button className="text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-1 cursor-pointer">
+-                    Categories
+-                    <svg
+-                      className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180"
+-                      fill="none"
+-                      stroke="currentColor"
+-                      viewBox="0 0 24 24"
++                <div className="flex items-center justify-center gap-5 flex-wrap pointer-events-auto">
++                  {flatCategories.map((cat) => (
++                    <Link
++                      key={cat._id}
++                      href={`/products?category=${cat._id}`}
++                      className="text-[11px] md:text-[12px] uppercase font-light text-gray-600 hover:text-black tracking-wider whitespace-nowrap transition-colors"
+                     >
+-                      <path
+-                        strokeLinecap="round"
+-                        strokeLinejoin="round"
+-                        strokeWidth={2}
+-                        d="M19 9l-7 7-7-7"
+-                      />
+-                    </svg>
+-                  </button>
+-                  <div className="absolute left-0 mt-1 pt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10000">
+-                    <div className="bg-white border border-gray-200 rounded-md shadow-lg py-2 transform scale-95 group-hover:scale-100 transition-transform duration-200">
+-                      {flatCategories.map((cat) => (
+-                        <Link
+-                          key={cat._id}
+-                          href={`/products?category=${cat._id}`}
+-                          className="block px-4 py-2 text-sm font-semibold text-gray-700 hover:text-gray-900 cursor-pointer border-b border-gray-100 last:border-b-0"
+-                        >
+-                          {cat.name}
+-                        </Link>
+-                      ))}
+-                    </div>
+-                  </div>
++                      {cat.name}
++                    </Link>
++                  ))}
+                 </div>
+               )}
++            </div>
+ 
+-              {session?.user.role === "admin" && (
+-                <Link
+-                  href="/admin"
+-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
+-                >
+-                  Admin
+-                </Link>
+-              )}
+-
++            {/* Mobile Centered Logo */}
++            <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+               <Link
+-                href="/cart"
+-                className="relative text-gray-700 hover:text-gray-900"
++                href="/"
++                className="flex items-center gap-3 hover:opacity-80 transition-opacity pointer-events-auto"
+               >
+-                <FiShoppingBag size={22} />
+-                {totalItems > 0 && (
+-                  <span
+-                    className="absolute -top-2 -right-2 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
+-                    style={{
+-                      backgroundColor: "var(--navbar-badge-color, #111827)",
+-                    }}
++                <Image
++                  src="/homyorganic.png"
++                  alt="Homy Orgaic"
++                  width={90}
++                  height={48}
++                  priority
++                  sizes="90px"
++                  style={{ height: "auto", width: "auto" }}
++                />
++              </Link>
++            </div>
++
++            {/* Right Section: Desktop Menu & Mobile Menu Toggle */}
++            <div className="flex flex-1 justify-end items-center space-x-6">
++              {/* Desktop Menu */}
++              <div className="hidden md:flex items-center space-x-6">
++                {session?.user.role === "admin" && (
++                  <Link
++                    href="/admin"
++                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                   >
+-                    {totalItems}
+-                  </span>
++                    Admin
++                  </Link>
+                 )}
+-              </Link>
+ 
+-              {session ? (
+-                <div className="relative group">
+-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
+-                    <FiUser size={24} />
+-                    <span className="font-medium">{session.user.name}</span>
+-                  </button>
+-                  <div className="absolute right-0 mt-1 pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10000">
+-                    <div className="bg-white border border-gray-100 rounded-lg shadow-lg py-2 transform scale-95 group-hover:scale-100 transition-transform duration-200 w-67">
+-                      <Link
+-                        href="/profile"
+-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+-                      >
+-                        Profile
+-                      </Link>
+-                      <Link
+-                        href="/orders"
+-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+-                      >
+-                        My Orders
+-                      </Link>
+-                      <button
+-                        onClick={() => signOut({ callbackUrl: "/" })}
+-                        className="w-full text-left px-4 py-2 text-red-500 cursor-pointer hover:bg-gray-100"
+-                      >
+-                        Sign Out
+-                      </button>
++                <button
++                  onClick={() => useCartStore.getState().openCart()}
++                  className="relative text-gray-700 hover:text-gray-900 cursor-pointer"
++                >
++                  <FiShoppingBag size={22} />
++                  {totalItems > 0 && (
++                    <span
++                      className="absolute -top-2 -right-2 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
++                      style={{
++                        backgroundColor: "var(--navbar-badge-color, #111827)",
++                      }}
++                    >
++                      {totalItems}
++                    </span>
++                  )}
++                </button>
++
++                {session ? (
++                  <div className="relative group">
++                    <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
++                      {session.user.image ? (
++                        <img
++                          src={session.user.image}
++                          alt={session.user.name || "User"}
++                          className="w-9 h-9 rounded-full border border-gray-200 object-cover"
++                        />
++                      ) : (
++                        <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
++                          <FiUser size={20} className="text-gray-500" />
++                        </div>
++                      )}
++                    </button>
++                    <div className="absolute right-0 mt-1 pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10000">
++                      <div className="bg-white border border-gray-100 rounded-lg shadow-lg py-2 transform scale-95 group-hover:scale-100 transition-transform duration-200 w-67">
++                        <Link
++                          href="/profile"
++                          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
++                        >
++                          Profile
++                        </Link>
++                        <Link
++                          href="/orders"
++                          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
++                        >
++                          My Orders
++                        </Link>
++                        <button
++                          onClick={() => signOut({ callbackUrl: "/" })}
++                          className="w-full text-left px-4 py-2 text-red-500 cursor-pointer hover:bg-gray-100"
++                        >
++                          Sign Out
++                        </button>
++                      </div>
+                     </div>
+                   </div>
+-                </div>
+-              ) : (
+-                <Link href="/auth/signin">
+-                  <IoPersonOutline size={24} />
+-                </Link>
+-              )}
+-            </div>
++                ) : (
++                  <Link href="/auth/signin">
++                    <IoPersonOutline size={24} />
++                  </Link>
++                )}
++              </div>
+ 
+-            {/* Mobile Menu Button */}
+-            <button
+-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+-              className="md:hidden text-gray-900"
+-            >
+-              {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+-            </button>
++              {/* Mobile Menu Button */}
++              <button
++                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
++                className="md:hidden text-gray-900"
++              >
++                {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
++              </button>
++            </div>
+           </div>
+         </div>
+-      </div>
++      </nav>
+ 
+-      {/* Mobile Menu */}
++      {/* Mobile Menu Drawer */}
++      {/* Backdrop */}
+       {isMobileMenuOpen && (
+-        <div className="md:hidden bg-white border-t border-gray-100 text-gray-900">
+-          <div className="px-4 py-2 space-y-2">
++        <div
++          className="fixed inset-0 bg-black/50 z-[99998] md:hidden transition-opacity"
++          onClick={() => setIsMobileMenuOpen(false)}
++        />
++      )}
++
++      {/* Slide-in Drawer */}
++      <div
++        className={`fixed top-0 left-0 h-full w-[80vw] max-w-sm bg-white shadow-2xl z-[999999] transform transition-transform duration-300 ease-in-out flex flex-col md:hidden ${
++          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
++        }`}
++      >
++        <div className="flex items-center justify-between p-4 border-b border-gray-100">
++          {session ? (
++            <div className="flex items-center gap-3">
++              {session.user.image ? (
++                <img
++                  src={session.user.image}
++                  alt={session.user.name || "User"}
++                  className="w-10 h-10 rounded-full border border-gray-200 object-cover"
++                />
++              ) : (
++                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
++                  <FiUser size={20} className="text-gray-500" />
++                </div>
++              )}
++              <div className="flex flex-col">
++                <span className="font-semibold text-gray-900 text-sm">
++                  {session.user.name || "User"}
++                </span>
++                <span className="text-xs text-gray-500">
++                  {session.user.email}
++                </span>
++              </div>
++            </div>
++          ) : (
++            <span className="font-semibold text-lg">Menu</span>
++          )}
++          <button
++            onClick={() => setIsMobileMenuOpen(false)}
++            className="p-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900"
++          >
++            <FiX size={24} />
++          </button>
++        </div>
++
++        <div className="flex-1 overflow-y-auto p-4 space-y-4">
++          <Link
++            href="/products"
++            className="block py-2 text-gray-700 hover:text-gray-900 border-b border-gray-50"
++            onClick={() => setIsMobileMenuOpen(false)}
++          >
++            Products
++          </Link>
++
++          {session?.user.role === "admin" && (
+             <Link
+-              href="/products"
+-              className="block py-2 text-gray-700 hover:text-gray-900"
++              href="/admin"
++              className="block py-2 text-gray-700 hover:text-gray-900 border-b border-gray-50"
+               onClick={() => setIsMobileMenuOpen(false)}
+             >
+-              Products
++              Admin
+             </Link>
++          )}
++
++          <button
++            onClick={() => {
++              useCartStore.getState().openCart();
++              setIsMobileMenuOpen(false);
++            }}
++            className="block w-full text-left py-2 text-gray-700 hover:text-gray-900 cursor-pointer"
++          >
++            Cart {totalItems > 0 && `(${totalItems})`}
++          </button>
+ 
+-            {session?.user.role === "admin" && (
++          {session ? (
++            <>
+               <Link
+-                href="/admin"
++                href="/profile"
+                 className="block py-2 text-gray-700 hover:text-gray-900"
+                 onClick={() => setIsMobileMenuOpen(false)}
+               >
+-                Admin
++                Profile
+               </Link>
+-            )}
+-
+-            <Link
+-              href="/cart"
+-              className="block py-2 text-gray-700 hover:text-gray-900"
+-              onClick={() => setIsMobileMenuOpen(false)}
+-            >
+-              Cart {totalItems > 0 && `(${totalItems})`}
+-            </Link>
+-
+-            {session ? (
+-              <>
+-                <Link
+-                  href="/profile"
+-                  className="block py-2 text-gray-700 hover:text-gray-900"
+-                  onClick={() => setIsMobileMenuOpen(false)}
+-                >
+-                  Profile
+-                </Link>
+-                <Link
+-                  href="/orders"
+-                  className="block py-2 text-gray-700 hover:text-gray-900"
+-                  onClick={() => setIsMobileMenuOpen(false)}
+-                >
+-                  My Orders
+-                </Link>
+-                <button
+-                  onClick={() => {
+-                    signOut({ callbackUrl: "/" });
+-                    setIsMobileMenuOpen(false);
+-                  }}
+-                  className="block w-full text-left py-2 text-red-500"
+-                >
+-                  Sign Out
+-                </button>
+-              </>
+-            ) : (
+               <Link
+-                href="/auth/signin"
+-                className="block w-full text-center py-2 px-4 font-semibold rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
++                href="/orders"
++                className="block py-2 text-gray-700 hover:text-gray-900"
+                 onClick={() => setIsMobileMenuOpen(false)}
+               >
+-                Sign In
++                My Orders
+               </Link>
+-            )}
+-          </div>
+-        </div>
+-      )}
+-
+-      {/* Category strip (desktop) */}
+-      {flatCategories.length > 0 && (
+-        <div className="hidden md:block border-t border-gray-100 bg-white relative z-9998 isolate">
+-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+-            <div className="flex items-center gap-6 py-3">
+-              {flatCategories.map((cat) => (
+-                <div key={cat._id} className="relative group">
+-                  <Link
+-                    href={`/products?category=${cat._id}`}
+-                    className="text-sm font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap flex items-center gap-1 cursor-pointer"
+-                  >
+-                    {cat.name}
+-                  </Link>
+-                </div>
+-              ))}
+-            </div>
+-          </div>
++              <button
++                onClick={() => {
++                  signOut({ callbackUrl: "/" });
++                  setIsMobileMenuOpen(false);
++                }}
++                className="block w-full text-left py-2 text-red-500"
++              >
++                Sign Out
++              </button>
++            </>
++          ) : (
++            <Link
++              href="/auth/signin"
++              className="block w-full text-center py-2 px-4 font-semibold rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
++              onClick={() => setIsMobileMenuOpen(false)}
++            >
++              Sign In
++            </Link>
++          )}
+         </div>
+-      )}
+-    </nav>
++      </div>
++    </>
+   );
+ }
+diff --git a/components/ProductCard.tsx b/components/ProductCard.tsx
+index 0b9134b..d4783ec 100644
+--- a/components/ProductCard.tsx
++++ b/components/ProductCard.tsx
+@@ -6,7 +6,9 @@ import { FiShoppingBag, FiShare2 } from "react-icons/fi";
+ import { formatPrice } from "@/lib/utils";
+ import { useCartStore } from "@/store/cartStore";
+ import { siteConfig } from "@/config/site.config";
+-import toast from "react-hot-toast";
++import { Tenor_Sans } from "next/font/google";
++
++const tenorSans = Tenor_Sans({ subsets: ["latin"], weight: "400" });
+ 
+ interface ProductCardProps {
+   product: {
+@@ -45,8 +47,7 @@ export default function ProductCard({ product }: ProductCardProps) {
+       price: currentPrice,
+       quantity: 1,
+       image: product.images[0] || "",
+-    });
+-    toast.success("Added to cart!");
++    })
+   };
+ 
+   const handleShare = async () => {
+@@ -55,7 +56,6 @@ export default function ProductCard({ product }: ProductCardProps) {
+ 
+       if (navigator.clipboard?.writeText) {
+         await navigator.clipboard.writeText(url);
+-        toast.success("Link copied");
+         return;
+       }
+ 
+@@ -66,15 +66,14 @@ export default function ProductCard({ product }: ProductCardProps) {
+       textarea.select();
+       document.execCommand("copy");
+       document.body.removeChild(textarea);
+-      toast.success("Link copied");
+     } catch (_error) {
+       // Silently ignore to avoid noisy errors
+     }
+   };
+ 
+   return (
+-    <article className="group flex h-full flex-col bg-white">
+-      <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-100 rounded-lg">
++    <article className="group/card flex h-full flex-col bg-white">
++      <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-100 rounded-sm">
+         <Link href={`/products/${product._id}`} className="absolute inset-0">
+           {primaryImage && (
+             <>
+@@ -85,8 +84,8 @@ export default function ProductCard({ product }: ProductCardProps) {
+                 sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 33vw"
+                 className={`object-cover transition-all duration-500 ${
+                   hasHoverImage
+-                    ? "group-hover:opacity-0"
+-                    : "group-hover:scale-105"
++                    ? "group-hover/card:opacity-0"
++                    : "group-hover/card:scale-105"
+                 }`}
+               />
+               {hasHoverImage && (
+@@ -95,7 +94,7 @@ export default function ProductCard({ product }: ProductCardProps) {
+                   alt={`${product.name} alternate view`}
+                   fill
+                   sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 33vw"
+-                  className="object-cover opacity-0 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
++                  className="object-cover opacity-0 transition-all duration-500 group-hover/card:scale-105 group-hover/card:opacity-100"
+                 />
+               )}
+             </>
+@@ -103,25 +102,36 @@ export default function ProductCard({ product }: ProductCardProps) {
+         </Link>
+       </div>
+ 
+-      <div className="flex flex-1 flex-col pt-4 items-center text-center">
++      <div className="flex flex-1 flex-col pt-3 items-center text-center">
+         <Link href={`/products/${product._id}`}>
+-          <h3 className="line-clamp-2 text-sm sm:text-base font-medium text-gray-700 leading-snug hover:text-black transition-colors">
++          <h3
++            className={`line-clamp-2 text-sm sm:text-base font-medium text-gray-700 leading-snug hover:text-black transition-colors ${tenorSans.className}`}
++          >
+             {product.name}
+           </h3>
+         </Link>
+ 
+-        <div className="mt-2 text-lg font-semibold text-gray-800 flex items-center justify-center gap-2">
+-          {formatPrice(currentPrice)}
+-          {showOldPrice && (
+-            <span className="text-sm text-gray-500 line-through font-normal">
+-              {formatPrice(previousPrice)}
++        <div className="mt-1.5 flex flex-col items-center justify-center gap-1">
++          <div className="flex items-center justify-center gap-2">
++            {showOldPrice && previousPrice !== undefined && (
++              <span className="text-xs sm:text-sm text-gray-400 line-through font-normal">
++                {formatPrice(previousPrice)}
++              </span>
++            )}
++            <span className="text-base sm:text-lg font-semibold text-gray-800 leading-none">
++              {formatPrice(currentPrice)}
++            </span>
++          </div>
++          {showOldPrice && previousPrice !== undefined && (
++            <span className="text-[11px] sm:text-xs font-medium text-red-500">
++              Save {formatPrice(previousPrice - currentPrice)}
+             </span>
+           )}
+         </div>
+ 
+         <button
+           onClick={handleAddToCart}
+-          className="mt-4 w-full flex items-center justify-center gap-2 rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
++          className="mt-3 w-full flex cursor-pointer items-center justify-center gap-2 rounded-sm bg-black py-2 sm:py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
+         >
+           <FiShoppingBag size={18} />
+           Add to Cart
+diff --git a/components/home/ProductsContent.tsx b/components/home/ProductsContent.tsx
+index 6c6c57f..86da64d 100644
+--- a/components/home/ProductsContent.tsx
++++ b/components/home/ProductsContent.tsx
+@@ -3,6 +3,7 @@
+ import { useEffect, useState, useRef, useMemo } from "react";
+ import ProductCard from "@/components/ProductCard";
+ import axios from "axios";
++import HeroSlider from "@/components/HeroSlider";
+ import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+ 
+ const CategorySlider = ({
+@@ -30,9 +31,9 @@ const CategorySlider = ({
+   };
+ 
+   return (
+-    <div className="relative group mb-10 sm:mb-14">
+-      <div className="flex items-center justify-between mb-4 sm:mb-6">
+-        <h2 className="text-xl sm:text-3xl font-sami-bold capitalize">
++    <div className="relative group mb-1 sm:mb-2">
++      <div className="flex items-center justify-between mb-2 sm:mb-3">
++        <h2 className="text-base sm:text-xl font-semibold capitalize">
+           {title}
+         </h2>
+ 
+@@ -193,21 +194,43 @@ export default function ProductsContent() {
+   }, [products]);
+ 
+   return (
+-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
++    <div className="w-full">
+       {isLoading ? (
+-        <CategorySlider
+-          title="Featured Products"
+-          products={[]}
+-          isLoading={true}
+-        />
+-      ) : Object.keys(groupedProducts).length > 0 ? (
+-        Object.entries(groupedProducts).map(([categoryName, items]) => (
++        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+           <CategorySlider
+-            key={categoryName}
+-            title={categoryName}
+-            products={items}
+-            isLoading={false}
++            title="Featured Products"
++            products={[]}
++            isLoading={true}
+           />
++        </div>
++      ) : Object.keys(groupedProducts).length > 0 ? (
++        Object.entries(groupedProducts).map(([categoryName, items], index) => (
++          <div key={categoryName}>
++            <div
++              className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-0 ${index === 0 ? "pt-8 sm:pt-10" : "pt-0"}`}
++            >
++              <CategorySlider
++                title={categoryName}
++                products={items}
++                isLoading={false}
++              />
++            </div>
++            {index === 0 && (
++              <div className="mb-2 mt-0 sm:mb-3 sm:mt-1">
++                <HeroSlider position="after_row_1" />
++              </div>
++            )}
++            {index === 1 && (
++              <div className="mb-2 mt-0 sm:mb-3 sm:mt-1">
++                <HeroSlider position="after_row_2" />
++              </div>
++            )}
++            {index === 2 && (
++              <div className="mb-2 mt-0 sm:mb-3 sm:mt-1">
++                <HeroSlider position="after_row_3" />
++              </div>
++            )}
++          </div>
+         ))
+       ) : (
+         <div className="text-center py-12">
+diff --git a/lib/utils.ts b/lib/utils.ts
+index 8a7820f..81d39bf 100644
+--- a/lib/utils.ts
++++ b/lib/utils.ts
+@@ -1,35 +1,35 @@
+ export function formatPrice(price: number): string {
+   // Format prices in Pakistani Rupees
+-  return new Intl.NumberFormat('en-PK', {
+-    style: 'currency',
+-    currency: 'PKR',
+-    minimumFractionDigits: 0,
+-    maximumFractionDigits: 0,
++  return new Intl.NumberFormat("en-PK", {
++    style: "currency",
++    currency: "PKR",
++    minimumFractionDigits: 2,
++    maximumFractionDigits: 2,
+   }).format(price);
+ }
+ 
+ export function generateSlug(text: string): string {
+   return text
+     .toLowerCase()
+-    .replace(/[^\w\s-]/g, '')
+-    .replace(/\s+/g, '-')
+-    .replace(/-+/g, '-')
++    .replace(/[^\w\s-]/g, "")
++    .replace(/\s+/g, "-")
++    .replace(/-+/g, "-")
+     .trim();
+ }
+ 
+ export function formatDate(date: Date | string): string {
+-  return new Intl.DateTimeFormat('en-US', {
+-    year: 'numeric',
+-    month: 'long',
+-    day: 'numeric',
++  return new Intl.DateTimeFormat("en-US", {
++    year: "numeric",
++    month: "long",
++    day: "numeric",
+   }).format(new Date(date));
+ }
+ 
+ export function truncateText(text: string, length: number): string {
+   if (text.length <= length) return text;
+-  return text.substring(0, length) + '...';
++  return text.substring(0, length) + "...";
+ }
+ 
+-export function getRandomImage(category: string = 'book'): string {
+-  return '';
++export function getRandomImage(category: string = "book"): string {
++  return "";
+ }
+diff --git a/models/Category.ts b/models/Category.ts
+index b16bf98..eed0fcc 100644
+--- a/models/Category.ts
++++ b/models/Category.ts
+@@ -1,9 +1,10 @@
+-import mongoose, { Schema, Document, Model } from 'mongoose';
++import mongoose, { Schema, Document, Model } from "mongoose";
+ 
+ export interface ICategory extends Document {
+   name: string;
+   slug: string;
+   description?: string;
++  showInNav: boolean;
+   createdAt: Date;
+   updatedAt: Date;
+ }
+@@ -12,7 +13,7 @@ const CategorySchema: Schema = new Schema(
+   {
+     name: {
+       type: String,
+-      required: [true, 'Category name is required'],
++      required: [true, "Category name is required"],
+       unique: true,
+       trim: true,
+     },
+@@ -25,12 +26,18 @@ const CategorySchema: Schema = new Schema(
+     description: {
+       type: String,
+     },
++    showInNav: {
++      type: Boolean,
++      default: true, // Show all existing by default, or maybe false? Default false is safer but user might want them to show currently. Let's do true or false? True is better since currently all are shown.
++    },
+   },
+   {
+     timestamps: true,
+-  }
++  },
+ );
+ 
+-const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
++const Category: Model<ICategory> =
++  mongoose.models.Category ||
++  mongoose.model<ICategory>("Category", CategorySchema);
+ 
+ export default Category;
+diff --git a/models/Slider.ts b/models/Slider.ts
+index e2d7599..f376401 100644
+--- a/models/Slider.ts
++++ b/models/Slider.ts
+@@ -1,10 +1,11 @@
+-import mongoose, { Schema, Document, Model } from 'mongoose';
++import mongoose, { Schema, Document, Model } from "mongoose";
+ 
+ export interface ISlider extends Document {
+   title: string;
+   image: string;
+   buttonText?: string;
+   buttonLink?: string;
++  position: string;
+   isActive: boolean;
+   order: number;
+   createdAt: Date;
+@@ -15,20 +16,25 @@ const SliderSchema: Schema = new Schema(
+   {
+     title: {
+       type: String,
+-      required: [true, 'Slider title is required'],
++      required: [true, "Slider title is required"],
+       trim: true,
+     },
+     image: {
+       type: String,
+-      required: [true, 'Slider image is required'],
++      required: [true, "Slider image is required"],
+     },
+     buttonText: {
+       type: String,
+-      default: 'Shop Now',
++      default: "Shop Now",
+     },
+     buttonLink: {
+       type: String,
+-      default: '/products',
++      default: "/products",
++    },
++    position: {
++      type: String,
++      enum: ["top", "after_row_1", "after_row_2", "after_row_3"],
++      default: "top",
+     },
+     isActive: {
+       type: Boolean,
+@@ -41,9 +47,10 @@ const SliderSchema: Schema = new Schema(
+   },
+   {
+     timestamps: true,
+-  }
++  },
+ );
+ 
+-const Slider: Model<ISlider> = mongoose.models.Slider || mongoose.model<ISlider>('Slider', SliderSchema);
++const Slider: Model<ISlider> =
++  mongoose.models.Slider || mongoose.model<ISlider>("Slider", SliderSchema);
+ 
+ export default Slider;
+diff --git a/package-lock.json b/package-lock.json
+index 0f5bc24..bdb6b1a 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,11 +1,11 @@
+ {
+-  "name": "homyorganic",
++  "name": "Homy Oraganic",
+   "version": "0.0.1",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+-      "name": "homyorganic",
++      "name": "Homy Oraganic",
+       "version": "0.0.1",
+       "dependencies": {
+         "axios": "^1.13.2",
+@@ -18,8 +18,8 @@
+         "nodemailer": "^7.0.13",
+         "react": "19.2.3",
+         "react-dom": "19.2.3",
+-        "react-hot-toast": "^2.6.0",
+         "react-icons": "^5.5.0",
++        "sonner": "^2.0.7",
+         "swiper": "^12.0.3",
+         "zustand": "^5.0.9"
+       },
+@@ -1122,7 +1122,6 @@
+       "integrity": "sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==",
+       "devOptional": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "csstype": "^3.2.2"
+       }
+@@ -1175,7 +1174,6 @@
+       "integrity": "sha512-Ixm8tFfoKKIPYdCCKYTsqv+Fd4IJ0DQqMyEimo+pxUOMUR9cVPlwTrFt9Avu+3cb6Zp3mAzl+t1MrG2fxxKsxw==",
+       "devOptional": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "@babel/types": "^7.26.0"
+       }
+@@ -1284,8 +1282,8 @@
+       "version": "3.2.3",
+       "resolved": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+       "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==",
+-      "license": "MIT",
+-      "peer": true
++      "devOptional": true,
++      "license": "MIT"
+     },
+     "node_modules/delayed-stream": {
+       "version": "1.0.0",
+@@ -1461,15 +1459,6 @@
+         "node": ">= 0.4"
+       }
+     },
+-    "node_modules/goober": {
+-      "version": "2.1.18",
+-      "resolved": "https://registry.npmjs.org/goober/-/goober-2.1.18.tgz",
+-      "integrity": "sha512-2vFqsaDVIT9Gz7N6kAL++pLpp41l3PfDuusHcjnGLfR6+huZkl6ziX+zgVC3ZxpqWhzH6pyDdGrCeDhMIvwaxw==",
+-      "license": "MIT",
+-      "peerDependencies": {
+-        "csstype": "^3.0.10"
+-      }
+-    },
+     "node_modules/gopd": {
+       "version": "1.2.0",
+       "resolved": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+@@ -2008,7 +1997,6 @@
+       "resolved": "https://registry.npmjs.org/next/-/next-16.1.6.tgz",
+       "integrity": "sha512-hkyRkcu5x/41KoqnROkfTm2pZVbKxvbZRuNvKXLRXxs3VfyO0WhY50TQS40EuKO9SW3rBj/sF3WbVwDACeMZyw==",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "@next/env": "16.1.6",
+         "@swc/helpers": "0.5.15",
+@@ -2137,7 +2125,6 @@
+       "resolved": "https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.13.tgz",
+       "integrity": "sha512-PNDFSJdP+KFgdsG3ZzMXCgquO7I6McjY2vlqILjtJd0hy8wEvtugS9xKRF2NWlPNGxvLCXlTNIae4serI7dinw==",
+       "license": "MIT-0",
+-      "peer": true,
+       "engines": {
+         "node": ">=6.0.0"
+       }
+@@ -2221,7 +2208,6 @@
+       "resolved": "https://registry.npmjs.org/preact/-/preact-10.28.3.tgz",
+       "integrity": "sha512-tCmoRkPQLpBeWzpmbhryairGnhW9tKV6c6gr/w+RhoRoKEJwsjzipwp//1oCpGPOchvSLaAPlpcJi9MwMmoPyA==",
+       "license": "MIT",
+-      "peer": true,
+       "funding": {
+         "type": "opencollective",
+         "url": "https://opencollective.com/preact"
+@@ -2276,7 +2262,6 @@
+       "resolved": "https://registry.npmjs.org/react/-/react-19.2.3.tgz",
+       "integrity": "sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==",
+       "license": "MIT",
+-      "peer": true,
+       "engines": {
+         "node": ">=0.10.0"
+       }
+@@ -2286,7 +2271,6 @@
+       "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.3.tgz",
+       "integrity": "sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "scheduler": "^0.27.0"
+       },
+@@ -2294,23 +2278,6 @@
+         "react": "^19.2.3"
+       }
+     },
+-    "node_modules/react-hot-toast": {
+-      "version": "2.6.0",
+-      "resolved": "https://registry.npmjs.org/react-hot-toast/-/react-hot-toast-2.6.0.tgz",
+-      "integrity": "sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==",
+-      "license": "MIT",
+-      "dependencies": {
+-        "csstype": "^3.1.3",
+-        "goober": "^2.1.16"
+-      },
+-      "engines": {
+-        "node": ">=10"
+-      },
+-      "peerDependencies": {
+-        "react": ">=16",
+-        "react-dom": ">=16"
+-      }
+-    },
+     "node_modules/react-icons": {
+       "version": "5.5.0",
+       "resolved": "https://registry.npmjs.org/react-icons/-/react-icons-5.5.0.tgz",
+@@ -2390,6 +2357,16 @@
+       "integrity": "sha512-Rtlj66/b0ICeFzYTuNvX/EF1igRbbnGSvEyT79McoZa/DeGhMyC5pWKOEsZKnpkqtSeovd5FL/bjHWC3CIIvCQ==",
+       "license": "MIT"
+     },
++    "node_modules/sonner": {
++      "version": "2.0.7",
++      "resolved": "https://registry.npmjs.org/sonner/-/sonner-2.0.7.tgz",
++      "integrity": "sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==",
++      "license": "MIT",
++      "peerDependencies": {
++        "react": "^18.0.0 || ^19.0.0 || ^19.0.0-rc",
++        "react-dom": "^18.0.0 || ^19.0.0 || ^19.0.0-rc"
++      }
++    },
+     "node_modules/source-map-js": {
+       "version": "1.2.1",
+       "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+diff --git a/package.json b/package.json
+index fa1e0c0..ab3c795 100644
+--- a/package.json
++++ b/package.json
+@@ -18,8 +18,8 @@
+     "nodemailer": "^7.0.13",
+     "react": "19.2.3",
+     "react-dom": "19.2.3",
+-    "react-hot-toast": "^2.6.0",
+     "react-icons": "^5.5.0",
++    "sonner": "^2.0.7",
+     "swiper": "^12.0.3",
+     "zustand": "^5.0.9"
+   },
+diff --git a/store/cartStore.ts b/store/cartStore.ts
+index 99197b6..6857028 100644
+--- a/store/cartStore.ts
++++ b/store/cartStore.ts
+@@ -11,19 +11,28 @@ interface CartItem {
+ 
+ interface CartStore {
+   items: CartItem[];
++  isOpen: boolean;
+   addItem: (item: CartItem) => void;
+   removeItem: (id: string) => void;
+   updateQuantity: (id: string, quantity: number) => void;
+   clearCart: () => void;
+   getTotalItems: () => number;
+   getTotalPrice: () => number;
++  openCart: () => void;
++  closeCart: () => void;
++  toggleCart: () => void;
+ }
+ 
+ export const useCartStore = create<CartStore>()(
+   persist(
+     (set, get) => ({
+       items: [],
++      isOpen: false,
+       
++      openCart: () => set({ isOpen: true }),
++      closeCart: () => set({ isOpen: false }),
++      toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
++
+       addItem: (item: CartItem) => {
+         const items = get().items;
+         const existingItem = items.find((i) => i._id === item._id);
+@@ -35,9 +44,10 @@ export const useCartStore = create<CartStore>()(
+                 ? { ...i, quantity: i.quantity + item.quantity }
+                 : i
+             ),
++            isOpen: true,
+           });
+         } else {
+-          set({ items: [...items, item] });
++          set({ items: [...items, item], isOpen: true });
+         }
+       },
+ 
+@@ -67,6 +77,7 @@ export const useCartStore = create<CartStore>()(
+     }),
+     {
+       name: 'cart-storage',
++      partialize: (state) => ({ items: state.items }), // Only persist items, not isOpen
+     }
+   )
+ );
