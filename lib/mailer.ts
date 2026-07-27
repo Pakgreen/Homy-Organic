@@ -11,24 +11,24 @@ async function getSiteSettings() {
     return {
       logo:
         settings?.value?.logo ||
-        "https://res.cloudinary.com/dz8pr6lnt/image/upload/v1770379199/homyorganic_arywhj.png",
+        "https://res.cloudinary.com/qmgjj5vu/image/upload/v1785171001/imgi_17_1784304698500-homy-organic-logo-footer_rhv4bg.png",
       brandName: footerSettings?.value?.brandName || "Homy Orgaic",
       contactEmail:
-        footerSettings?.value?.contact?.email || "info@Homy Oraganic.store",
-      contactPhone: footerSettings?.value?.contact?.phone || "+92 336 8249118",
+        footerSettings?.value?.contact?.email || "info@homyorganic.store",
+      contactPhone: footerSettings?.value?.contact?.phone || "+92302 3735860",
     };
   } catch (error) {
     return {
       logo: "https://res.cloudinary.com/dz8pr6lnt/image/upload/v1770379199/homyorganic_arywhj.png",
       brandName: "Homy Orgaic",
-      contactEmail: "info@Homy Oraganic.store",
-      contactPhone: "+92 336 8249118",
+      contactEmail: "info@homyorganic.store",
+      contactPhone: "+92302 3735860",
     };
   }
 }
 
-const GMAIL_USER = "Homy Oraganic@gmail.com";
-const FROM_ADDRESS = "<no-reply@Homy Oraganic.store>";
+const GMAIL_USER = "Pakgreen1439@gmail.com";
+const FROM_ADDRESS = "<no-reply@homyorganic.store>";
 
 function getAppPassword(): string {
   const password = process.env.APP_PASSWORD;

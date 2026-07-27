@@ -13,8 +13,8 @@ export async function GET() {
         brandName: "Homy Orgaic",
         tagline: "Modern essentials crafted for everyday elegance.",
         contact: {
-          email: "info@Homy Oraganic.store",
-          phone: "+92 336 8249118",
+          email: "info@homyorganic.store",
+          phone: "+92302 3735860",
           address: "Multan, Pakistan",
         },
         socials: {
