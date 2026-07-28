@@ -64,8 +64,8 @@ export default function HeroSlider({
 
   if (isLoading) {
     return (
-      <section className="relative overflow-hidden w-full px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
-        <div className="w-full h-[18vh] sm:h-[72vh] md:h-[78vh] lg:h-[84vh] max-h-225 bg-gray-200 animate-pulse rounded-xl sm:rounded-3xl overflow-hidden" />
+      <section className="relative overflow-hidden w-full">
+        <div className="w-full aspect-[21/9] bg-gray-200 animate-pulse" />
       </section>
     );
   }
@@ -75,8 +75,8 @@ export default function HeroSlider({
   }
 
   return (
-    <section className="relative overflow-hidden mb-5 w-full ">
-      <div >
+    <section className="relative overflow-hidden w-full">
+      <div>
         <Swiper
           modules={[Autoplay, Pagination]}
           autoplay={{
@@ -90,25 +90,18 @@ export default function HeroSlider({
           navigation={false}
           loop={sliders.length > 1}
           key={sliders.map((s) => s._id).join("-")}
-          className="w-full h-[18vh] sm:h-[72vh] md:h-[78vh] lg:h-[84vh] max-h-225 bg-gray-100"
+          className="w-full h-auto bg-gray-100"
           slidesPerView={1}
           spaceBetween={0}
-          centeredSlides={false}
+          autoHeight={true}
         >
-          {sliders.map((slider, index) => (
+          {sliders.map((slider) => (
             <SwiperSlide key={slider._id}>
-              <div className="relative w-full h-full">
-                {/* Background Image */}
-                <Image
+              <div className="relative w-full">
+                <img
                   src={slider.image}
-                  alt={slider.title}
-                  fill
-                  sizes="100vw"
-                  quality={90}
-                  unoptimized={isCloudinaryUrl(slider.image)}
-                  className="object-cover object-[90%_center] sm:object-center"
-                  loading={index === 0 ? "eager" : "lazy"}
-                  priority={index === 0}
+                  alt={slider.title || "Banner"}
+                  className="w-full h-auto block object-contain"
                 />
                 <Link
                   href={slider.buttonLink || "#"}
