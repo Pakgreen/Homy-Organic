@@ -42,14 +42,12 @@ export default function ValuePacksContent() {
         
         {/* Section Title */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#EADBCC] pb-4">
-          <div>
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#B9853A] uppercase tracking-widest mb-1">
-              <span>🎁 Special Bundles</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-              Exclusive Value Packs
-            </h2>
-          </div>
+            <h2 className="text-4xl font-light tracking-tight text-white md:text-6xl">
+         Special Bundles{" "}
+          <span className="font-serif italic text-[#B9853B]">
+            Exclusive Value Packs
+          </span>
+        </h2>
           <p className="text-xs sm:text-sm text-gray-500 font-medium">
             Curated organic care bundles for extra savings & complete wellness.
           </p>

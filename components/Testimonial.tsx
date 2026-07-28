@@ -40,9 +40,9 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="w-full overflow-hidden py-20">
+    <section className="w-full overflow-hidden py-5">
       {/* Heading */}
-      <div className="mb-16 text-center">
+      <div className="mb-1 text-center">
         <h2 className="text-4xl font-light tracking-tight text-white md:text-6xl">
           What Our{" "}
           <span className="font-serif italic text-[#B9853B]">

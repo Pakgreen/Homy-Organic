@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function BachatPack() {
   return (
-    <div className="grid md:grid-cols-2  max-w-7xl mx-auto">
+    <div className="grid md:grid-cols-2 p-2 max-w-7xl mx-auto">
       <div>
         <h2 className="text-4xl text-center md:px-33 pt-33 font-light tracking-tight text-white md:text-6xl">
            Beauty Essentials {" "}
