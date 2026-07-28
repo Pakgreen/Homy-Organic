@@ -730,34 +730,6 @@ export default function AdminProductsPage() {
               onSubmit={handleSubmit}
               className="space-y-10 flex-1 flex flex-col"
             >
-              {/* Top Item Type Selector: Standard Product VS Value Pack */}
-              <div className="bg-gray-100/80 p-1.5 rounded-2xl border border-gray-200/80 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, isValuePack: false })}
-                  className={`flex-1 py-3.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
-                    !formData.isValuePack
-                      ? "bg-white text-gray-900 shadow-xs border border-gray-200/80"
-                      : "text-gray-500 hover:text-gray-900"
-                  }`}
-                >
-                  <span className="text-sm">📦</span>
-                  <span>Standard Product</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, isValuePack: true })}
-                  className={`flex-1 py-3.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
-                    formData.isValuePack
-                      ? "bg-[#B9853A] text-white shadow-xs"
-                      : "text-gray-500 hover:text-gray-900"
-                  }`}
-                >
-                  <span className="text-sm">🎁</span>
-                  <span>Value Pack Bundle</span>
-                </button>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
                 <div className="flex flex-col gap-2">
