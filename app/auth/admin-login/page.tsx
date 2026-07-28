@@ -69,7 +69,7 @@ export default function AdminSignInPage() {
       {/* Left Side - Brand Display (Fixed background style) */}
       <div className="relative w-full md:w-2/5  text-white p-8 md:p-12 flex flex-col justify-between hidden md:flex h-full">
         {/* Subtle gradient overlay/background */}
-        <div className="absolute inset-0 bg-white  pointer-events-none  rounded-r-full overflow-hidden"></div>
+        <div className="absolute inset-0 bg-[#B9853A]  pointer-events-none  rounded-r-full overflow-hidden"></div>
 
         <div className="relative z-10 flex items-center justify-start">
           <button

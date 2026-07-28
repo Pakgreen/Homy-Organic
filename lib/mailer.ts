@@ -12,23 +12,23 @@ async function getSiteSettings() {
       logo:
         settings?.value?.logo ||
         "https://res.cloudinary.com/qmgjj5vu/image/upload/v1785171001/imgi_17_1784304698500-homy-organic-logo-footer_rhv4bg.png",
-      brandName: footerSettings?.value?.brandName || "Homy Orgaic",
+      brandName: footerSettings?.value?.brandName || "Homy Organic",
       contactEmail:
-        footerSettings?.value?.contact?.email || "info@homyorganic.store",
+        footerSettings?.value?.contact?.email || "info@homyorganic.com",
       contactPhone: footerSettings?.value?.contact?.phone || "+92302 3735860",
     };
   } catch (error) {
     return {
       logo: "https://res.cloudinary.com/dz8pr6lnt/image/upload/v1770379199/homyorganic_arywhj.png",
-      brandName: "Homy Orgaic",
-      contactEmail: "info@homyorganic.store",
+      brandName: "Homy Organic",
+      contactEmail: "info@homyorganic.com",
       contactPhone: "+92302 3735860",
     };
   }
 }
 
 const GMAIL_USER = "Pakgreen1439@gmail.com";
-const FROM_ADDRESS = "<no-reply@homyorganic.store>";
+const FROM_ADDRESS = "<no-reply@homyorganic.com>";
 
 function getAppPassword(): string {
   const password = process.env.APP_PASSWORD;
@@ -135,7 +135,7 @@ export async function sendEmail(options: SendMailOptions) {
 }
 
 export async function buildWelcomeEmail(name: string) {
-  const subject = "Welcome to Homy Orgaic";
+  const subject = "Welcome to Homy Organic";
   const siteConfig = await getSiteSettings();
   const safeName = name?.trim() || "there";
 

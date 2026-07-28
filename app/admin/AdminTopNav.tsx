@@ -11,7 +11,7 @@ export default function AdminTopNav() {
   const userImage = (user as any)?.image;
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 w-full shadow-sm">
+    <div className="flex items-center ml-3 rounded-l-2xl overflow-hidden justify-between px-6 py-3 bg-white  w-full">
       {/* Left: Static Title */}
       <div>
         <h1 className="text-lg font-bold tracking-tight text-gray-900">

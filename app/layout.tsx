@@ -3,6 +3,7 @@ import { Syne } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ConditionalFooterAndSlider from "@/components/ConditionalFooterAndSlider";
+import ConditionalMain from "@/components/ConditionalMain";
 import ThemeProvider from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import BottomNav from "@/components/BottomNav";
@@ -161,7 +162,7 @@ export default async function RootLayout({
 
           <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main className="grow pb-16 md:pb-0">{children}</main>
+            <ConditionalMain>{children}</ConditionalMain>
             <ConditionalFooterAndSlider />
           </div>
           <BottomNav />
