@@ -24,6 +24,21 @@ export default function ChatWidget() {
   const [guestId, setGuestId] = useState<string>("");
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsDismissed(sessionStorage.getItem("chat_widget_dismissed") === "true");
+    }
+  }, []);
+
+  const dismissWidget = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDismissed(true);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("chat_widget_dismissed", "true");
+    }
+  };
 
   useEffect(() => {
     if (!session?.user) {
@@ -149,12 +164,12 @@ export default function ChatWidget() {
     } catch (e) { console.error("Failed to delete message"); }
   };
 
-  if (session?.user?.role === "admin") return null;
+  if (isDismissed || session?.user?.role === "admin") return null;
 
   return (
     <>
       {/* Floating widget wrapper */}
-      <div className="fixed bottom-20 md:bottom-6 right-3 sm:right-5 z-[9999] flex flex-col items-end gap-3">
+      <div className="fixed bottom-12 md:bottom-4 right-1 sm:right-3 z-[9999] flex flex-col items-end gap-1">
 
         {/* ── Chat Dialog ── */}
         {isOpen && (
@@ -171,13 +186,13 @@ export default function ChatWidget() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white shrink-0">
               <div className="flex items-center gap-3">
                 {/* Logo */}
-                <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 shrink-0 bg-gray-50 flex items-center justify-center">
+                <div className="w-12 h-12 shrink-0 flex items-center justify-center">
                   <Image
                     src="/chatwidget.png"
                     alt="Support"
-                    width={36}
-                    height={36}
-                    className="w-full h-full object-cover"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-contain"
                     onError={(e: any) => { e.target.style.display = "none"; }}
                   />
                 </div>
@@ -200,7 +215,7 @@ export default function ChatWidget() {
             {/* Notice Banner */}
             <div className="px-4 py-2.5 bg-amber-50 border-b border-amber-100 shrink-0">
               <p className="text-[11px] text-amber-800 leading-relaxed">
-                ⏱ Reply thoda late ho sakta hai, lekin jawab zaroor milega! Ya phir{" "}
+                ⏱ Replies may take a moment, but we will surely answer! Or{" "}
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
@@ -210,7 +225,7 @@ export default function ChatWidget() {
                   <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
-                  WhatsApp karein
+                  Chat on WhatsApp
                 </a>
               </p>
             </div>
@@ -222,12 +237,12 @@ export default function ChatWidget() {
             >
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center gap-2 py-8">
-                  <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 bg-white">
-                    <Image src="/chatwidget.png" alt="Support" width={56} height={56} className="w-full h-full object-cover" />
+                  <div className="w-24 h-24 flex items-center justify-center">
+                    <Image src="/chatwidget.png" alt="Support" width={96} height={96} className="w-full h-full object-contain" />
                   </div>
                   <p className="text-xs font-semibold text-gray-700">Homy Organic Support</p>
                   <p className="text-xs text-gray-400 max-w-[200px]">
-                    Apna sawaal likhein, hum jald reply karenge!
+                    Type your message below and we will get back to you shortly!
                   </p>
                 </div>
               )}
@@ -314,7 +329,7 @@ export default function ChatWidget() {
                 </button>
                 <input
                   type="text"
-                  placeholder="Message likhein..."
+                  placeholder="Type a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   className="flex-1 px-3.5 py-2 text-sm border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors placeholder:text-gray-400"
@@ -333,31 +348,45 @@ export default function ChatWidget() {
         )}
 
         {/* ── Floating Trigger Button ── */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="relative cursor-pointer hover:scale-105 transition-transform drop-shadow-xl"
-          aria-label="Open chat"
-        >
-          {/* Unread badge */}
-          {unreadCount > 0 && !isOpen && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full z-10 animate-bounce">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
+        <div className="relative group">
+          {/* Dismiss X button for session */}
+          {!isOpen && (
+            <button
+              onClick={dismissWidget}
+              className="absolute top-2 right-2 z-20 w-6 h-6 bg-black/75 hover:bg-black text-white rounded-full flex items-center justify-center transition-all shadow-md cursor-pointer border border-white/20"
+              title="Close chat for this session"
+              aria-label="Close chat for session"
+            >
+              <FiX size={12} />
+            </button>
           )}
-          {isOpen ? (
-            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gray-800 shadow-xl">
-              <FiX size={24} className="text-white" />
-            </div>
-          ) : (
-            <Image
-              src="/chatwidget.png"
-              alt="Chat with us"
-              width={140}
-              height={140}
-              className="w-32 h-32 sm:w-36 sm:h-36 object-contain drop-shadow-2xl"
-            />
-          )}
-        </button>
+
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="relative cursor-pointer hover:scale-105 transition-transform drop-shadow-xl"
+            aria-label="Open chat"
+          >
+            {/* Unread badge */}
+            {unreadCount > 0 && !isOpen && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full z-10 animate-bounce">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+            {isOpen ? (
+              <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gray-800 shadow-xl">
+                <FiX size={24} className="text-white" />
+              </div>
+            ) : (
+              <Image
+                src="/chatwidget.png"
+                alt="Chat with us"
+                width={250}
+                height={250}
+                className="w-56 h-56 sm:w-64 sm:h-64 object-contain drop-shadow-2xl"
+              />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Image Zoom Modal */}
