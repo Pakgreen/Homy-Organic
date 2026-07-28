@@ -180,12 +180,12 @@ export default function Navbar() {
             >
               <Image
                 src={siteLogo}
-                alt="Homy Orgaic"
-                width={92}
-                height={46}
+                alt="Homy Organic"
+                width={150}
+                height={75}
                 priority
-                sizes="(max-width: 768px) 84px, 92px"
-                style={{ height: "auto", width: "auto" }}
+                sizes="(max-width: 768px) 120px, 150px"
+                className="max-h-16 w-auto object-contain"
               />
             </Link>
 

@@ -175,13 +175,13 @@ export default function AdminChatPage() {
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex h-[calc(100dvh-120px)] md:h-[calc(100dvh-80px)] overflow-hidden rounded-xl border border-gray-100 bg-white">
+    <div className="flex h-[calc(100dvh-160px)] sm:h-[calc(100dvh-100px)] md:h-[calc(100dvh-80px)] overflow-hidden rounded-xl border border-gray-100 bg-white">
 
       {/* ── Conversation Sidebar ── */}
       <div className={`${activeChat ? "hidden md:flex" : "flex"} flex-col w-full md:w-72 lg:w-80 border-r border-gray-100 shrink-0`}>
 
         {/* Sidebar Header */}
-        <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-4 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-gray-900">Chats</h3>
             {totalUnread > 0 && (
@@ -253,40 +253,41 @@ export default function AdminChatPage() {
         {activeChat ? (
           <>
             {/* Chat Header */}
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
-              <div className="flex items-center gap-3">
+            <div className="px-3 sm:px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <button
                   onClick={() => setActiveChat(null)}
-                  className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition cursor-pointer"
+                  className="md:hidden flex items-center gap-1 px-2 py-1 rounded-lg text-gray-600 hover:text-black bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-xs font-semibold shrink-0"
                 >
-                  <FiArrowLeft size={18} />
+                  <FiArrowLeft size={16} />
+                  <span>Chats</span>
                 </button>
                 {/* Avatar */}
-                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shrink-0">
                   {activeChat.user?.image ? (
                     <img src={activeChat.user.image} alt={activeName} className="w-full h-full object-cover" />
                   ) : (
-                    <FiUser size={15} className="text-gray-400" />
+                    <FiUser size={14} className="text-gray-400" />
                   )}
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-gray-900">{activeName}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{activeName}</p>
                   {activeChat.user?.email && (
-                    <p className="text-xs text-gray-400">{activeChat.user.email}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{activeChat.user.email}</p>
                   )}
                 </div>
               </div>
               <button
                 onClick={deleteConversation}
                 title="Delete Conversation"
-                className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
               >
                 <FiTrash2 size={15} />
               </button>
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5 space-y-3 bg-gray-50/40">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 bg-gray-50/40">
               {messages.length === 0 && (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-xs text-gray-400">No messages yet. Say hello! 👋</p>
@@ -296,12 +297,13 @@ export default function AdminChatPage() {
                 const isAdmin = msg.senderModel === "Admin";
                 return (
                   <div key={msg._id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
-                    <div className={`relative group max-w-[75%] sm:max-w-[65%] ${isAdmin ? "items-end" : "items-start"} flex flex-col`}>
+                    <div className={`relative group max-w-[85%] sm:max-w-[65%] ${isAdmin ? "items-end" : "items-start"} flex flex-col`}>
 
-                      {/* Delete hover button */}
+                      {/* Delete button: visible on mobile, hover on desktop */}
                       <button
                         onClick={() => deleteMessage(msg._id)}
-                        className={`absolute top-2 opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-600 cursor-pointer z-10 ${isAdmin ? "-left-7" : "-right-7"}`}
+                        className={`absolute top-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition text-red-400 hover:text-red-600 cursor-pointer z-10 ${isAdmin ? "-left-7" : "-right-7"}`}
+                        title="Delete message"
                       >
                         <FiTrash2 size={13} />
                       </button>
@@ -323,7 +325,7 @@ export default function AdminChatPage() {
                             <img
                               src={msg.image}
                               alt="Attachment"
-                              className="max-w-[180px] max-h-[200px] rounded-lg object-contain"
+                              className="max-w-[160px] sm:max-w-[200px] max-h-[180px] sm:max-h-[200px] rounded-lg object-contain"
                             />
                           </button>
                         )}
@@ -337,7 +339,7 @@ export default function AdminChatPage() {
 
             {/* Image Upload Preview */}
             {showUpload && (
-              <div className="px-4 py-3 border-t border-gray-100 bg-white">
+              <div className="px-3 sm:px-4 py-3 border-t border-gray-100 bg-white">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Attach Image</span>
                   <button
@@ -357,7 +359,7 @@ export default function AdminChatPage() {
             )}
 
             {/* Input Bar */}
-            <div className="px-4 py-3 border-t border-gray-100 bg-white shrink-0">
+            <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-t border-gray-100 bg-white shrink-0">
               <form onSubmit={sendMessage} className="flex items-center gap-2">
                 <button
                   type="button"
@@ -372,7 +374,7 @@ export default function AdminChatPage() {
                   placeholder="Type a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 transition-colors placeholder:text-gray-400"
+                  className="flex-1 px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 transition-colors placeholder:text-gray-400 min-w-0"
                 />
                 <button
                   type="submit"
@@ -421,3 +423,4 @@ export default function AdminChatPage() {
     </div>
   );
 }
+

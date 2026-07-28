@@ -243,6 +243,18 @@ export default function ProductClient({ productId }: ProductClientProps) {
     };
   }, []);
 
+  const benefitsList: string[] = Array.isArray(product?.keyBenefits)
+    ? product.keyBenefits.filter(Boolean)
+    : typeof product?.keyBenefits === "string"
+      ? product.keyBenefits.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
+  const ingredientsList: string[] = Array.isArray(product?.naturalIngredients)
+    ? product.naturalIngredients.filter(Boolean)
+    : typeof product?.naturalIngredients === "string"
+      ? product.naturalIngredients.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
   if (isLoading) {
     return <ProductSkeleton />;
   }
@@ -466,6 +478,94 @@ export default function ProductClient({ productId }: ProductClientProps) {
             </div>
           </div>
         </div>
+
+        {/* Organic Details Section (Key Benefits, Ingredients, How to Use, Precautions, Our Quality) */}
+        {( (benefitsList.length > 0) ||
+           (ingredientsList.length > 0) ||
+           product.howToUse || product.precautions || product.ourQuality ) && (
+          <section className="mt-12 border-t border-gray-100 pt-10">
+            <div className="flex flex-col gap-1 mb-6">
+              <p className="text-[10px] uppercase tracking-[0.24em] font-semibold" style={{ color: "#B9853A" }}>
+                Pure & Natural
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                Product Details & Benefits
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Key Benefits - Sequence List */}
+              {benefitsList.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3 md:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Key Benefits</h3>
+                  </div>
+                  <ol className="space-y-2">
+                    {benefitsList.map((benefit: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2.5 text-xs text-gray-800 leading-relaxed bg-gray-50/80 p-2.5 rounded-xl border border-gray-100">
+                        <span className="w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: "#B9853A" }}>
+                          {idx + 1}
+                        </span>
+                        <span className="pt-0.5 font-medium">{benefit}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {/* Selected Natural Ingredients */}
+              {ingredientsList.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Selected Natural Ingredients</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {ingredientsList.map((ing: string, idx: number) => (
+                      <span key={idx} className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#FDF6EC] text-[#B9853A] border border-[#F5E6CE] shadow-2xs">
+                        🌱 {ing}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* How to Use */}
+              {product.howToUse && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">How to Use</h3>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{product.howToUse}</p>
+                </div>
+              )}
+
+              {/* Precautions */}
+              {product.precautions && (
+                <div className="bg-amber-50/60 rounded-2xl border border-amber-100 p-5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900">Precautions</h3>
+                  </div>
+                  <p className="text-xs text-amber-800 leading-relaxed whitespace-pre-line">{product.precautions}</p>
+                </div>
+              )}
+
+              {/* Our Quality Commitment */}
+              {product.ourQuality && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-2 md:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Our Quality Commitment</h3>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{product.ourQuality}</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Reviews Section */}
         <section className="mt-12 border-t border-gray-100 pt-8">

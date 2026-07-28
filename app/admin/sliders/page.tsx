@@ -209,16 +209,31 @@ export default function AdminSlidersPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
-          <div className="max-w-3xl mx-auto p-6 md:p-12 min-h-screen flex flex-col pt-24">
-            <div className="mb-12 border-b border-gray-200 pb-6 flex items-center justify-between">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.2)", backdropFilter: "blur(4px)" }}
+        >
+          {/* Backdrop click to close */}
+          <div
+            className="absolute inset-0"
+            onClick={() => {
+              setShowModal(false);
+              setEditingSlider(null);
+              resetForm();
+            }}
+          />
+
+          {/* Modal Card */}
+          <div className="relative bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col max-h-[90dvh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
               <div>
-                <h3 className="text-lg font-light text-gray-900 uppercase tracking-widest">
-                  {editingSlider ? "Edit Slider" : "Add New Slider"}
-                </h3>
-                <p className="mt-2 text-[10px] text-gray-400 uppercase tracking-widest">
-                  UPLOAD IMAGE AND SET DISPLAY POSITION
+                <p className="text-[11px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: "#B9853A" }}>
+                  {editingSlider ? "Edit" : "New"}
                 </p>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {editingSlider ? "Edit Slider" : "Add Slider"}
+                </h3>
               </div>
               <button
                 type="button"
@@ -227,118 +242,126 @@ export default function AdminSlidersPage() {
                   setEditingSlider(null);
                   resetForm();
                 }}
-                className="text-gray-400 hover:text-black transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors text-lg font-light cursor-pointer"
+                aria-label="Close"
               >
-                <span className="text-[10px] uppercase tracking-widest font-medium">
-                  Close
-                </span>
+                ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-12">
-              <div className="flex flex-col gap-4">
-                <label className="text-[10px] font-semibold text-gray-900 uppercase tracking-widest">
-                  Slider Image
-                </label>
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-light">
-                  RECOMMENDED: 1920 x 800 PIXELS (3:1 RATIO)
-                </p>
-                <div className="w-full bg-gray-50 border border-gray-100 p-8 text-center flex justify-center">
-                  <div className="w-full max-w-sm aspect-[3/1]">
-                    <LocalImageUpload
-                      value={formData.image}
-                      onChange={(url) =>
-                        setFormData({ ...formData, image: url })
-                      }
-                      onRemove={() => setFormData({ ...formData, image: "" })}
-                    />
+            {/* Scrollable Form */}
+            <form onSubmit={handleSubmit} className="overflow-y-auto flex-1">
+              <div className="px-5 py-5 space-y-4">
+                {/* Title */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Slider Title <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    placeholder="e.g. Summer Collection 2026"
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300"
+                  />
+                </div>
+
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+                    Slider Image <span className="text-red-400">*</span>
+                  </label>
+                  <p className="text-[11px] text-gray-400 mb-2">
+                    Recommended ratio: 1920 × 800 px (3:1)
+                  </p>
+                  <div className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 flex justify-center">
+                    <div className="w-full max-w-sm aspect-[3/1]">
+                      <LocalImageUpload
+                        value={formData.image}
+                        onChange={(url) =>
+                          setFormData({ ...formData, image: url })
+                        }
+                        onRemove={() => setFormData({ ...formData, image: "" })}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-semibold text-gray-900 uppercase tracking-widest">
-                    Position
+                {/* Position */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Display Position
                   </label>
                   <select
                     value={formData.position || "top"}
                     onChange={(e) =>
                       setFormData({ ...formData, position: e.target.value })
                     }
-                    className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light appearance-none text-gray-900"
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all text-gray-900"
                   >
-                    <option value="top">Top (Main Hero)</option>
+                    <option value="top">Top (Main Hero Slider)</option>
                     <option value="after_row_1">After 1st Category Row</option>
                     <option value="after_row_2">After 2nd Category Row</option>
                     <option value="after_row_3">After 3rd Category Row</option>
                   </select>
                 </div>
 
-                <div className="flex flex-col justify-end">
-                  <label className="flex items-center gap-3 cursor-pointer group bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors p-4 rounded-lg">
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.isActive}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            isActive: e.target.checked,
-                          })
-                        }
-                        className="peer w-5 h-5 opacity-0 absolute z-10 cursor-pointer"
-                      />
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded bg-white peer-checked:bg-black peer-checked:border-black transition-colors flex items-center justify-center">
-                        <svg
-                          className="w-3.5 h-3.5 text-white hidden peer-checked:block pointer-events-none"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                        >
-                          <path
-                            d="M3 8L6 11L11 3.5"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            stroke="currentColor"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-semibold text-gray-900 uppercase tracking-widest group-hover:text-black">
-                      Active Status
-                    </span>
+                {/* Active Status Toggle */}
+                <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Active Status</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Show this slider on the store</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          isActive: e.target.checked,
+                        })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#B9853A]"></div>
                   </label>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-semibold text-gray-900 uppercase tracking-widest">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  required
-                  placeholder="E.g., Summer Collection 2026"
-                  className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 placeholder:text-gray-300 font-light"
-                />
-              </div>
-
-              <div className="pt-8 border-t border-gray-100">
+              {/* Submit Actions */}
+              <div className="px-5 pb-5 pt-2 border-t border-gray-100 flex gap-3 shrink-0">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full inline-flex justify-center items-center gap-2 px-6 py-4 bg-black text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2.5 text-sm font-semibold text-white rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: "#B9853A" }}
+                  onMouseEnter={(e) =>
+                    !isLoading && (e.currentTarget.style.backgroundColor = "#a07230")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#B9853A")
+                  }
                 >
                   {isLoading
                     ? "Processing..."
                     : editingSlider
                       ? "Update Slider"
                       : "Create Slider"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingSlider(null);
+                    resetForm();
+                  }}
+                  className="flex-1 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all cursor-pointer"
+                >
+                  Cancel
                 </button>
               </div>
             </form>

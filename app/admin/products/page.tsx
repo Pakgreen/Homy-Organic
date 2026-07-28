@@ -28,6 +28,11 @@ export default function AdminProductsPage() {
     imageLabels: string[];
     isFeatured: boolean;
     isDisabled: boolean;
+    keyBenefits: string;
+    naturalIngredients: string;
+    howToUse: string;
+    precautions: string;
+    ourQuality: string;
   }>({
     name: "",
     description: "",
@@ -39,6 +44,11 @@ export default function AdminProductsPage() {
     imageLabels: [],
     isFeatured: false,
     isDisabled: false,
+    keyBenefits: "",
+    naturalIngredients: "",
+    howToUse: "",
+    precautions: "",
+    ourQuality: "",
   });
 
   useEffect(() => {
@@ -101,6 +111,14 @@ export default function AdminProductsPage() {
           ? label.trim()
           : `Design ${index + 1}`;
       }),
+      keyBenefits: formData.keyBenefits
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      naturalIngredients: formData.naturalIngredients
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
     };
 
     try {
@@ -150,6 +168,15 @@ export default function AdminProductsPage() {
             ),
       isFeatured: product.isFeatured || false,
       isDisabled: product.isDisabled || false,
+      keyBenefits: Array.isArray(product.keyBenefits)
+        ? product.keyBenefits.join("\n")
+        : product.keyBenefits || "",
+      naturalIngredients: Array.isArray(product.naturalIngredients)
+        ? product.naturalIngredients.join("\n")
+        : product.naturalIngredients || "",
+      howToUse: product.howToUse || "",
+      precautions: product.precautions || "",
+      ourQuality: product.ourQuality || "",
     });
     setShowModal(true);
   };
@@ -166,6 +193,11 @@ export default function AdminProductsPage() {
       imageLabels: [],
       isFeatured: false,
       isDisabled: false,
+      keyBenefits: "",
+      naturalIngredients: "",
+      howToUse: "",
+      precautions: "",
+      ourQuality: "",
     });
   };
 
@@ -622,6 +654,82 @@ export default function AdminProductsPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              {/* Organic Product Highlights & Details */}
+              <div className="border-t border-gray-100 pt-6 space-y-6">
+                <p className="text-xs font-bold text-[#B9853A] uppercase tracking-wider">
+                  Organic Product Highlights & Usage
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Key Benefits <span className="text-gray-400 font-normal">(Enter each benefit on a new line)</span>
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={formData.keyBenefits}
+                      onChange={(e) => setFormData({ ...formData, keyBenefits: e.target.value })}
+                      placeholder="e.g.&#10;100% Pure & Unrefined&#10;Boosts Natural Immunity & Energy&#10;Rich in Essential Vitamins & Antioxidants&#10;No Added Sugar or Preservatives"
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Selected Natural Ingredients <span className="text-gray-400 font-normal">(Enter each ingredient on a new line)</span>
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={formData.naturalIngredients}
+                      onChange={(e) => setFormData({ ...formData, naturalIngredients: e.target.value })}
+                      placeholder="e.g.&#10;Raw Wildflower Honey Extract&#10;Organic Cold-Pressed Seed Oil&#10;Natural Herbal Essences&#10;Vitamin E & Minerals"
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      How to Use
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.howToUse}
+                      onChange={(e) => setFormData({ ...formData, howToUse: e.target.value })}
+                      placeholder="e.g. Take 1 tablespoon daily with warm water..."
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Precautions
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.precautions}
+                      onChange={(e) => setFormData({ ...formData, precautions: e.target.value })}
+                      placeholder="e.g. Keep out of reach of children under 1 year. Store in a cool dry place."
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Our Quality Commitment
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.ourQuality}
+                      onChange={(e) => setFormData({ ...formData, ourQuality: e.target.value })}
+                      placeholder="e.g. 100% Lab Tested, No Chemicals, Unrefined Organic Product."
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
+                  </div>
                 </div>
               </div>
 

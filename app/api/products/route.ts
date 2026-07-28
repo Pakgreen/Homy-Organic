@@ -18,6 +18,19 @@ const withPriceAliases = (product: any) => {
     ...plain,
     newPrice: plain?.price,
     oldPrice,
+    keyBenefits: Array.isArray(plain?.keyBenefits)
+      ? plain.keyBenefits
+      : typeof plain?.keyBenefits === "string"
+        ? plain.keyBenefits.split("\n").filter(Boolean)
+        : [],
+    naturalIngredients: Array.isArray(plain?.naturalIngredients)
+      ? plain.naturalIngredients
+      : typeof plain?.naturalIngredients === "string"
+        ? plain.naturalIngredients.split("\n").filter(Boolean)
+        : [],
+    howToUse: plain?.howToUse || "",
+    precautions: plain?.precautions || "",
+    ourQuality: plain?.ourQuality || "",
     imageVariants: buildProductImageVariants(plain),
   };
 };
@@ -140,12 +153,21 @@ export async function POST(req: NextRequest) {
         ? [data.images.trim()]
         : [];
 
-    if (data.imageLabels !== undefined) {
-      data.imageLabels = Array.isArray(data.imageLabels)
-        ? data.imageLabels.map((label: unknown) =>
-            typeof label === "string" ? label.trim() : "",
-          )
-        : [];
+    const normalizeStringArray = (input: any) => {
+      if (Array.isArray(input)) {
+        return input.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
+      }
+      if (typeof input === "string" && input.trim()) {
+        return input.split("\n").map((item) => item.trim()).filter(Boolean);
+      }
+      return [];
+    };
+
+    if (data.keyBenefits !== undefined) {
+      data.keyBenefits = normalizeStringArray(data.keyBenefits);
+    }
+    if (data.naturalIngredients !== undefined) {
+      data.naturalIngredients = normalizeStringArray(data.naturalIngredients);
     }
 
     // Validate required fields

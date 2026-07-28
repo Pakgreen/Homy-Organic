@@ -14,6 +14,11 @@ export interface IProduct extends Document {
   ratings: number;
   isFeatured: boolean;
   isDisabled: boolean;
+  keyBenefits?: string[];
+  naturalIngredients?: string[];
+  howToUse?: string;
+  precautions?: string;
+  ourQuality?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,11 +79,36 @@ const ProductSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    keyBenefits: {
+      type: [String],
+      default: [],
+    },
+    naturalIngredients: {
+      type: [String],
+      default: [],
+    },
+    howToUse: {
+      type: String,
+      default: "",
+    },
+    precautions: {
+      type: String,
+      default: "",
+    },
+    ourQuality: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
+    strict: false,
   },
 );
+
+if (mongoose.models && mongoose.models.Product) {
+  delete (mongoose.models as any).Product;
+}
 
 const Product: Model<IProduct> =
   mongoose.models.Product || mongoose.model<IProduct>("Product", ProductSchema);

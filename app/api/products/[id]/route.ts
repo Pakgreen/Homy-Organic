@@ -19,6 +19,19 @@ const withPriceAliases = (product: any) => {
     ...plain,
     newPrice: plain?.price,
     oldPrice,
+    keyBenefits: Array.isArray(plain?.keyBenefits)
+      ? plain.keyBenefits
+      : typeof plain?.keyBenefits === "string"
+        ? plain.keyBenefits.split("\n").filter(Boolean)
+        : [],
+    naturalIngredients: Array.isArray(plain?.naturalIngredients)
+      ? plain.naturalIngredients
+      : typeof plain?.naturalIngredients === "string"
+        ? plain.naturalIngredients.split("\n").filter(Boolean)
+        : [],
+    howToUse: plain?.howToUse || "",
+    precautions: plain?.precautions || "",
+    ourQuality: plain?.ourQuality || "",
     imageVariants: buildProductImageVariants(plain),
   };
 };
@@ -132,16 +145,31 @@ export async function PUT(
 
     const data = await req.json();
 
+    // Remove immutable, alias, and computed fields to prevent MongoDB update failures
+    delete data._id;
+    delete data.id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    delete data.__v;
+    delete data.imageVariants;
+
     // Accept alias fields from clients: newPrice -> price, oldPrice -> originalPrice
     if (typeof data.newPrice === "number" && data.newPrice > 0) {
       data.price = data.newPrice;
     }
+    delete data.newPrice;
+
     if (
       typeof data.oldPrice === "number" &&
       data.oldPrice > 0 &&
       (data.originalPrice === undefined || data.originalPrice === null)
     ) {
       data.originalPrice = data.oldPrice;
+    }
+    delete data.oldPrice;
+
+    if (data.category && typeof data.category === "object") {
+      data.category = data.category._id || data.category;
     }
 
     if (data.images !== undefined) {
@@ -155,12 +183,21 @@ export async function PUT(
           : [];
     }
 
-    if (data.imageLabels !== undefined) {
-      data.imageLabels = Array.isArray(data.imageLabels)
-        ? data.imageLabels.map((label: unknown) =>
-            typeof label === "string" ? label.trim() : "",
-          )
-        : [];
+    const normalizeStringArray = (input: any) => {
+      if (Array.isArray(input)) {
+        return input.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
+      }
+      if (typeof input === "string" && input.trim()) {
+        return input.split("\n").map((item) => item.trim()).filter(Boolean);
+      }
+      return [];
+    };
+
+    if (data.keyBenefits !== undefined) {
+      data.keyBenefits = normalizeStringArray(data.keyBenefits);
+    }
+    if (data.naturalIngredients !== undefined) {
+      data.naturalIngredients = normalizeStringArray(data.naturalIngredients);
     }
 
     const existingProduct = await Product.findById(id);
@@ -175,8 +212,20 @@ export async function PUT(
       );
     }
 
-    if (data.name) {
-      data.slug = generateSlug(data.name);
+    if (data.name && data.name.trim() !== existingProduct.name) {
+      const newSlug = generateSlug(data.name);
+      if (newSlug !== existingProduct.slug) {
+        const slugExists = await Product.findOne({ slug: newSlug, _id: { $ne: id } });
+        if (slugExists) {
+          data.slug = `${newSlug}-${Math.random().toString(36).substring(2, 6)}`;
+        } else {
+          data.slug = newSlug;
+        }
+      } else {
+        delete data.slug;
+      }
+    } else {
+      delete data.slug;
     }
 
     // If images changed, collect removed Cloudinary URLs for cleanup

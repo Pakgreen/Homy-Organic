@@ -4,11 +4,22 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import LocalImageUpload from "@/components/LocalImageUpload";
+import { FiGlobe, FiMail, FiPhone, FiMapPin, FiCreditCard, FiTruck, FiSave, FiCheckCircle } from "react-icons/fi";
 
 export default function SiteSettingsPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    logo: string;
+    aboutUsText: string;
+    contactUsText: string;
+    contactEmail: string;
+    contactPhone: string;
+    contactAddress: string;
+    paymentAccountDetails: string;
+    deliveryChargesEnabled: boolean;
+    deliveryChargeAmount: number | "";
+  }>({
     logo: "",
     aboutUsText: "",
     contactUsText: "",
@@ -17,7 +28,7 @@ export default function SiteSettingsPage() {
     contactAddress: "",
     paymentAccountDetails: "",
     deliveryChargesEnabled: false,
-    deliveryChargeAmount: 0,
+    deliveryChargeAmount: "",
   });
 
   useEffect(() => {
@@ -35,7 +46,7 @@ export default function SiteSettingsPage() {
             data.paymentAccountDetails ||
             "JazzCash: 0308 6753520 (Rabia Malik)",
           deliveryChargesEnabled: data.deliveryChargesEnabled || false,
-          deliveryChargeAmount: data.deliveryChargeAmount || 0,
+          deliveryChargeAmount: data.deliveryChargeAmount || "",
         });
       } catch (error) {
         toast.error("Failed to load site settings");
@@ -64,7 +75,12 @@ export default function SiteSettingsPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.put("/api/settings/site", formData);
+      const payload = {
+        ...formData,
+        deliveryChargeAmount:
+          formData.deliveryChargeAmount === "" ? 0 : Number(formData.deliveryChargeAmount),
+      };
+      await axios.put("/api/settings/site", payload);
       toast.success("Site settings updated successfully");
     } catch (error) {
       toast.error("Failed to update site settings");
@@ -75,217 +91,249 @@ export default function SiteSettingsPage() {
 
   if (fetching) {
     return (
-      <div className="text-sm text-gray-500 font-light">
-        Loading settings...
+      <div className="space-y-4 max-w-4xl mx-auto">
+        <div className="h-8 w-40 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="h-40 w-full bg-gray-100 rounded-2xl animate-pulse" />
+        <div className="h-60 w-full bg-gray-100 rounded-2xl animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-12">
-      <div className="border-b border-gray-200 pb-6">
-        <h1 className="text-3xl font-light text-gray-900 tracking-tight">
-          Site Settings
-        </h1>
-        <p className="text-sm text-gray-400 mt-2 font-light">
-          Manage your global site configuration
-        </p>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Site Settings</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Manage global brand identity, contact info & shipping rules</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-lg transition-all cursor-pointer disabled:opacity-50 w-fit"
+          style={{ backgroundColor: "#B9853A" }}
+          onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = "#a07230")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B9853A")}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            <>
+              <FiSave size={16} />
+              Save Changes
+            </>
+          )}
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div>
-          <h2 className="text-sm uppercase tracking-widest text-gray-400 font-semibold mb-6">
-            Brand Identity
-          </h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Section 1: Brand Identity */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+            <FiGlobe size={18} style={{ color: "#B9853A" }} />
+            <h3 className="text-base font-bold text-gray-900">Brand Identity</h3>
+          </div>
 
-          <div className="border-b border-gray-100 pb-8">
-            <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
               Site Logo
             </label>
-            <div className="max-w-xs">
+            <div className="w-full max-w-md sm:max-w-lg">
               <LocalImageUpload
                 value={formData.logo}
                 onChange={handleImageUpload}
                 onRemove={handleImageRemove}
               />
             </div>
-            <p className="text-xs text-gray-400 font-light mt-4">
-              Recommended size: 140x38 or similar ratio. Used in navbar and
-              footer.
+            <p className="text-xs text-gray-400 mt-2">
+              Recommended: PNG or SVG with transparent background. Appears in navbar and footer.
             </p>
           </div>
         </div>
 
-        <div>
-          <h2 className="text-sm uppercase tracking-widest text-gray-400 font-semibold mb-6">
-            Page Content
-          </h2>
+        {/* Section 2: Page Content & Story */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+            <FiCheckCircle size={18} style={{ color: "#B9853A" }} />
+            <h3 className="text-base font-bold text-gray-900">Page Content</h3>
+          </div>
 
-          <div className="border-b border-gray-100 pb-8 space-y-6">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                About Us Text
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                About Us Story
               </label>
               <textarea
                 value={formData.aboutUsText}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    aboutUsText: e.target.value,
-                  }))
-                }
-                className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light min-h-[120px] resize-y"
+                onChange={(e) => setFormData((prev) => ({ ...prev, aboutUsText: e.target.value }))}
+                rows={4}
+                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
                 placeholder="Tell your brand's story..."
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                Contact Us Message (Optional)
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                Contact Page Intro Message
               </label>
               <textarea
                 value={formData.contactUsText}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    contactUsText: e.target.value,
-                  }))
-                }
-                className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light min-h-[100px] resize-y"
-                placeholder="A short message displayed above contact details..."
+                onChange={(e) => setFormData((prev) => ({ ...prev, contactUsText: e.target.value }))}
+                rows={3}
+                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                placeholder="Short greeting displayed above contact form..."
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                  Contact Email
-                </label>
+          </div>
+        </div>
+
+        {/* Section 3: Contact & Payment Information */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+            <FiMail size={18} style={{ color: "#B9853A" }} />
+            <h3 className="text-base font-bold text-gray-900">Contact & Payment Details</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                Contact Email
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                 <input
                   type="email"
                   value={formData.contactEmail}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      contactEmail: e.target.value,
-                    }))
-                  }
-                  className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light"
-                  placeholder="e.g. info@yoursite.com"
+                  onChange={(e) => setFormData((prev) => ({ ...prev, contactEmail: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300"
+                  placeholder="info@homyorganic.com"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                  Contact Phone
-                </label>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                Contact Phone
+              </label>
+              <div className="relative">
+                <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                 <input
                   type="text"
                   value={formData.contactPhone}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      contactPhone: e.target.value,
-                    }))
-                  }
-                  className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light"
-                  placeholder="e.g. +1 234 567 890"
+                  onChange={(e) => setFormData((prev) => ({ ...prev, contactPhone: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300"
+                  placeholder="+92 300 1234567"
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                Physical Address
-              </label>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+              Physical Address
+            </label>
+            <div className="relative">
+              <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
               <input
                 type="text"
                 value={formData.contactAddress}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    contactAddress: e.target.value,
-                  }))
-                }
-                className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light"
-                placeholder="123 Example St, City, Country"
+                onChange={(e) => setFormData((prev) => ({ ...prev, contactAddress: e.target.value }))}
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300"
+                placeholder="Store address, City, Country"
               />
             </div>
-            <div className="pt-4 border-t border-gray-100">
-              <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                Prepaid Payment Details
-              </label>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+              Prepaid Payment Account Details
+            </label>
+            <div className="relative">
               <textarea
                 value={formData.paymentAccountDetails}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    paymentAccountDetails: e.target.value,
-                  }))
-                }
-                className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light resize-y min-h-[60px]"
-                placeholder="e.g. Bank Transfer IBAN: XXXX, Account Title: YYY"
+                onChange={(e) => setFormData((prev) => ({ ...prev, paymentAccountDetails: e.target.value }))}
+                rows={2}
+                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-none"
+                placeholder="JazzCash / EasyPaisa / Bank transfer details shown at checkout"
               />
-              <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
-                Details shown on checkout for prepaid orders.
-              </p>
             </div>
+            <p className="text-xs text-gray-400 mt-1">
+              These details will be displayed to customers selecting prepaid payment at checkout.
+            </p>
           </div>
         </div>
 
-        <div>
-          <h2 className="text-sm uppercase tracking-widest text-gray-400 font-semibold mb-6">
-            Shipping & Delivery
-          </h2>
+        {/* Section 4: Shipping & Delivery */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+            <FiTruck size={18} style={{ color: "#B9853A" }} />
+            <h3 className="text-base font-bold text-gray-900">Shipping & Delivery</h3>
+          </div>
 
-          <div className="border-b border-gray-100 pb-8 space-y-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3.5 border border-gray-100">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Enable Delivery Charges</p>
+              <p className="text-xs text-gray-400 mt-0.5">Apply flat shipping fee to customer checkouts</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                id="deliveryChargesEnabled"
                 checked={formData.deliveryChargesEnabled}
+                onChange={(e) => setFormData((prev) => ({ ...prev, deliveryChargesEnabled: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#B9853A]"></div>
+            </label>
+          </div>
+
+          {formData.deliveryChargesEnabled && (
+            <div className="pt-2">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                Delivery Charge Amount (PKR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.deliveryChargeAmount}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    deliveryChargesEnabled: e.target.checked,
+                    deliveryChargeAmount:
+                      e.target.value === "" ? "" : Number(e.target.value),
                   }))
                 }
-                className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                className="w-full max-w-xs px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300"
+                placeholder="Enter amount (e.g. 200)"
               />
-              <label
-                htmlFor="deliveryChargesEnabled"
-                className="text-xs font-medium text-gray-900 uppercase tracking-widest"
-              >
-                Enable Delivery Charges
-              </label>
             </div>
-
-            {formData.deliveryChargesEnabled && (
-              <div>
-                <label className="block text-xs font-medium text-gray-900 uppercase tracking-widest mb-2">
-                  Delivery Charge Amount (Rs)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.deliveryChargeAmount}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      deliveryChargeAmount: Number(e.target.value),
-                    }))
-                  }
-                  className="w-full max-w-xs bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light"
-                  placeholder="e.g. 200"
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        <div className="pt-4">
+        {/* Bottom Save Button */}
+        <div className="flex justify-end pt-2">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-black cursor-pointer text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors uppercase tracking-widest"
+            className="flex items-center justify-center gap-2 px-8 py-3 text-sm font-semibold text-white rounded-xl transition-all cursor-pointer disabled:opacity-50 w-full sm:w-auto"
+            style={{ backgroundColor: "#B9853A" }}
+            onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = "#a07230")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B9853A")}
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              <>
+                <FiSave size={16} />
+                Save All Changes
+              </>
+            )}
           </button>
         </div>
       </form>
