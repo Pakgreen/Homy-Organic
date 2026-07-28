@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import HeroSlider from "@/components/HeroSlider";
-
 import ProductsContent from "@/components/home/ProductsContent";
+import ValuePacksContent from "@/components/home/ValuePacksContent";
 import FAQAccordion from "@/components/FAQAccordion";
 import About from "@/components/About";
 import Testimonials from "@/components/Testimonial";
@@ -12,7 +12,6 @@ async function getSliders() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/sliders`, {
-      // Always fetch fresh so all new sliders appear
       cache: "no-store",
     });
 
@@ -50,6 +49,9 @@ export default async function ProductsPage() {
       <Suspense fallback={null}>
         <ProductsContent />
       </Suspense>
+
+      <ValuePacksContent />
+
       <BachatPack />
       
       <InstagramFeed urls={instagramReels} />

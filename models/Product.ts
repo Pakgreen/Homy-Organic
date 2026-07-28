@@ -14,11 +14,14 @@ export interface IProduct extends Document {
   ratings: number;
   isFeatured: boolean;
   isDisabled: boolean;
+  isValuePack?: boolean;
   keyBenefits?: string[];
   naturalIngredients?: string[];
   howToUse?: string;
   precautions?: string;
   ourQuality?: string;
+  badge?: string;
+  whichIncluded?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,6 +82,10 @@ const ProductSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    isValuePack: {
+      type: Boolean,
+      default: false,
+    },
     keyBenefits: {
       type: [String],
       default: [],
@@ -98,6 +105,14 @@ const ProductSchema: Schema = new Schema(
     ourQuality: {
       type: String,
       default: "",
+    },
+    badge: {
+      type: String,
+      default: "",
+    },
+    whichIncluded: {
+      type: [Schema.Types.Mixed],
+      default: [],
     },
   },
   {

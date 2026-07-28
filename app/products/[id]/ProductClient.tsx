@@ -429,8 +429,47 @@ export default function ProductClient({ productId }: ProductClientProps) {
           </div>
         </div>
 
-        {/* Organic Details - 2 Column Layout (No Card Containers) */}
-        {(benefitsList.length > 0 ||
+        {/* Value Pack Included Items */}
+        {product.isValuePack &&
+          Array.isArray(product.whichIncluded) &&
+          product.whichIncluded.length > 0 && (
+            <div className="pt-6 border-t border-amber-200/80">
+              <div className="bg-[#FAF6F0] p-6 rounded-2xl border border-[#EADBCC] space-y-3">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                  <span className="text-base">🎁</span>
+                  <span>Items Included in this Value Pack</span>
+                </h3>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {product.whichIncluded.map((item: any, idx: number) => {
+                    const isObject = typeof item === "object" && item !== null;
+                    const itemName = isObject ? item.name : String(item);
+                    const itemQty = isObject && typeof item.quantity === "number" ? item.quantity : 1;
+                    const itemPrice = isObject && typeof item.price === "number" ? item.price : undefined;
+
+                    return (
+                      <li key={idx} className="flex items-center justify-between gap-3 text-xs text-gray-800 font-semibold bg-white p-3 rounded-xl border border-amber-100/80 shadow-2xs">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-5.5 h-5.5 rounded-full bg-[#B9853A] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                            {itemQty}x
+                          </span>
+                          <span className="font-bold text-gray-900">{itemName}</span>
+                        </div>
+                        {itemPrice !== undefined && (
+                          <span className="text-[11px] font-semibold text-[#B9853A] bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200/60 shrink-0">
+                            {formatPrice(itemPrice)}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          )}
+
+        {/* Organic Details - 2 Column Layout (Standard Products) */}
+        {!product.isValuePack &&
+          (benefitsList.length > 0 ||
           ingredientsList.length > 0 ||
           (typeof product.howToUse === "string" && product.howToUse.trim().length > 0) ||
           (typeof product.precautions === "string" && product.precautions.trim().length > 0) ||

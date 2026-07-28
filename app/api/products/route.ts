@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const featured = searchParams.get("featured");
+    const valuePack = searchParams.get("valuePack");
     const includeDisabled = searchParams.get("includeDisabled") === "true";
     const sort = searchParams.get("sort") || "-createdAt";
     const page = parseInt(searchParams.get("page") || "1");
@@ -53,6 +54,15 @@ export async function GET(req: NextRequest) {
 
     if (!includeDisabled) {
       query.isDisabled = { $ne: true };
+    }
+
+    if (valuePack === "true") {
+      query.isValuePack = true;
+    } else if (valuePack === "false") {
+      query.isValuePack = { $ne: true };
+    } else if (!includeDisabled) {
+      // By default for customer store, exclude Value Packs from standard product grid
+      query.isValuePack = { $ne: true };
     }
 
     if (category) {

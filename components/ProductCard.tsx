@@ -3,23 +3,25 @@
 import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
-import { FiShoppingBag, FiShare2 } from "react-icons/fi";
+import { FiShoppingBag, FiEye } from "react-icons/fi";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
-import { siteConfig } from "@/config/site.config";
 import { isCloudinaryUrl } from "@/lib/image";
 
 interface ProductCardProps {
   product: {
     _id: string;
     name: string;
-    slug: string;
+    slug?: string;
     price: number;
     newPrice?: number;
     oldPrice?: number;
     originalPrice?: number;
     images: string[];
-    ratings: number;
+    ratings?: number;
+    category?: any;
+    brand?: string;
+    badge?: string;
   };
 }
 
@@ -28,6 +30,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const primaryImage = product.images?.[0] || "";
   const hoverImage = product.images?.[1] || primaryImage;
   const hasHoverImage = Boolean(product.images?.[1]);
+  
   const currentPrice =
     typeof product.newPrice === "number" ? product.newPrice : product.price;
   const previousPrice =
@@ -36,10 +39,27 @@ export default function ProductCard({ product }: ProductCardProps) {
       : typeof product.originalPrice === "number"
         ? product.originalPrice
         : undefined;
+
   const showOldPrice =
     typeof previousPrice === "number" && previousPrice > currentPrice;
 
-  const handleAddToCart = () => {
+  const discountPercent =
+    showOldPrice && previousPrice
+      ? Math.round(((previousPrice - currentPrice) / previousPrice) * 100)
+      : 0;
+
+  const categoryName =
+    typeof product.category === "object" && product.category?.name
+      ? product.category.name
+      : typeof product.category === "string"
+      ? product.category
+      : product.brand || "ORGANIC";
+
+  const customBadge = product.badge?.trim() || "";
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     addItem({
       _id: product._id,
       name: product.name,
@@ -50,37 +70,30 @@ export default function ProductCard({ product }: ProductCardProps) {
     toast.success("Added to cart!");
   };
 
-  const handleShare = async () => {
-    try {
-      const url = `${window.location.origin}/products/${product._id}`;
-
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copied");
-        return;
-      }
-
-      // Fallback copy for older browsers
-      const textarea = document.createElement("textarea");
-      textarea.value = url;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      toast.success("Link copied");
-    } catch (_error) {
-      // Silently ignore to avoid noisy errors
-    }
-  };
-
   return (
-    <article className="group/card flex h-full flex-col bg-white">
-      <div className="relative h-64 sm:h-80 overflow-hidden bg-gray-100 ">
-        {showOldPrice && (
-          <div className="absolute top-3 left-3 z-10  text-yellow-500 border border-yellow-500 rounded-2xl text-[10px] font-bold uppercase tracking-widest px-3 py-1 shadow-sm">
-            Sale
+    <article className="group flex h-full flex-col bg-white">
+      
+      {/* Image Container */}
+      <div className="relative aspect-4/5 w-full overflow-hidden bg-[#F4F1EA]">
+        
+        {/* Top-Left Custom Badge (e.g. NEW, HOT SALE from admin or custom) */}
+        {customBadge ? (
+          <div className="absolute top-3 left-3 z-10 bg-white text-black font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
+            {customBadge}
+          </div>
+        ) : (
+          <div className="absolute top-3 left-3 z-10 bg-white text-black font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
+            NEW
           </div>
         )}
+
+        {/* Top-Right Discount Pill Badge (-25%) */}
+        {showOldPrice && discountPercent > 0 && (
+          <div className="absolute top-3 right-3 z-10 bg-[#EA6925] text-white font-bold text-[10px] px-2.5 py-1 rounded-full shadow-2xs">
+            -{discountPercent}%
+          </div>
+        )}
+
         <Link href={`/products/${product._id}`} className="absolute inset-0">
           {primaryImage && (
             <>
@@ -88,12 +101,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                 src={primaryImage}
                 alt={product.name}
                 fill
-                sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 33vw"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 unoptimized={isCloudinaryUrl(primaryImage)}
                 className={`object-cover transition-all duration-500 ${
                   hasHoverImage
-                    ? "group-hover/card:opacity-0"
-                    : "group-hover/card:scale-105"
+                    ? "group-hover:opacity-0"
+                    : "group-hover:scale-105"
                 }`}
               />
               {hasHoverImage && (
@@ -101,51 +114,74 @@ export default function ProductCard({ product }: ProductCardProps) {
                   src={hoverImage}
                   alt={`${product.name} alternate view`}
                   fill
-                  sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 33vw"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   unoptimized={isCloudinaryUrl(hoverImage)}
-                  className="object-cover opacity-0 transition-all duration-500 group-hover/card:scale-105 group-hover/card:opacity-100"
+                  className="object-cover opacity-0 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
                 />
               )}
             </>
           )}
         </Link>
+
+        {/* Hover / Touch Action Buttons (Auto-visible on Mobile, Hover on Desktop) */}
+        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
+          <button
+            onClick={handleAddToCart}
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-900 flex items-center justify-center shadow-md sm:shadow-sm hover:bg-black hover:text-white transition-colors cursor-pointer"
+            title="Add to Cart"
+          >
+            <FiShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </button>
+          <Link
+            href={`/products/${product._id}`}
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-900 flex items-center justify-center shadow-md sm:shadow-sm hover:bg-black hover:text-white transition-colors"
+            title="Quick View"
+          >
+            <FiEye className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </Link>
+        </div>
+
       </div>
 
-      <div className="flex flex-1 flex-col pt-3 items-center text-center">
+      {/* Content Details Below Image */}
+      <div className="flex flex-1 flex-col pt-3 pb-1 text-left space-y-1">
+        
+        {/* Category Label */}
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          {categoryName}
+        </span>
+
+        {/* Title */}
         <Link href={`/products/${product._id}`}>
-          <h3
-            className="line-clamp-2 text-sm sm:text-base font-medium italic text-gray-700 leading-snug hover:text-black transition-colors"
-          >
+          <h3 className="line-clamp-2 text-sm font-bold uppercase tracking-tight text-gray-900 leading-snug hover:text-[#B9853A] transition-colors">
             {product.name}
           </h3>
         </Link>
 
-        <div className="mt-1.5 flex flex-col items-center justify-center gap-1 italic">
-          <div className="flex items-center justify-center gap-2">
-            {showOldPrice && previousPrice !== undefined && (
-              <span className="text-xs sm:text-sm text-gray-400 line-through font-normal not-italic">
-                {formatPrice(previousPrice)}
-              </span>
-            )}
-            <span className="text-base sm:text-lg font-semibold text-gray-800 leading-none">
-              {formatPrice(currentPrice)}
-            </span>
+        {/* Rating Stars & Reviews */}
+        <div className="flex items-center gap-1.5 pt-0.5">
+          <div className="flex text-amber-400 text-xs">
+            ★★★★★
           </div>
+          <span className="text-xs text-gray-500 font-normal">
+            4 reviews
+          </span>
+        </div>
+
+        {/* Price Row */}
+        <div className="flex items-baseline gap-2 pt-1 font-semibold text-sm">
+          <span className="text-[#E55353] font-bold text-base">
+            {formatPrice(currentPrice)}
+          </span>
           {showOldPrice && previousPrice !== undefined && (
-            <span className="text-[11px] sm:text-xs font-medium text-red-500 not-italic">
-              Save {formatPrice(previousPrice - currentPrice)}
+            <span className="text-xs text-gray-400 line-through font-normal">
+              {formatPrice(previousPrice)}
             </span>
           )}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          className="mt-3 w-full flex cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-300  px-3 py-2 text-sm font-medium text-gray-700  focus:outline-none transition-colors hover:bg-black hover:text-white active:bg-gray-200"
-        >
-          <FiShoppingBag size={18} />
-          Add to Cart
-        </button>
       </div>
+
     </article>
   );
 }
