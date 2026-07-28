@@ -65,16 +65,16 @@ export default function AdminSignInPage() {
   };
 
   return (
-    <div className="flex bg-white h-screen w-full flex-col md:flex-row overflow-hidden">
+    <div className="flex bg-[#EEF3EC] h-screen w-full flex-col md:flex-row overflow-hidden">
       {/* Left Side - Brand Display (Fixed background style) */}
-      <div className="relative w-full md:w-2/5 bg-gray-950 text-white p-8 md:p-12 flex flex-col justify-between hidden md:flex h-full">
+      <div className="relative w-full md:w-2/5  text-white p-8 md:p-12 flex flex-col justify-between hidden md:flex h-full">
         {/* Subtle gradient overlay/background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 to-transparent pointer-events-none"></div>
+        <div className="absolute inset-0 bg-white  pointer-events-none  rounded-r-full overflow-hidden"></div>
 
         <div className="relative z-10 flex items-center justify-start">
           <button
             onClick={() => router.push("/")}
-            className="p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-sm"
+            className="p-2 text-black hover:text-black cursor-pointer bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-sm"
             title="Return to Home"
           >
             <FiArrowLeft className="w-5 h-5" />
@@ -82,32 +82,32 @@ export default function AdminSignInPage() {
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="flex justify-center border-4 border-white/20 rounded-full p-2 bg-white mb-6">
+          <div className="flex justify-center  rounded-full p-2 mb-6">
             <Image
               src="/homyorganic.png"
               alt="Homy Orgaic logo"
               width={72}
               height={72}
-              className="rounded-full"
+            
               priority
             />
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold mb-4 tracking-tight">
             Admin Portal
           </h2>
-          <p className="text-white/70 text-base leading-relaxed max-w-md">
+          <p className="text-black text-base leading-relaxed max-w-md">
             Log in to manage your store, track active sessions, oversee users,
             and control contents cleanly securely.
           </p>
         </div>
 
-        <div className="relative z-10 text-sm text-white/50 font-medium tracking-wide text-center">
+        <div className="relative z-10 text-sm text-black font-medium tracking-wide text-center">
           © {new Date().getFullYear()} Homy Orgaic
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full md:w-3/5 p-6 sm:p-10 md:p-16 lg:p-24 flex flex-col justify-center bg-white h-full overflow-y-auto">
+      <div className="w-full md:w-3/5 p-6 sm:p-10 md:p-16 lg:p-24 flex flex-col justify-center h-full overflow-y-auto">
         {/* Mobile Header (Only visible on small screens) */}
         <div className="md:hidden flex items-center justify-between mb-10 w-full max-w-md mx-auto">
           <button
@@ -117,13 +117,13 @@ export default function AdminSignInPage() {
           >
             <FiArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex justify-center border border-gray-100 rounded-full p-1 bg-white shadow-sm">
+          <div className="flex justify-center  p-1 ">
             <Image
               src="/homyorganic.png"
               alt="Homy Orgaic logo"
               width={40}
               height={40}
-              className="rounded-full"
+  
               priority
             />
           </div>
