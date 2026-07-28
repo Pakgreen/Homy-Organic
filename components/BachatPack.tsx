@@ -18,7 +18,7 @@ export default function BachatPack() {
         </p>
         
       </div>
-      <div>
+      <div className="flex items-center translate-0">
         <Image src="/bachatpack.png" alt="bachatpack" width={543} height={543} />
       </div>
     </div>
