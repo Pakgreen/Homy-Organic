@@ -45,7 +45,7 @@ export default function Testimonials() {
       <div className="mb-16 text-center">
         <h2 className="text-4xl font-light tracking-tight text-white md:text-6xl">
           What Our{" "}
-          <span className="font-serif italic text-gray-400">
+          <span className="font-serif italic text-[#B9853B]">
             Clients Say
           </span>
         </h2>

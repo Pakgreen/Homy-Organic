@@ -284,296 +284,245 @@ export default function ProductClient({ productId }: ProductClientProps) {
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={() => router.push("/products")}
-          className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest hover:text-black border border-gray-300 hover:border-black rounded-full px-4 py-2 transition-colors mb-8 cursor-pointer bg-transparent"
-        >
-          &larr; Back to products
-        </button>
+    <div className="min-h-screen py-6 sm:py-8 bg-[#F7F6F3]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
+        
+        {/* Top Header Label */}
+        <div className="text-center py-1">
+          <p className="text-[10px] tracking-[0.3em] font-semibold text-gray-400 uppercase">
+            PURE • NATURAL • PREMIUM
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-tr-[3rem] rounded-bl-[3rem]">
-              {heroImage && (
-                <Image
-                  src={heroImage}
-                  alt={product.name}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  unoptimized={isCloudinaryUrl(heroImage)}
-                  priority
-                />
+        {/* Main Product Hero Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          
+          {/* Left Column: Product Image */}
+          <div className="lg:col-span-6">
+            <div className="bg-white rounded-3xl p-6 sm:p-10 border border-gray-100/80 relative flex flex-col items-center justify-center h-full min-h-[380px] sm:min-h-[450px]">
+              {product.isFeatured && (
+                <span className="absolute top-6 left-6 bg-white border border-gray-200 text-[10px] font-bold text-gray-900 px-3 py-1 rounded-full uppercase tracking-wider">
+                  FEATURED
+                </span>
+              )}
+
+              <div className="relative w-full aspect-square max-h-[360px] sm:max-h-[420px]">
+                {heroImage && (
+                  <Image
+                    src={heroImage}
+                    alt={product.name}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    unoptimized={isCloudinaryUrl(heroImage)}
+                    priority
+                  />
+                )}
+              </div>
+
+              {/* Thumbnails if multiple */}
+              {productImageVariants.length > 1 && (
+                <div className="flex items-center gap-2.5 mt-4">
+                  {productImageVariants.map((img: any, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectImage(idx)}
+                      className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                        selectedImage === idx ? "border-black" : "border-gray-100 opacity-60"
+                      }`}
+                    >
+                      <Image src={img.url} alt="" fill className="object-contain p-1" unoptimized={isCloudinaryUrl(img.url)} />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-
-            {productImageVariants.length > 1 && (
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.24em] text-gray-400 font-semibold">
-                      Select Design
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Choose the design you want to preview.
-                    </p>
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-                    {selectedImage + 1}/{productImageVariants.length}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
-                  {productImageVariants.map((image: any, index: number) => {
-                    const isActive = selectedImage === index;
-                    const imageLabel = image.name || `Design ${index + 1}`;
-
-                    return (
-                      <button
-                        key={`${image.url}-${index}`}
-                        type="button"
-                        onClick={() => handleSelectImage(index)}
-                        className={`group relative aspect-square overflow-hidden !rounded-md border transition-colors ${
-                          isActive
-                            ? "border-black"
-                            : "border-gray-200 hover:border-gray-400"
-                        }`}
-                        aria-label={`Select ${imageLabel}`}
-                        aria-pressed={isActive}
-                      >
-                        <Image
-                          src={image.url}
-                          alt={`${product.name} ${imageLabel}`}
-                          fill
-                          className="object-contain bg-white"
-                          sizes="120px"
-                          unoptimized={isCloudinaryUrl(image.url)}
-                        />
-
-                        <div
-                          className={`absolute inset-x-0 bottom-0 flex items-center justify-center px-2 py-1 text-[10px] font-semibold uppercase tracking-widest ${
-                            isActive
-                              ? "bg-black text-white"
-                              : "bg-white/90 text-gray-700"
-                          }`}
-                        >
-                          {isActive ? "Selected" : imageLabel}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Product Info */}
-          <div className="lg:pt-2">
-            <div className="max-w-xl space-y-5">
-              <div>
-                {product.brand && (
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
-                    {product.brand}
-                  </p>
-                )}
-                <h1 className="text-xl sm:text-3xl font-light text-gray-900 leading-tight tracking-tight">
+          {/* Right Column: Product Specs & Order Form */}
+          <div className="lg:col-span-6">
+            <div className="bg-white rounded-3xl p-6 sm:p-10 border border-gray-100/80 h-full flex flex-col justify-between space-y-6">
+              
+              <div className="space-y-4">
+                <p className="text-[10px] tracking-[0.25em] font-bold text-gray-400 uppercase">
+                  {product.category?.name || "ORGANIC"} {product.brand ? `• ${product.brand}` : ""}
+                </p>
+
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#2C1810] tracking-tight leading-snug">
                   {product.name}
                 </h1>
+
+                {/* Rating & Reviews */}
                 {product.ratings > 0 && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex text-yellow-500 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="flex text-amber-400 text-xs gap-0.5">
                       {[...Array(5)].map((_, i) => (
-                        <span key={i}>
-                          {i < Math.round(product.ratings) ? "★" : "☆"}
-                        </span>
+                        <span key={i}>{i < Math.round(product.ratings) ? "★" : "☆"}</span>
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {product.ratings} / 5 ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+                    <span className="text-xs text-gray-500 font-medium">
+                      {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
                     </span>
                   </div>
                 )}
-                <p className="mt-6 text-sm text-gray-500 font-light leading-relaxed">
-                  {product.description}
-                </p>
-              </div>
 
-              <div className="pt-4 border-t border-gray-100">
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">
-                  Price
-                </p>
-                <p className="text-2xl sm:text-3xl font-light text-gray-900 tracking-tight">
-                  {formatPrice(product.price)}
-                </p>
-              </div>
+                {/* Price */}
+                <div className="flex items-baseline gap-3 pt-1">
+                  <span className="text-2xl sm:text-3xl font-bold text-[#E55353]">
+                    {formatPrice(product.price)}
+                  </span>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <span className="text-sm font-medium text-gray-400 line-through">
+                      {formatPrice(product.originalPrice)}
+                    </span>
+                  )}
+                </div>
 
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">
-                    Quantity
+                {/* Description */}
+                {product.description && (
+                  <p className="text-xs text-gray-500 font-normal leading-relaxed">
+                    {product.description}
                   </p>
-                  <div className="inline-flex flex-row items-center border border-gray-200 bg-white">
+                )}
+              </div>
+
+              <div className="space-y-5 pt-4 border-t border-gray-100">
+                {/* Quantity */}
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-semibold text-gray-700">Quantity</span>
+                  <div className="flex items-center border border-gray-200 rounded-full px-3 py-1 space-x-3 bg-white">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="cursor-pointer h-10 w-10 flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-50 transition-colors"
-                      aria-label="Decrease quantity"
+                      className="text-gray-500 hover:text-black font-bold text-sm px-1 cursor-pointer"
                     >
-                      <FiMinus size={14} />
+                      -
                     </button>
-                    <span className="w-10 text-center text-sm font-semibold text-gray-900 border-x border-gray-200">
-                      {quantity}
-                    </span>
+                    <span className="w-6 text-center text-xs font-bold text-gray-900">{quantity}</span>
                     <button
                       onClick={() => setQuantity(quantity + 1)}
-                      className="cursor-pointer h-10 w-10 flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-50 transition-colors"
-                      aria-label="Increase quantity"
+                      className="text-gray-500 hover:text-black font-bold text-sm px-1 cursor-pointer"
                     >
-                      <FiPlus size={14} />
+                      +
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 relative pt-6 border-t border-gray-100">
-                {sharePopup && (
-                  <div className="absolute -top-14 left-0 bg-black text-white px-3 py-2 text-[10px] uppercase tracking-widest max-w-full">
-                    <p className="font-semibold">Link copied</p>
-                  </div>
-                )}
-                <button
-                  onClick={handleShare}
-                  className="inline-flex items-center justify-center gap-2 cursor-pointer border border-gray-200 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-gray-900 hover:border-black transition-colors bg-white hover:bg-gray-50"
-                >
-                  <FiShare2 size={16} />
-                  <span>Share</span>
-                </button>
-                <button
-                  onClick={handleAddToCart}
-                  className="inline-flex flex-1 items-center justify-center cursor-pointer gap-2 bg-black text-white text-[10px] font-semibold uppercase tracking-widest py-3 hover:bg-gray-900 transition-colors"
-                >
-                  <FiShoppingCart size={16} />
-                  <span>Add to Cart</span>
-                </button>
-              </div>
+                {/* Buttons */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 sm:flex-initial bg-[#1A1A1A] hover:bg-black text-white px-8 py-3 rounded-full text-xs font-bold transition-all cursor-pointer text-center"
+                  >
+                    Add to Cart
+                  </button>
 
-              {/* Delivery Estimate */}
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <div className="flex items-start gap-4">
-                  <div className="mt-0.5 text-gray-400">
-                    <FiTruck size={22} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-1">
-                      Standard Delivery
-                    </h4>
-                    <p className="text-sm font-light text-gray-500">
-                      Delivered within 3 - 5 business days.
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => useCartStore.getState().openCart()}
+                    className="bg-[#FAF7F2] hover:bg-[#F2ECE4] text-gray-900 border border-gray-100 px-8 py-3 rounded-full text-xs font-bold transition-all cursor-pointer text-center"
+                  >
+                    Go to Cart
+                  </button>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
 
-        {/* Organic Details Section (Key Benefits, Ingredients, How to Use, Precautions, Our Quality) */}
-        {( (benefitsList.length > 0) ||
-           (ingredientsList.length > 0) ||
-           product.howToUse || product.precautions || product.ourQuality ) && (
-          <section className="mt-12 border-t border-gray-100 pt-10">
-            <div className="flex flex-col gap-1 mb-6">
-              <p className="text-[10px] uppercase tracking-[0.24em] font-semibold" style={{ color: "#B9853A" }}>
-                Pure & Natural
-              </p>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                Product Details & Benefits
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Key Benefits - Sequence List */}
-              {benefitsList.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3 md:col-span-2 lg:col-span-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Key Benefits</h3>
-                  </div>
-                  <ol className="space-y-2">
-                    {benefitsList.map((benefit: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2.5 text-xs text-gray-800 leading-relaxed bg-gray-50/80 p-2.5 rounded-xl border border-gray-100">
-                        <span className="w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: "#B9853A" }}>
-                          {idx + 1}
-                        </span>
-                        <span className="pt-0.5 font-medium">{benefit}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              {/* Selected Natural Ingredients */}
-              {ingredientsList.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Selected Natural Ingredients</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {ingredientsList.map((ing: string, idx: number) => (
-                      <span key={idx} className="px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[#FDF6EC] text-[#B9853A] border border-[#F5E6CE] shadow-2xs">
-                        🌱 {ing}
+        {/* Organic Details - 2 Column Layout (No Card Containers) */}
+        {(benefitsList.length > 0 ||
+          ingredientsList.length > 0 ||
+          (typeof product.howToUse === "string" && product.howToUse.trim().length > 0) ||
+          (typeof product.precautions === "string" && product.precautions.trim().length > 0) ||
+          (typeof product.ourQuality === "string" && product.ourQuality.trim().length > 0)) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 pt-6 border-t border-gray-200">
+            
+            {/* Key Benefits */}
+            {benefitsList.length > 0 && (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                  <span className="w-1 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                  Key Benefits
+                </h3>
+                <ul className="space-y-2">
+                  {benefitsList.map((b: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2.5 text-xs text-gray-600 font-medium">
+                      <span className="w-4 h-4 rounded-full bg-[#E5F5EB] text-[#2E7D32] flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">
+                        ✓
                       </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-              {/* How to Use */}
-              {product.howToUse && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">How to Use</h3>
-                  </div>
-                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{product.howToUse}</p>
+            {/* Selected Natural Ingredients */}
+            {ingredientsList.length > 0 && (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                  <span className="w-1 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                  Selected Natural Ingredients
+                </h3>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {ingredientsList.map((ing: string, i: number) => (
+                    <span key={i} className="px-3 py-1 text-xs font-semibold rounded-full bg-[#FDF6EC] text-[#B9853A] border border-[#F5E6CE]">
+                      🌱 {ing}
+                    </span>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Precautions */}
-              {product.precautions && (
-                <div className="bg-amber-50/60 rounded-2xl border border-amber-100 p-5 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900">Precautions</h3>
-                  </div>
-                  <p className="text-xs text-amber-800 leading-relaxed whitespace-pre-line">{product.precautions}</p>
-                </div>
-              )}
+            {/* How to Use */}
+            {typeof product.howToUse === "string" && product.howToUse.trim().length > 0 && (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                  <span className="w-1 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                  How to Use
+                </h3>
+                <p className="text-xs text-gray-500 font-normal leading-relaxed whitespace-pre-line">
+                  {product.howToUse}
+                </p>
+              </div>
+            )}
 
-              {/* Our Quality Commitment */}
-              {product.ourQuality && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-2 md:col-span-2 lg:col-span-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#B9853A" }} />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Our Quality Commitment</h3>
-                  </div>
-                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{product.ourQuality}</p>
-                </div>
-              )}
-            </div>
-          </section>
+            {/* Precautions */}
+            {typeof product.precautions === "string" && product.precautions.trim().length > 0 && (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                  <span className="w-1 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                  Precautions
+                </h3>
+                <p className="text-xs text-gray-600 font-normal leading-relaxed whitespace-pre-line">
+                  {product.precautions}
+                </p>
+              </div>
+            )}
+
+            {/* Our Quality */}
+            {typeof product.ourQuality === "string" && product.ourQuality.trim().length > 0 && (
+              <div className="space-y-2.5 md:col-span-2">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                  <span className="w-1 h-4 bg-[#2E5B3E] rounded-full mr-2.5 inline-block" />
+                  Our Quality
+                </h3>
+                <p className="text-xs text-gray-800 font-medium leading-relaxed whitespace-pre-line">
+                  {product.ourQuality}
+                </p>
+              </div>
+            )}
+
+          </div>
         )}
 
-        {/* Reviews Section */}
-        <section className="mt-12 border-t border-gray-100 pt-8">
-          <div className="flex flex-col gap-1 mb-4">
+        {/* Reviews Section - Flat (No Card Box) */}
+        <section className="pt-8 border-t border-gray-200 space-y-6">
+          <div className="flex flex-col gap-1">
             <p className="text-[10px] uppercase tracking-[0.24em] text-gray-400 font-semibold">
               Customer Feedback
             </p>
-            <h2 className="text-lg font-light text-gray-900 tracking-tight">
+            <h2 className="text-lg font-bold text-gray-900 tracking-tight">
               Reviews
             </h2>
           </div>
@@ -632,8 +581,8 @@ export default function ProductClient({ productId }: ProductClientProps) {
             </div>
 
             {/* Submission Form */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-900 mb-1">
+            <div className="space-y-3 bg-white p-5 rounded-2xl border border-gray-100">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-900 mb-1">
                 Write a Review
               </h3>
               <form onSubmit={handleReviewSubmit} className="space-y-3">
@@ -647,7 +596,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
                     value={reviewerName}
                     onChange={(e) => setReviewerName(e.target.value)}
                     required
-                    className="w-full px-0 py-2 border-b border-gray-200 bg-transparent text-sm focus:outline-none focus:border-black transition-colors"
+                    className="w-full px-3 py-2 border border-gray-200 bg-white text-xs rounded-lg focus:outline-none focus:border-black transition-colors"
                     placeholder="Enter your name"
                   />
                 </div>
@@ -662,7 +611,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
                         key={star}
                         type="button"
                         onClick={() => setRating(star)}
-                        className={`text-xl focus:outline-none transition-colors cursor-pointer !rounded-none ${
+                        className={`text-lg focus:outline-none transition-colors cursor-pointer ${
                           star <= rating ? "text-yellow-500" : "text-gray-300"
                         }`}
                       >
@@ -682,7 +631,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
                     onChange={(e) => setComment(e.target.value)}
                     required
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-200 bg-transparent text-sm focus:outline-none focus:border-black rounded-md resize-none transition-colors"
+                    className="w-full px-3 py-2 border border-gray-200 bg-white text-xs focus:outline-none focus:border-black rounded-lg resize-none transition-colors"
                     placeholder="Write your thoughts here..."
                   />
                 </div>
@@ -690,7 +639,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-black text-white text-[10px] font-semibold uppercase tracking-widest py-2.5 hover:bg-gray-900 transition-colors disabled:bg-gray-400 cursor-pointer"
+                  className="w-full bg-black text-white text-xs font-bold uppercase tracking-widest py-2.5 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 cursor-pointer"
                 >
                   {isSubmitting ? "Submitting..." : "Submit Review"}
                 </button>
@@ -700,21 +649,16 @@ export default function ProductClient({ productId }: ProductClientProps) {
         </section>
 
         {!relatedLoading && relatedProducts.length > 0 && (
-          <section className="mt-14 border-t border-gray-100 pt-10">
-            <div className="flex items-end justify-between gap-4 mb-6">
+          <section className="pt-8 border-t border-gray-200 space-y-6">
+            <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.24em] text-gray-400 font-semibold">
                   Related Products
                 </p>
-                <h2 className="mt-2 text-xl sm:text-2xl font-light text-gray-900 tracking-tight">
+                <h2 className="mt-1 text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
                   You may also like
                 </h2>
               </div>
-              {product?.category?.name && (
-                <span className="hidden sm:inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-                  {product.category.name}
-                </span>
-              )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -727,6 +671,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
             </div>
           </section>
         )}
+
       </div>
     </div>
   );

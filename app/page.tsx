@@ -5,6 +5,8 @@ import ProductsContent from "@/components/home/ProductsContent";
 import FAQAccordion from "@/components/FAQAccordion";
 import About from "@/components/About";
 import Testimonials from "@/components/Testimonial";
+import BachatPack from "@/components/BachatPack";
+import InstagramFeed from "@/components/IntagramComp";
 
 async function getSliders() {
   try {
@@ -30,6 +32,11 @@ async function getSliders() {
 }
 
 export default async function ProductsPage() {
+  const instagramReels = [
+    "https://www.instagram.com/p/DR6x3pajHLu/",
+    "https://www.instagram.com/p/DR6x3pajHLu/",
+    "https://www.instagram.com/p/DR6x3pajHLu/",
+  ];
   const allSliders = await getSliders();
   const heroSliders = allSliders.filter(
     (s: any) => !s.position || s.position === "top",
@@ -43,9 +50,12 @@ export default async function ProductsPage() {
       <Suspense fallback={null}>
         <ProductsContent />
       </Suspense>
-      <Testimonials/>
-      <FAQAccordion />
+      <BachatPack />
+      
+      <InstagramFeed urls={instagramReels} />
 
+      <Testimonials />
+      <FAQAccordion />
     </>
   );
 }
