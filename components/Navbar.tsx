@@ -304,7 +304,7 @@ export default function Navbar() {
 
       {/* Slide-in Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out rounded-tr-3xl overflow-hidden w-[80vw] max-w-sm bg-amber-50 backdrop-blur-xl z-999999 flex flex-col md:hidden font-[inherit] ${
+        className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out rounded-tr-3xl overflow-hidden w-[80vw] max-w-sm bg-gray-100 backdrop-blur-xl z-999999 flex flex-col md:hidden font-[inherit] ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -449,7 +449,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/auth/signin"
-              className="block w-full text-center py-2 px-4 font-semibold rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+              className="block w-full text-center py-2 px-4 font-semibold rounded-full bg-[#B9853B] text-white transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Sign In

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
-import { FiEdit, FiTrash2, FiPlus, FiLoader, FiX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiPlus, FiLoader, FiX, FiSearch, FiExternalLink, FiAlertTriangle } from "react-icons/fi";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
@@ -17,6 +17,34 @@ export default function AdminProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  
+  // Delete Popup Modal States
+  const [deletingProduct, setDeletingProduct] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Search & Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const triggerDelete = (product: any) => {
+    setDeletingProduct(product);
+  };
+
+  const executeDelete = async () => {
+    if (!deletingProduct) return;
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/api/products/${deletingProduct._id}`);
+      toast.success("Product deleted successfully");
+      fetchProducts();
+    } catch (error) {
+      toast.error("Failed to delete product");
+    } finally {
+      setIsDeleting(false);
+      setDeletingProduct(null);
+    }
+  };
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -265,154 +293,250 @@ export default function AdminProductsPage() {
     }));
   };
 
+  // Filtered Products Computation
+  const filteredProducts = products.filter((product) => {
+    const query = searchTerm.toLowerCase().trim();
+    const matchesSearch =
+      !query ||
+      product.name?.toLowerCase().includes(query) ||
+      product.brand?.toLowerCase().includes(query) ||
+      product.category?.name?.toLowerCase().includes(query);
+
+    const matchesCategory =
+      !selectedCategory ||
+      product.category?._id === selectedCategory ||
+      product.category === selectedCategory;
+
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "active"
+        ? !product.isDisabled
+        : statusFilter === "disabled"
+        ? product.isDisabled
+        : statusFilter === "featured"
+        ? product.isFeatured
+        : true;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
-        <div className="h-12 w-full max-w-sm bg-gray-200 rounded animate-pulse" />
-        <div className="h-80 w-full bg-gray-100 rounded-xl border border-gray-200 animate-pulse" />
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="h-10 w-48 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-16 w-full bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="h-80 w-full bg-gray-100 rounded-2xl border border-gray-200 animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-gray-200 pb-6 w-full">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      
+      {/* Top Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200/80 pb-5">
         <div>
-          <h2 className="text-3xl font-light text-gray-900 tracking-tight">
-            Products
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+            Products Catalog
           </h2>
-          <p className="text-sm text-gray-400 mt-2 font-light">
-            Create, edit, and curate items quickly.
+          <p className="text-xs text-gray-500 mt-1 font-medium">
+            Manage product items, prices, categories, and organic details.
           </p>
         </div>
+
         <button
           onClick={() => {
             setEditingProduct(null);
             resetForm();
             setShowModal(true);
           }}
-          className="text-xs uppercase tracking-widest font-medium text-gray-900 hover:text-gray-500 border-b border-transparent hover:border-gray-500 transition-colors cursor-pointer pb-0.5 flex items-center gap-2"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1A1A] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer"
         >
-          <FiPlus strokeWidth={1.5} size={14} /> Add Product
+          <FiPlus size={16} /> Add Product
         </button>
       </div>
 
-      <div className="w-full">
-        {products.length === 0 ? (
-          <div className="text-center py-16 space-y-3">
-            <p className="text-lg font-semibold text-gray-800">
-              No products yet
+      {/* Direct Search Bar (No Card Box) */}
+      <div className="relative w-full max-w-md">
+        <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search products..."
+          className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black transition-all font-medium"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
+          >
+            <FiX size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Products Table Container */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
+        {filteredProducts.length === 0 ? (
+          <div className="text-center py-16 space-y-3 px-4">
+            <p className="text-base font-bold text-gray-800">
+              No products found
             </p>
-            <p className="text-sm text-gray-500">
-              Start by adding your first product to populate the catalog.
+            <p className="text-xs text-gray-500">
+              {searchTerm || selectedCategory || statusFilter !== "all"
+                ? "Try adjusting your search query or filters."
+                : "Start by adding your first product to populate the catalog."}
             </p>
-            <button
-              onClick={() => {
-                setEditingProduct(null);
-                resetForm();
-                setShowModal(true);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white font-semibold hover:bg-neutral-800"
-            >
-              <FiPlus /> Add Product
-            </button>
+            {searchTerm || selectedCategory || statusFilter !== "all" ? (
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("");
+                  setStatusFilter("all");
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 text-xs font-bold text-gray-700 hover:border-black"
+              >
+                Clear Search & Filters
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setEditingProduct(null);
+                  resetForm();
+                  setShowModal(true);
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider"
+              >
+                <FiPlus size={14} /> Add Product
+              </button>
+            )}
           </div>
         ) : (
           <>
+            {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-gray-700">
-                    <th className="text-left py-3 px-4">Image</th>
-                    <th className="text-left py-3 px-4">Name</th>
-                    <th className="text-left py-3 px-4">Category</th>
-                    <th className="text-left py-3 px-4">Price</th>
-                    <th className="text-left py-3 px-4">Featured</th>
-                    <th className="text-left py-3 px-4">Actions</th>
+                  <tr className="border-b border-gray-100 bg-gray-50/70 text-gray-500 uppercase tracking-wider font-bold">
+                    <th className="py-3.5 px-4">Product</th>
+                    <th className="py-3.5 px-4">Category & Brand</th>
+                    <th className="py-3.5 px-4">Price</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {products.map((product: any) => (
-                    <tr key={product._id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden relative border border-gray-200">
-                          {product.images && product.images.length > 0 ? (
-                            <img
-                              src={product.images[0]}
-                              alt={product.name}
-                              className="object-cover w-full h-full"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <span className="text-[10px] font-medium">
+                <tbody className="divide-y divide-gray-100">
+                  {filteredProducts.map((product: any) => (
+                    <tr key={product._id} className="hover:bg-gray-50/60 transition-colors">
+                      
+                      {/* Product Thumbnail & Name */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100 shrink-0">
+                            {product.images && product.images.length > 0 ? (
+                              <img
+                                src={product.images[0]}
+                                alt={product.name}
+                                className="object-cover w-full h-full hover:scale-105 transition-transform duration-200"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-[10px] font-bold">
                                 No Img
-                              </span>
-                            </div>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 text-xs">
+                              {product.name}
+                            </p>
+                            {product.slug && (
+                              <p className="text-[10px] text-gray-400 font-normal">
+                                /{product.slug}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Category & Brand */}
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-0.5">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold">
+                            {product.category?.name || "Uncategorized"}
+                          </span>
+                          {product.brand && (
+                            <p className="text-[10px] text-gray-400 font-medium pl-1">
+                              Brand: {product.brand}
+                            </p>
                           )}
                         </div>
                       </td>
-                      <td className="py-5 px-6 font-light text-gray-900 text-sm">
-                        {product.name}
-                      </td>
-                      <td className="py-5 px-6 text-gray-500 text-sm font-light whitespace-nowrap">
-                        {product.category?.name || "N/A"}
-                      </td>
-                      <td className="py-5 px-6 text-gray-900 text-sm font-medium">
-                        <div className="flex items-center gap-2">
+
+                      {/* Price */}
+                      <td className="py-3.5 px-4 font-bold text-gray-900">
+                        <div className="flex items-baseline gap-1.5">
                           <span>{formatPrice(product.price)}</span>
-                          {typeof (
-                            product.originalPrice ?? product.oldPrice
-                          ) === "number" &&
-                            (product.originalPrice ?? product.oldPrice) >
-                              product.price && (
-                              <span className="text-[10px] text-gray-400 line-through font-light decoration-gray-300">
-                                {formatPrice(
-                                  product.originalPrice ?? product.oldPrice,
-                                )}
+                          {typeof (product.originalPrice ?? product.oldPrice) === "number" &&
+                            (product.originalPrice ?? product.oldPrice) > product.price && (
+                              <span className="text-[10px] text-gray-400 font-normal line-through">
+                                {formatPrice(product.originalPrice ?? product.oldPrice)}
                               </span>
                             )}
                         </div>
                       </td>
-                      <td className="py-5 px-6">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {product.isFeatured ? (
-                            <span className="inline-flex items-center gap-1 border border-green-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-green-700">
+
+                      {/* Status Badges */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {product.isFeatured && (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
                               Featured
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 border border-gray-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-gray-500">
-                              Standard
                             </span>
                           )}
                           {product.isDisabled ? (
-                            <span className="inline-flex items-center gap-1 border border-red-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-red-700">
+                            <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10px] font-bold uppercase tracking-wider">
                               Disabled
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 border border-emerald-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-emerald-700">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
                               Active
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="py-5 pl-6 text-right flex items-center justify-end gap-4">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="text-xs font-medium text-gray-400 hover:text-black transition-colors cursor-pointer"
-                          aria-label="Edit product"
-                        >
-                          <FiEdit size={14} />
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleDelete(product._id)}
-                            className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                            aria-label="Delete product"
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/products/${product._id}`}
+                            target="_blank"
+                            className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-black hover:border-black transition-colors"
+                            title="View on store"
                           >
-                            <FiTrash2 size={14} />
+                            <FiExternalLink size={13} />
+                          </Link>
+
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="p-1.5 rounded-lg border border-gray-200 text-gray-700 hover:text-black hover:border-black transition-colors cursor-pointer"
+                            title="Edit Product"
+                          >
+                            <FiEdit size={13} />
                           </button>
-                        )}
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => triggerDelete(product)}
+                              className="p-1.5 rounded-lg border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors cursor-pointer"
+                              title="Delete Product"
+                            >
+                              <FiTrash2 size={13} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -420,93 +544,72 @@ export default function AdminProductsPage() {
               </table>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:hidden">
-              {products.map((product: any) => (
+            {/* Mobile Cards Grid View */}
+            <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+              {filteredProducts.map((product: any) => (
                 <div
                   key={product._id}
-                  className="bg-transparent border-b border-gray-100 py-6 flex gap-4 last:border-b-0"
+                  className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 flex gap-3 items-start justify-between"
                 >
-                  <div className="shrink-0 w-24 h-24 bg-gray-50 overflow-hidden border border-gray-100">
+                  <div className="w-16 h-16 bg-white rounded-lg overflow-hidden border border-gray-200 shrink-0 relative">
                     {product.images && product.images.length > 0 ? (
                       <img
                         src={product.images[0]}
                         alt={product.name}
-                        className="object-cover w-full h-full mix-blend-multiply"
+                        className="object-cover w-full h-full"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                        <span className="text-[10px] font-medium tracking-tight">
-                          N/A
-                        </span>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-[9px] font-bold">
+                        N/A
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <p className="text-xs font-light text-gray-500 mb-1 uppercase tracking-widest">
-                        {product.category?.name || "N/A"}
-                      </p>
-                      <h3 className="text-sm font-medium text-gray-900 leading-tight">
-                        {product.name}
-                      </h3>
-                      <div className="mt-2 flex flex-col gap-1 text-sm text-gray-700">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900">
-                            {formatPrice(product.price)}
-                          </span>
-                          {typeof (
-                            product.originalPrice ?? product.oldPrice
-                          ) === "number" &&
-                            (product.originalPrice ?? product.oldPrice) >
-                              product.price && (
-                              <span className="text-[10px] text-gray-400 font-light line-through decoration-gray-300">
-                                {formatPrice(
-                                  product.originalPrice ?? product.oldPrice,
-                                )}
-                              </span>
-                            )}
-                        </div>
+
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#B9853A]">
+                          {product.category?.name || "Uncategorized"}
+                        </span>
+                        <h3 className="text-xs font-bold text-gray-900 leading-snug">
+                          {product.name}
+                        </h3>
                       </div>
-                      <div className="mt-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {product.isFeatured ? (
-                            <span className="inline-flex items-center gap-1 border border-green-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-green-700">
-                              Featured
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 border border-gray-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-gray-500">
-                              Standard
-                            </span>
-                          )}
-                          {product.isDisabled ? (
-                            <span className="inline-flex items-center gap-1 border border-red-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-red-700">
-                              Disabled
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 border border-emerald-200 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold text-emerald-700">
-                              Active
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <span className="text-xs font-bold text-gray-900 shrink-0">
+                        {formatPrice(product.price)}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
+
+                    <div className="flex items-center gap-1.5 pt-1">
+                      {product.isFeatured && (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[9px] font-bold uppercase">
+                          Featured
+                        </span>
+                      )}
+                      {product.isDisabled ? (
+                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 text-[9px] font-bold uppercase">
+                          Disabled
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase">
+                          Active
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-200/60">
                       <button
                         onClick={() => handleEdit(product)}
-                        className="flex-1 py-2 text-xs font-medium text-gray-600 hover:text-black border border-gray-200 hover:border-gray-900 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
-                        aria-label="Edit product"
+                        className="flex-1 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black transition-colors cursor-pointer"
                       >
-                        <FiEdit size={12} />
-                        <span>Edit</span>
+                        Edit
                       </button>
                       {isAdmin && (
                         <button
-                          onClick={() => handleDelete(product._id)}
-                          className="flex-1 py-2 text-xs font-medium text-red-500 hover:text-red-700 border border-red-100 hover:border-red-200 hover:bg-red-50 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
-                          aria-label="Delete product"
+                          onClick={() => triggerDelete(product)}
+                          className="py-1.5 px-3 rounded-lg bg-red-50 border border-red-100 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
                         >
-                          <FiTrash2 size={12} />
-                          <span>Delete</span>
+                          Delete
                         </button>
                       )}
                     </div>
@@ -517,6 +620,55 @@ export default function AdminProductsPage() {
           </>
         )}
       </div>
+
+      {/* Custom Delete Confirmation Popup Modal */}
+      {deletingProduct && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100 space-y-5">
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <FiAlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Delete Product?</h3>
+                <p className="text-xs text-gray-500 font-medium">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 font-normal bg-gray-50 p-3.5 rounded-xl border border-gray-200/80 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-gray-900 font-bold">&quot;{deletingProduct.name}&quot;</strong> from your product catalog?
+            </p>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setDeletingProduct(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-full border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shadow-xs"
+              >
+                {isDeleting ? (
+                  <>
+                    <FiLoader className="animate-spin" size={14} />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Yes, Delete</span>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
