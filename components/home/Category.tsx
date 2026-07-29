@@ -95,9 +95,9 @@ export default function CategoryNav() {
   }
 
   return (
-    <section className="py-8 md:py-10">
+    <section className="p-3">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-         <h2 className="text-2xl p-2 font-light text-center tracking-tight text-white md:text-4xl">
+         <h2 className="text-2xl  font-light text-center tracking-tight text-white md:text-4xl">
                    Shop by 
 {" "}
           <span className="font-serif italic text-[#B9853B]">
@@ -130,7 +130,7 @@ export default function CategoryNav() {
           {/* Scrollable Container */}
           <div
             ref={scrollRef}
-            className="flex gap-6 sm:gap-8 overflow-x-auto scroll-smooth pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2"
+            className="flex gap-6 mt-4 sm:gap-8 overflow-x-auto scroll-smooth pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2"
           >
             {categories.map((category) => (
               <Link
