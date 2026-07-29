@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import ProductCard from "@/components/ProductCard";
+import ProductSkeleton from "@/components/ProductSkeleton";
 import axios from "axios";
-import HeroSlider from "@/components/HeroSlider";
 
 export default function ProductsContent() {
   const [products, setProducts] = useState<any[]>([]);
@@ -60,26 +60,19 @@ export default function ProductsContent() {
   return (
     <div className="w-full">
       {isLoading ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <div key={idx} className="animate-pulse space-y-3">
-                <div className="aspect-4/5 bg-gray-200 rounded-2xl" />
-                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
-                <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto" />
-              </div>
-            ))}
-          </div>
-        </div>
+        <ProductSkeleton count={10} />
       ) : productRows.length > 0 ? (
         productRows.map((rowItems, rowIndex) => (
           <div key={rowIndex}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
               {rowIndex === 0 && (
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                    Our Products
-                  </h2>
+                   <h2 className="text-4xl text-center md:px-2  font-light tracking-tight text-white md:text-6xl">
+            Our{" "}
+            <span className="font-serif italic text-[#B9853B]">
+             Premium Collection
+            </span>
+          </h2>
                 </div>
               )}
 
@@ -87,28 +80,11 @@ export default function ProductsContent() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
                 {rowItems.map((product: any) => (
                   <div key={product._id} className="w-full">
-                    <ProductCard product={product} />
+                    <ProductCard product={product} priority={rowIndex === 0} />
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Banner Sliders inserted after rows */}
-            {rowIndex === 0 && (
-              <div className="my-3 sm:my-4">
-                <HeroSlider position="after_row_1" />
-              </div>
-            )}
-            {rowIndex === 1 && (
-              <div className="my-3 sm:my-4">
-                <HeroSlider position="after_row_2" />
-              </div>
-            )}
-            {rowIndex === 2 && (
-              <div className="my-3 sm:my-4">
-                <HeroSlider position="after_row_3" />
-              </div>
-            )}
           </div>
         ))
       ) : (

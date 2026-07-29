@@ -12,7 +12,7 @@ import "swiper/css/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
-import { isCloudinaryUrl } from "@/lib/image";
+import { isCloudinaryUrl, getOptimizedImageUrl } from "@/lib/image";
 
 interface SliderItem {
   _id: string;
@@ -24,35 +24,28 @@ interface SliderItem {
 
 interface HeroSliderProps {
   initialSliders?: SliderItem[];
-  position?: string;
 }
 
 export default function HeroSlider({
   initialSliders = [],
-  position = "top",
 }: HeroSliderProps) {
   const [sliders, setSliders] = useState<SliderItem[]>(initialSliders);
   const [isLoading, setIsLoading] = useState(initialSliders.length === 0);
 
   useEffect(() => {
-    // Always refresh once on mount to pick up latest sliders
-    fetchSliders(initialSliders.length === 0);
+    // Only fetch client-side if no initial sliders were provided by SSR
+    if (initialSliders.length === 0) {
+      fetchSliders(true);
+    }
   }, [initialSliders.length]);
 
   const fetchSliders = async (showLoader = true) => {
     try {
       if (showLoader) setIsLoading(true);
       const res = await axios.get("/api/sliders");
-      // Handle both formats: array directly or object with sliders property
       let data = Array.isArray(res.data) ? res.data : res.data.sliders || [];
-      // Filter out sliders without images and by position
       data = data.filter(
-        (slider: any) =>
-          slider.image &&
-          slider.image.trim() !== "" &&
-          (position === "top"
-            ? !slider.position || slider.position === "top"
-            : slider.position === position),
+        (slider: any) => slider.image && slider.image.trim() !== ""
       );
       setSliders(data);
     } catch (error) {
@@ -64,8 +57,8 @@ export default function HeroSlider({
 
   if (isLoading) {
     return (
-      <section className="relative overflow-hidden w-full">
-        <div className="w-full aspect-[21/9] bg-gray-200 animate-pulse" />
+      <section className="relative overflow-hidden w-full bg-gray-100/70">
+        <div className="w-full h-44 sm:h-72 md:h-96 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
       </section>
     );
   }
@@ -95,12 +88,16 @@ export default function HeroSlider({
           spaceBetween={0}
           autoHeight={true}
         >
-          {sliders.map((slider) => (
+          {sliders.map((slider, idx) => (
             <SwiperSlide key={slider._id}>
               <div className="relative w-full">
                 <img
-                  src={slider.image}
+                  src={getOptimizedImageUrl(slider.image, 1200, "auto")}
                   alt={slider.title || "Banner"}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  // @ts-ignore
+                  fetchPriority={idx === 0 ? "high" : "auto"}
+                  decoding="async"
                   className="w-full h-auto block object-contain"
                 />
                 <Link
@@ -129,7 +126,6 @@ export default function HeroSlider({
           border-radius: 6px;
         }
 
-        /* Move pagination to bottom-right, especially on mobile */
         .swiper-pagination {
           width: auto;
           left: auto;

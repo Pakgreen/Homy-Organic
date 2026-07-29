@@ -99,9 +99,17 @@ export default async function RootLayout({
 }) {
   let themeData = null;
   try {
-    await connectDB();
-    const settings = await Setting.findOne({ key: "theme_colors" });
-    if (settings) {
+    const fetchTheme = async () => {
+      await connectDB();
+      return await Setting.findOne({ key: "theme_colors" }).lean();
+    };
+
+    const timeoutPromise = new Promise((resolve) =>
+      setTimeout(() => resolve(null), 1500)
+    );
+
+    const settings: any = await Promise.race([fetchTheme(), timeoutPromise]);
+    if (settings && settings.value) {
       themeData = settings.value;
     }
   } catch (error) {

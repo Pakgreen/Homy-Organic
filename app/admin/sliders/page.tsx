@@ -72,6 +72,44 @@ export default function AdminSlidersPage() {
     }
   };
 
+  const handleMoveUp = async (index: number) => {
+    if (index <= 0) return;
+    const current = sliders[index];
+    const prev = sliders[index - 1];
+
+    const currentOrder = current.order !== undefined ? current.order : index;
+    const prevOrder = prev.order !== undefined ? prev.order : index - 1;
+
+    try {
+      await Promise.all([
+        axios.put(`/api/sliders/${current._id}`, { order: prevOrder }),
+        axios.put(`/api/sliders/${prev._id}`, { order: currentOrder }),
+      ]);
+      await fetchSliders();
+    } catch (error) {
+      console.error("Error moving slider up:", error);
+    }
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (index >= sliders.length - 1) return;
+    const current = sliders[index];
+    const next = sliders[index + 1];
+
+    const currentOrder = current.order !== undefined ? current.order : index;
+    const nextOrder = next.order !== undefined ? next.order : index + 1;
+
+    try {
+      await Promise.all([
+        axios.put(`/api/sliders/${current._id}`, { order: nextOrder }),
+        axios.put(`/api/sliders/${next._id}`, { order: currentOrder }),
+      ]);
+      await fetchSliders();
+    } catch (error) {
+      console.error("Error moving slider down:", error);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this slider?")) return;
     setIsLoading(true);
@@ -151,18 +189,23 @@ export default function AdminSlidersPage() {
 
       {/* Sliders Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {sliders.map((slider) => (
+        {sliders.map((slider, idx) => (
           <div
             key={slider._id}
             className="group flex flex-col border-b border-gray-100 pb-6 last:border-0"
           >
-            <div className="relative h-48 w-full bg-gray-50 border border-gray-100 mb-4 overflow-hidden">
+            <div className="relative h-48 w-full bg-gray-50 border border-gray-100 mb-4 overflow-hidden rounded-xl">
               <Image
                 src={slider.image}
                 alt={slider.title}
                 fill
                 className="object-cover mix-blend-multiply"
               />
+              <div className="absolute top-3 left-3 z-10">
+                <span className="text-[10px] font-bold text-gray-900 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full border border-gray-200/80 shadow-2xs">
+                  Order #{slider.order !== undefined ? slider.order + 1 : idx + 1}
+                </span>
+              </div>
               {!slider.isActive && (
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-900 border border-gray-900 px-3 py-1 bg-white/90">
@@ -172,17 +215,34 @@ export default function AdminSlidersPage() {
               )}
             </div>
 
-            <div className="flex-1 flex flex-col justify-between">
+            <div className="flex-1 flex flex-col justify-between space-y-3">
               <div>
-                <p className="text-[10px] font-light text-gray-500 mb-2 uppercase tracking-widest">
-                  {slider.position === "after_row_1"
-                    ? "After 1st Row"
-                    : slider.position === "after_row_2"
-                      ? "After 2nd Row"
-                      : slider.position === "after_row_3"
-                        ? "After 3rd Row"
-                        : "Top (Main Hero)"}
-                </p>
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <p className="text-[10px] font-semibold text-[#B9853A] uppercase tracking-widest">
+                    Hero Banner
+                  </p>
+                  
+                  {/* Order Navigation Arrows */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleMoveUp(idx)}
+                      disabled={idx === 0}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-black hover:text-white text-gray-700 disabled:opacity-25 disabled:hover:bg-gray-100 disabled:hover:text-gray-700 transition-colors text-xs font-bold cursor-pointer"
+                      title="Move Slider Up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => handleMoveDown(idx)}
+                      disabled={idx === sliders.length - 1}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-black hover:text-white text-gray-700 disabled:opacity-25 disabled:hover:bg-gray-100 disabled:hover:text-gray-700 transition-colors text-xs font-bold cursor-pointer"
+                      title="Move Slider Down"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                </div>
+
                 <h3 className="text-sm font-medium text-gray-900 uppercase tracking-widest break-words leading-relaxed">
                   {slider.title || "Untitled"}
                 </h3>
@@ -288,25 +348,6 @@ export default function AdminSlidersPage() {
                       />
                     </div>
                   </div>
-                </div>
-
-                {/* Position */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
-                    Display Position
-                  </label>
-                  <select
-                    value={formData.position || "top"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, position: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-[#B9853A] focus:bg-white transition-all text-gray-900"
-                  >
-                    <option value="top">Top (Main Hero Slider)</option>
-                    <option value="after_row_1">After 1st Category Row</option>
-                    <option value="after_row_2">After 2nd Category Row</option>
-                    <option value="after_row_3">After 3rd Category Row</option>
-                  </select>
                 </div>
 
                 {/* Active Status Toggle */}

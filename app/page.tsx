@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import HeroSlider from "@/components/HeroSlider";
+import BestSellingProducts from "@/components/home/BestSellingProducts";
 import ProductsContent from "@/components/home/ProductsContent";
 import ValuePacksContent from "@/components/home/ValuePacksContent";
 import FAQAccordion from "@/components/FAQAccordion";
@@ -7,25 +8,19 @@ import About from "@/components/About";
 import Testimonials from "@/components/Testimonial";
 import BachatPack from "@/components/BachatPack";
 import InstagramFeed from "@/components/IntagramComp";
+import ProductSkeleton from "@/components/ProductSkeleton";
+import connectDB from "@/lib/mongodb";
+import Slider from "@/models/Slider";
 
 async function getSliders() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/sliders`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      throw new Error(`Slider fetch failed with status ${res.status}`);
-    }
-
-    const payload = await res.json();
-    let data = Array.isArray(payload) ? payload : payload.sliders || [];
-    return data.filter(
-      (slider: any) => slider.image && slider.image.trim() !== "",
+    await connectDB();
+    const sliders = await Slider.find({ isActive: true }).sort("order").lean();
+    return JSON.parse(JSON.stringify(sliders)).filter(
+      (slider: any) => slider.image && slider.image.trim() !== ""
     );
   } catch (error) {
-    console.error("Home slider fetch error:", error);
+    console.error("Home slider direct DB fetch error:", error);
     return [];
   }
 }
@@ -36,17 +31,16 @@ export default async function ProductsPage() {
     "https://www.instagram.com/p/DR6x3pajHLu/",
     "https://www.instagram.com/p/DR6x3pajHLu/",
   ];
+  
   const allSliders = await getSliders();
-  const heroSliders = allSliders.filter(
-    (s: any) => !s.position || s.position === "top",
-  );
 
   return (
     <>
-      <HeroSlider initialSliders={heroSliders} position="top" />
+      <HeroSlider initialSliders={allSliders} />
+      <BestSellingProducts />
       <About />
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<ProductSkeleton count={10} />}>
         <ProductsContent />
       </Suspense>
 

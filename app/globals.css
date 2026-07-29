@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-slideInRight: slideInRight 1s ease-out;
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+}
 :root {
   --background: #ffffff;
   --foreground: #000000;

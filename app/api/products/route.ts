@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const featured = searchParams.get("featured");
+    const bestSeller = searchParams.get("bestSeller");
     const valuePack = searchParams.get("valuePack");
     const includeDisabled = searchParams.get("includeDisabled") === "true";
     const sort = searchParams.get("sort") || "-createdAt";
@@ -79,6 +80,10 @@ export async function GET(req: NextRequest) {
 
     if (featured === "true") {
       query.isFeatured = true;
+    }
+
+    if (bestSeller === "true") {
+      query.isBestSeller = true;
     }
 
     const skip = (page - 1) * limit;
@@ -180,11 +185,18 @@ export async function POST(req: NextRequest) {
       data.naturalIngredients = normalizeStringArray(data.naturalIngredients);
     }
 
+    // Separate Value Packs from Category: Value Packs do not require or use Category
+    if (data.isValuePack) {
+      delete data.category;
+    }
+
     // Validate required fields
-    if (!data.name || !data.price || !data.category) {
+    if (!data.name || !data.price || (!data.isValuePack && !data.category)) {
       return NextResponse.json(
         {
-          error: "Missing required fields: name, price, category",
+          error: data.isValuePack
+            ? "Missing required fields: name, price"
+            : "Missing required fields: name, price, category",
           code: "VALIDATION_ERROR",
         },
         { status: 400 },

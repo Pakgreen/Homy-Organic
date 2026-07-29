@@ -6,7 +6,7 @@ import Link from "next/link";
 import { FiShoppingBag, FiEye } from "react-icons/fi";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
-import { isCloudinaryUrl } from "@/lib/image";
+import { isCloudinaryUrl, getOptimizedImageUrl } from "@/lib/image";
 
 interface ProductCardProps {
   product: {
@@ -23,14 +23,17 @@ interface ProductCardProps {
     brand?: string;
     badge?: string;
   };
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
-  const primaryImage = product.images?.[0] || "";
-  const hoverImage = product.images?.[1] || primaryImage;
+  const rawPrimary = product.images?.[0] || "";
+  const rawHover = product.images?.[1] || rawPrimary;
+  const primaryImage = getOptimizedImageUrl(rawPrimary, 600);
+  const hoverImage = getOptimizedImageUrl(rawHover, 600);
   const hasHoverImage = Boolean(product.images?.[1]);
-  
+
   const currentPrice =
     typeof product.newPrice === "number" ? product.newPrice : product.price;
   const previousPrice =
@@ -48,12 +51,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       ? Math.round(((previousPrice - currentPrice) / previousPrice) * 100)
       : 0;
 
-  const categoryName =
-    typeof product.category === "object" && product.category?.name
-      ? product.category.name
-      : typeof product.category === "string"
-      ? product.category
-      : product.brand || "ORGANIC";
+  const categoryName = (product as any).isValuePack
+    ? product.badge || "VALUE PACK"
+    : typeof product.category === "object" && product.category?.name
+    ? product.category.name
+    : typeof product.category === "string"
+    ? product.category
+    : product.brand || "ORGANIC";
 
   const customBadge = product.badge?.trim() || "";
 
@@ -101,8 +105,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 src={primaryImage}
                 alt={product.name}
                 fill
+                priority={priority}
+                loading={priority ? "eager" : "lazy"}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                unoptimized={isCloudinaryUrl(primaryImage)}
                 className={`object-cover transition-all duration-500 ${
                   hasHoverImage
                     ? "group-hover:opacity-0"
@@ -114,8 +119,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                   src={hoverImage}
                   alt={`${product.name} alternate view`}
                   fill
+                  loading="lazy"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                  unoptimized={isCloudinaryUrl(hoverImage)}
                   className="object-cover opacity-0 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
                 />
               )}

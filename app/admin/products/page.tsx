@@ -56,6 +56,7 @@ export default function AdminProductsPage() {
     images: string[];
     imageLabels: string[];
     isFeatured: boolean;
+    isBestSeller: boolean;
     isDisabled: boolean;
     isValuePack: boolean;
     whichIncluded: Array<{ name: string; quantity: number | ""; price: number | "" }>;
@@ -75,6 +76,7 @@ export default function AdminProductsPage() {
     images: [],
     imageLabels: [],
     isFeatured: false,
+    isBestSeller: false,
     isDisabled: false,
     isValuePack: false,
     whichIncluded: [{ name: "", quantity: 1, price: "" }],
@@ -92,9 +94,11 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/api/products?limit=100&includeDisabled=true");
-      console.log("Products API response:", res.data);
-      setProducts(res.data.products || res.data || []);
+      const res = await axios.get("/api/products?limit=100&includeDisabled=true&sort=order");
+      const data = Array.isArray(res.data) ? res.data : res.data.products || [];
+      // Ensure local sorting by order
+      const sorted = [...data].sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+      setProducts(sorted);
     } catch (error: any) {
       console.error(
         "Failed to fetch products:",
@@ -181,6 +185,70 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleMoveProductUp = async (index: number) => {
+    if (index <= 0) return;
+    const current = filteredProducts[index];
+    const prev = filteredProducts[index - 1];
+
+    const currentOrder = current.order !== undefined ? current.order : index;
+    const prevOrder = prev.order !== undefined ? prev.order : index - 1;
+
+    // Optimistic UI Swap
+    setProducts((prevProducts) => {
+      const updated = [...prevProducts];
+      const idxCurrent = updated.findIndex((p) => p._id === current._id);
+      const idxPrev = updated.findIndex((p) => p._id === prev._id);
+      if (idxCurrent !== -1 && idxPrev !== -1) {
+        updated[idxCurrent] = { ...current, order: prevOrder };
+        updated[idxPrev] = { ...prev, order: currentOrder };
+      }
+      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    });
+
+    try {
+      await Promise.all([
+        axios.put(`/api/products/${current._id}`, { order: prevOrder }),
+        axios.put(`/api/products/${prev._id}`, { order: currentOrder }),
+      ]);
+      fetchProducts();
+    } catch (error) {
+      console.error("Error moving product up:", error);
+      fetchProducts();
+    }
+  };
+
+  const handleMoveProductDown = async (index: number) => {
+    if (index >= filteredProducts.length - 1) return;
+    const current = filteredProducts[index];
+    const next = filteredProducts[index + 1];
+
+    const currentOrder = current.order !== undefined ? current.order : index;
+    const nextOrder = next.order !== undefined ? next.order : index + 1;
+
+    // Optimistic UI Swap
+    setProducts((prevProducts) => {
+      const updated = [...prevProducts];
+      const idxCurrent = updated.findIndex((p) => p._id === current._id);
+      const idxNext = updated.findIndex((p) => p._id === next._id);
+      if (idxCurrent !== -1 && idxNext !== -1) {
+        updated[idxCurrent] = { ...current, order: nextOrder };
+        updated[idxNext] = { ...next, order: currentOrder };
+      }
+      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    });
+
+    try {
+      await Promise.all([
+        axios.put(`/api/products/${current._id}`, { order: nextOrder }),
+        axios.put(`/api/products/${next._id}`, { order: currentOrder }),
+      ]);
+      fetchProducts();
+    } catch (error) {
+      console.error("Error moving product down:", error);
+      fetchProducts();
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -211,6 +279,7 @@ export default function AdminProductsPage() {
               `Design ${index + 1}`,
             ),
       isFeatured: product.isFeatured || false,
+      isBestSeller: product.isBestSeller || false,
       isDisabled: product.isDisabled || false,
       isValuePack: product.isValuePack || false,
       whichIncluded:
@@ -250,6 +319,7 @@ export default function AdminProductsPage() {
       images: [],
       imageLabels: [],
       isFeatured: false,
+      isBestSeller: false,
       isDisabled: false,
       isValuePack: false,
       whichIncluded: [{ name: "", quantity: 1, price: "" }],
@@ -452,6 +522,7 @@ export default function AdminProductsPage() {
               <table className="w-full text-xs text-left">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/70 text-gray-500 uppercase tracking-wider font-bold">
+                    <th className="py-3.5 px-4">Order</th>
                     <th className="py-3.5 px-4">Product</th>
                     <th className="py-3.5 px-4">Category & Brand</th>
                     <th className="py-3.5 px-4">Price</th>
@@ -460,9 +531,36 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredProducts.map((product: any) => (
+                  {filteredProducts.map((product: any, idx: number) => (
                     <tr key={product._id} className="hover:bg-gray-50/60 transition-colors">
                       
+                      {/* Order Controls & Index */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded border border-gray-200/80">
+                            #{idx + 1}
+                          </span>
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              onClick={() => handleMoveProductUp(idx)}
+                              disabled={idx === 0}
+                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 transition-colors cursor-pointer"
+                              title="Move Up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => handleMoveProductDown(idx)}
+                              disabled={idx === filteredProducts.length - 1}
+                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 transition-colors cursor-pointer"
+                              title="Move Down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
                       {/* Product Thumbnail & Name */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
@@ -522,6 +620,11 @@ export default function AdminProductsPage() {
                       {/* Status Badges */}
                       <td className="py-3.5 px-4">
                         <div className="flex flex-wrap items-center gap-1.5">
+                          {product.isBestSeller && (
+                            <span className="px-2 py-0.5 rounded-md bg-orange-100 text-orange-900 text-[10px] font-bold uppercase tracking-wider">
+                              🔥 Best Seller
+                            </span>
+                          )}
                           {product.isFeatured && (
                             <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
                               Featured
@@ -578,7 +681,7 @@ export default function AdminProductsPage() {
 
             {/* Mobile Cards Grid View */}
             <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
-              {filteredProducts.map((product: any) => (
+              {filteredProducts.map((product: any, idx: number) => (
                 <div
                   key={product._id}
                   className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 flex gap-3 items-start justify-between"
@@ -600,19 +703,52 @@ export default function AdminProductsPage() {
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#B9853A]">
-                          {product.category?.name || "Uncategorized"}
-                        </span>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[9px] font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200 shadow-2xs">
+                            Order #{idx + 1}
+                          </span>
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-[#B9853A]">
+                            {product.category?.name || "Uncategorized"}
+                          </span>
+                        </div>
                         <h3 className="text-xs font-bold text-gray-900 leading-snug">
                           {product.name}
                         </h3>
                       </div>
-                      <span className="text-xs font-bold text-gray-900 shrink-0">
-                        {formatPrice(product.price)}
-                      </span>
+                      
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-xs font-bold text-gray-900">
+                          {formatPrice(product.price)}
+                        </span>
+                        
+                        {/* Order Navigation Arrows on Mobile */}
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <button
+                            onClick={() => handleMoveProductUp(idx)}
+                            disabled={idx === 0}
+                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
+                            title="Move Up"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleMoveProductDown(idx)}
+                            disabled={idx === filteredProducts.length - 1}
+                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
+                            title="Move Down"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 pt-1">
+                      {product.isBestSeller && (
+                        <span className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-900 text-[9px] font-bold uppercase">
+                          🔥 Best Seller
+                        </span>
+                      )}
                       {product.isFeatured && (
                         <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[9px] font-bold uppercase">
                           Featured
@@ -1145,6 +1281,26 @@ export default function AdminProductsPage() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-lg border border-orange-200/80 bg-orange-50/50 px-4 py-3">
+                <input
+                  type="checkbox"
+                  id="isBestSeller"
+                  checked={formData.isBestSeller}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isBestSeller: e.target.checked })
+                  }
+                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 rounded cursor-pointer"
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-gray-900">
+                    Best Seller Product 🔥
+                  </span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    Displays in the &quot;Our Best Selling Products&quot; section right after Hero Slider.
+                  </span>
                 </div>
               </div>
 

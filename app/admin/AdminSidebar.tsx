@@ -22,6 +22,7 @@ import {
   FiSettings,
   FiLogOut,
   FiGift,
+  FiAward,
 } from "react-icons/fi";
 
 interface MenuItem {
@@ -54,6 +55,12 @@ const menuItems: MenuItem[] = [
     icons: <FiGift size={22} />,
     label: "Value Packs",
     href: "/admin/value-packs",
+    requiredPermission: "manage_products",
+  },
+  {
+    icons: <FiAward size={22} />,
+    label: "Best Sellers",
+    href: "/admin/best-sellers",
     requiredPermission: "manage_products",
   },
   {

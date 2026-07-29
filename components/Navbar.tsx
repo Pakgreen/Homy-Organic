@@ -78,40 +78,6 @@ export default function Navbar() {
 
   if (isAdminPage || isSearchPage || isAuthPage) return null;
 
-  // Suppress hydration warning for client-only content
-  if (!isMounted) {
-    return (
-      <nav
-        className="sticky top-0 z-9999 bg-white border-b border-gray-100 shadow-sm text-gray-900"
-        suppressHydrationWarning
-      >
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo Skeleton */}
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-200 rounded animate-pulse" />
-              <div className="w-32 h-6 bg-gray-200 rounded animate-pulse" />
-            </div>
-
-            {/* Desktop Menu Skeleton */}
-            <div className="hidden md:flex items-center space-x-8">
-              <div className="w-20 h-5 bg-gray-200 rounded animate-pulse" />
-              <div className="w-24 h-5 bg-gray-200 rounded animate-pulse" />
-              <div className="w-20 h-5 bg-gray-200 rounded animate-pulse" />
-              <div className="w-20 h-5 bg-gray-200 rounded animate-pulse" />
-            </div>
-
-            {/* Cart & User Skeleton */}
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
-              <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
-            </div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
   const flatCategories = categories
     .filter((c) => c.showInNav !== false)
     .slice(0, 10);
@@ -173,7 +139,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Exact Centered Logo */}
+            {/* Exact Centered Logo - Eager Priority Loaded */}
             <Link
               href="/"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10"
@@ -184,6 +150,9 @@ export default function Navbar() {
                 width={150}
                 height={75}
                 priority
+                loading="eager"
+                // @ts-ignore
+                fetchPriority="high"
                 sizes="(max-width: 768px) 120px, 150px"
                 className="max-h-16 w-auto object-contain"
               />
@@ -211,7 +180,7 @@ export default function Navbar() {
                 aria-label="Open cart"
               >
                 <FiShoppingBag size={23} />
-                {totalItems > 0 && (
+                {isMounted && totalItems > 0 && (
                   <span
                     className="absolute -top-2 -right-2 text-white text-[10px] rounded-full h-5 min-w-5 px-1 flex items-center justify-center font-semibold"
                     style={{ backgroundColor: "#111827" }}

@@ -13,6 +13,7 @@ export interface IProduct extends Document {
   brand?: string;
   ratings: number;
   isFeatured: boolean;
+  isBestSeller?: boolean;
   isDisabled: boolean;
   isValuePack?: boolean;
   keyBenefits?: string[];
@@ -55,7 +56,7 @@ const ProductSchema: Schema = new Schema(
     category: {
       type: Schema.Types.ObjectId,
       ref: "Category",
-      required: [true, "Product category is required"],
+      required: false,
     },
     images: {
       type: [String],
@@ -75,6 +76,10 @@ const ProductSchema: Schema = new Schema(
       max: 5,
     },
     isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    isBestSeller: {
       type: Boolean,
       default: false,
     },

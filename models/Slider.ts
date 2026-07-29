@@ -33,7 +33,6 @@ const SliderSchema: Schema = new Schema(
     },
     position: {
       type: String,
-      enum: ["top", "after_row_1", "after_row_2", "after_row_3"],
       default: "top",
     },
     isActive: {

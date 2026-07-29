@@ -168,7 +168,9 @@ export async function PUT(
     }
     delete data.oldPrice;
 
-    if (data.category && typeof data.category === "object") {
+    if (data.isValuePack) {
+      data.category = null;
+    } else if (data.category && typeof data.category === "object") {
       data.category = data.category._id || data.category;
     }
 

@@ -68,7 +68,7 @@ export default function Footer() {
   if (!loaded) return null;
 
   return (
-    <footer className=" hidden md:block mx-3 sm:mx-6 lg:mx-8 mb-3 overflow-hidden rounded-4xl bg-white text-gray-700 border border-gray-100 shadow-[0_-12px_40px_rgba(15,23,42,0.04)]">
+    <footer className="mx-3 sm:mx-6 lg:mx-8 mb-20 sm:mb-6 overflow-hidden rounded-3xl sm:rounded-4xl bg-white text-gray-700 border border-gray-100 shadow-[0_-12px_40px_rgba(15,23,42,0.04)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}

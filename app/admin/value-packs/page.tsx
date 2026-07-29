@@ -30,7 +30,6 @@ export default function AdminValuePacksPage() {
   const isAdmin = session?.user?.role === "admin";
 
   const [valuePacks, setValuePacks] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingPack, setEditingPack] = useState<any>(null);
@@ -40,16 +39,14 @@ export default function AdminValuePacksPage() {
   const [deletingPack, setDeletingPack] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Search & Filter States
+  // Search States
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
 
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
     price: number | "";
     originalPrice: number | "";
-    category: string;
     brand: string;
     badge: string;
     images: string[];
@@ -62,7 +59,6 @@ export default function AdminValuePacksPage() {
     description: "",
     price: "",
     originalPrice: "",
-    category: "",
     brand: "Homy Organic",
     badge: "VALUE PACK",
     images: [],
@@ -74,34 +70,22 @@ export default function AdminValuePacksPage() {
 
   useEffect(() => {
     fetchValuePacks();
-    fetchCategories();
   }, []);
 
   const fetchValuePacks = async () => {
     try {
       const res = await axios.get(
-        "/api/products?valuePack=true&limit=100&includeDisabled=true"
+        "/api/products?valuePack=true&limit=100&includeDisabled=true&sort=order"
       );
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.products || [];
-      setValuePacks(data);
+      const sorted = [...data].sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+      setValuePacks(sorted);
     } catch (error) {
       console.error("Error fetching value packs:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await axios.get("/api/categories");
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data.categories || [];
-      setCategories(data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
     }
   };
 
@@ -155,6 +139,70 @@ export default function AdminValuePacksPage() {
     }
   };
 
+  const handleMovePackUp = async (index: number) => {
+    if (index <= 0) return;
+    const current = filteredPacks[index];
+    const prev = filteredPacks[index - 1];
+
+    const currentOrder = current.order !== undefined ? current.order : index;
+    const prevOrder = prev.order !== undefined ? prev.order : index - 1;
+
+    // Optimistic UI Swap
+    setValuePacks((prevPacks) => {
+      const updated = [...prevPacks];
+      const idxCurrent = updated.findIndex((p) => p._id === current._id);
+      const idxPrev = updated.findIndex((p) => p._id === prev._id);
+      if (idxCurrent !== -1 && idxPrev !== -1) {
+        updated[idxCurrent] = { ...current, order: prevOrder };
+        updated[idxPrev] = { ...prev, order: currentOrder };
+      }
+      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    });
+
+    try {
+      await Promise.all([
+        axios.put(`/api/products/${current._id}`, { order: prevOrder }),
+        axios.put(`/api/products/${prev._id}`, { order: currentOrder }),
+      ]);
+      fetchValuePacks();
+    } catch (error) {
+      console.error("Error moving value pack up:", error);
+      fetchValuePacks();
+    }
+  };
+
+  const handleMovePackDown = async (index: number) => {
+    if (index >= filteredPacks.length - 1) return;
+    const current = filteredPacks[index];
+    const next = filteredPacks[index + 1];
+
+    const currentOrder = current.order !== undefined ? current.order : index;
+    const nextOrder = next.order !== undefined ? next.order : index + 1;
+
+    // Optimistic UI Swap
+    setValuePacks((prevPacks) => {
+      const updated = [...prevPacks];
+      const idxCurrent = updated.findIndex((p) => p._id === current._id);
+      const idxNext = updated.findIndex((p) => p._id === next._id);
+      if (idxCurrent !== -1 && idxNext !== -1) {
+        updated[idxCurrent] = { ...current, order: nextOrder };
+        updated[idxNext] = { ...next, order: currentOrder };
+      }
+      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    });
+
+    try {
+      await Promise.all([
+        axios.put(`/api/products/${current._id}`, { order: nextOrder }),
+        axios.put(`/api/products/${next._id}`, { order: currentOrder }),
+      ]);
+      fetchValuePacks();
+    } catch (error) {
+      console.error("Error moving value pack down:", error);
+      fetchValuePacks();
+    }
+  };
+
   const executeDelete = async () => {
     if (!deletingPack) return;
     setIsDeleting(true);
@@ -177,7 +225,6 @@ export default function AdminValuePacksPage() {
       description: pack.description || "",
       price: pack.price || "",
       originalPrice: pack.originalPrice || pack.oldPrice || "",
-      category: pack.category?._id || pack.category || "",
       brand: pack.brand || "Homy Organic",
       badge: pack.badge || "VALUE PACK",
       images: pack.images || [],
@@ -211,7 +258,6 @@ export default function AdminValuePacksPage() {
       description: "",
       price: "",
       originalPrice: "",
-      category: "",
       brand: "Homy Organic",
       badge: "VALUE PACK",
       images: [],
@@ -282,18 +328,11 @@ export default function AdminValuePacksPage() {
 
   const filteredPacks = valuePacks.filter((pack) => {
     const query = searchTerm.toLowerCase().trim();
-    const matchesSearch =
+    return (
       !query ||
       pack.name?.toLowerCase().includes(query) ||
-      pack.brand?.toLowerCase().includes(query) ||
-      pack.category?.name?.toLowerCase().includes(query);
-
-    const matchesCategory =
-      !selectedCategory ||
-      pack.category?._id === selectedCategory ||
-      pack.category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
+      pack.brand?.toLowerCase().includes(query)
+    );
   });
 
   if (isLoading) {
@@ -337,7 +376,7 @@ export default function AdminValuePacksPage() {
         </button>
       </div>
 
-      {/* Direct Search & Filters */}
+      {/* Direct Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-96">
           <FiSearch
@@ -360,19 +399,6 @@ export default function AdminValuePacksPage() {
             </button>
           )}
         </div>
-
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700 focus:outline-none focus:border-[#B9853A] cursor-pointer"
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat: any) => (
-            <option key={cat._id} value={cat._id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
       </div>
 
       {/* Value Packs Table / Grid Container */}
@@ -404,19 +430,46 @@ export default function AdminValuePacksPage() {
               <table className="w-full text-xs text-left">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/70 text-gray-500 uppercase tracking-wider font-bold">
+                    <th className="py-3.5 px-4">Order</th>
                     <th className="py-3.5 px-4">Value Pack</th>
-                    <th className="py-3.5 px-4">Category</th>
                     <th className="py-3.5 px-4">Price / Savings</th>
                     <th className="py-3.5 px-4">Included Items</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredPacks.map((pack: any) => (
+                  {filteredPacks.map((pack: any, idx: number) => (
                     <tr
                       key={pack._id}
                       className="hover:bg-gray-50/60 transition-colors"
                     >
+                      {/* Order Controls & Index */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-gray-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                            #{idx + 1}
+                          </span>
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              onClick={() => handleMovePackUp(idx)}
+                              disabled={idx === 0}
+                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 transition-colors cursor-pointer"
+                              title="Move Up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => handleMovePackDown(idx)}
+                              disabled={idx === filteredPacks.length - 1}
+                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 transition-colors cursor-pointer"
+                              title="Move Down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-amber-50 rounded-xl overflow-hidden relative border border-amber-200/60 shrink-0">
@@ -441,12 +494,6 @@ export default function AdminValuePacksPage() {
                             </span>
                           </div>
                         </div>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold">
-                          {pack.category?.name || "General"}
-                        </span>
                       </td>
 
                       <td className="py-3.5 px-4 font-bold text-gray-900">
@@ -508,7 +555,7 @@ export default function AdminValuePacksPage() {
 
             {/* Mobile Cards Grid View */}
             <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
-              {filteredPacks.map((pack: any) => (
+              {filteredPacks.map((pack: any, idx: number) => (
                 <div
                   key={pack._id}
                   className="bg-amber-50/20 rounded-xl p-4 border border-amber-200/50 flex gap-3 items-start justify-between"
@@ -530,16 +577,44 @@ export default function AdminValuePacksPage() {
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-[#B9853A]">
-                          {pack.category?.name || "Bundle"}
-                        </span>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[9px] font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-amber-200 shadow-2xs">
+                            Order #{idx + 1}
+                          </span>
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-[#B9853A]">
+                            {pack.badge || "VALUE PACK"}
+                          </span>
+                        </div>
                         <h3 className="text-xs font-bold text-gray-900 leading-snug">
                           {pack.name}
                         </h3>
                       </div>
-                      <span className="text-xs font-bold text-[#E55353] shrink-0">
-                        {formatPrice(pack.price)}
-                      </span>
+                      
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-xs font-bold text-[#E55353]">
+                          {formatPrice(pack.price)}
+                        </span>
+
+                        {/* Order Navigation Arrows on Mobile */}
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <button
+                            onClick={() => handleMovePackUp(idx)}
+                            disabled={idx === 0}
+                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
+                            title="Move Up"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleMovePackDown(idx)}
+                            disabled={idx === filteredPacks.length - 1}
+                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
+                            title="Move Down"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="pt-1">
@@ -704,7 +779,7 @@ export default function AdminValuePacksPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
                     Bundle Price (Rs) *
@@ -744,27 +819,6 @@ export default function AdminValuePacksPage() {
                     className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-[#B9853A] font-medium text-gray-500"
                     placeholder="Optional Total Value"
                   />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
-                    Category *
-                  </label>
-                  <select
-                    required
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-[#B9853A] font-medium"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((cat: any) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
