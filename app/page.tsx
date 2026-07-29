@@ -11,6 +11,7 @@ import InstagramFeed from "@/components/IntagramComp";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import connectDB from "@/lib/mongodb";
 import Slider from "@/models/Slider";
+import CategoryNav from "@/components/home/Category";
 
 async function getSliders() {
   try {
@@ -37,9 +38,9 @@ export default async function ProductsPage() {
   return (
     <>
       <HeroSlider initialSliders={allSliders} />
-      <BestSellingProducts />
+     <CategoryNav/>
       <About />
-
+ <BestSellingProducts />
       <Suspense fallback={<ProductSkeleton count={10} />}>
         <ProductsContent />
       </Suspense>
