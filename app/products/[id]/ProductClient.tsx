@@ -59,6 +59,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
   const [sharePopup, setSharePopup] = useState<string | null>(null);
   const shareTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -209,6 +210,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
   const handleSelectImage = (index: number) => {
     if (index < 0 || index >= productImageVariants.length) return;
+    setIsMainImageLoaded(false);
     setSelectedImage(index);
   };
 

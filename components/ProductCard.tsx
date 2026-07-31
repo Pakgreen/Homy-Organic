@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -27,6 +28,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
+  const [isPrimaryLoaded, setIsPrimaryLoaded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const rawPrimary = product.images?.[0] || "";
   const rawHover = product.images?.[1] || rawPrimary;

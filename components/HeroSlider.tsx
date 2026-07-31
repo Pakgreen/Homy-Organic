@@ -31,6 +31,7 @@ export default function HeroSlider({
 }: HeroSliderProps) {
   const [sliders, setSliders] = useState<SliderItem[]>(initialSliders);
   const [isLoading, setIsLoading] = useState(initialSliders.length === 0);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // Only fetch client-side if no initial sliders were provided by SSR
@@ -38,6 +39,10 @@ export default function HeroSlider({
       fetchSliders(true);
     }
   }, [initialSliders.length]);
+
+  const handleImageLoad = (id: string) => {
+    setLoadedImages((prev) => ({ ...prev, [id]: true }));
+  };
 
   const fetchSliders = async (showLoader = true) => {
     try {
@@ -58,7 +63,9 @@ export default function HeroSlider({
   if (isLoading) {
     return (
       <section className="relative overflow-hidden w-full bg-gray-100/70">
-        <div className="w-full h-44 sm:h-72 md:h-96 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+        <div className="w-full h-44 sm:h-72 md:h-96 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
+        </div>
       </section>
     );
   }

@@ -14,6 +14,8 @@ import connectDB from "@/lib/mongodb";
 import Setting from "@/models/Setting";
 import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import TopProgressBar from "@/components/TopProgressBar";
+import PagePreloader from "@/components/PagePreloader";
 
 // Disable Next.js caching across the app so every request fetches fresh data.
 export const fetchCache = "force-no-store";
@@ -105,7 +107,7 @@ export default async function RootLayout({
     };
 
     const timeoutPromise = new Promise((resolve) =>
-      setTimeout(() => resolve(null), 1500)
+      setTimeout(() => resolve(null), 300)
     );
 
     const settings: any = await Promise.race([fetchTheme(), timeoutPromise]);
@@ -163,6 +165,8 @@ export default async function RootLayout({
       >
         <GoogleAnalytics />
         <AuthProvider>
+          <PagePreloader />
+          <TopProgressBar />
           <ThemeProvider />
           <CartDrawer />
           <ChatWidget />
