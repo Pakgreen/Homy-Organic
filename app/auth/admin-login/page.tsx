@@ -25,11 +25,6 @@ export default function AdminSignInPage() {
     setStatusMessage(null);
 
     try {
-      console.log("[LOGIN] Attempting signin with:", {
-        email: formData.email,
-        loginType: "admin",
-      });
-
       const result = await signIn("credentials", {
         redirect: false,
         email: formData.email,
@@ -37,24 +32,19 @@ export default function AdminSignInPage() {
         loginType: "admin",
       });
 
-      console.log("[LOGIN] SignIn result:", result);
-
       if (result?.ok) {
         setStatusMessage({
           type: "success",
           text: "Admin securely signed in! Redirecting...",
         });
-        // Wait a bit longer to ensure session is updated, then redirect
         setTimeout(() => {
-          router.push("/admin");
+          router.replace("/admin");
           router.refresh();
-        }, 1500);
+        }, 1000);
       } else if (result?.error) {
-        console.error("[LOGIN] SignIn error:", result.error);
         setStatusMessage({ type: "error", text: result.error });
       }
     } catch (error: any) {
-      console.error("[LOGIN] Exception:", error);
       setStatusMessage({
         type: "error",
         text: "An unexpected error occurred",
@@ -65,97 +55,77 @@ export default function AdminSignInPage() {
   };
 
   return (
-    <div className="flex bg-[#EEF3EC] h-screen w-full flex-col md:flex-row overflow-hidden">
-      {/* Left Side - Brand Display (Fixed background style) */}
-      <div className="relative w-full h-12 md:w-2/5  text-white p-8 md:p-12 flex  justify-between flex-col md:flex h-full">
-        {/* Subtle gradient overlay/background */}
-        <div className="absolute inset-0 bg-[#B9853A]   pointer-events-none  rounded-r-full overflow-hidden"></div>
-
-        <div className="relative z-10 flex items-center justify-start">
+    <div className="flex bg-[#EEF3EC] min-h-screen w-full flex-col md:flex-row overflow-x-hidden">
+      
+      {/* Left Side - Brand Panel: Sharp top/left, FULL rounded right edge */}
+      <div className="relative w-full md:w-2/5 bg-[#B9853A] text-white p-6 sm:p-8 md:p-12 flex flex-col justify-between min-h-[240px] md:min-h-screen shrink-0 rounded-t-none rounded-b-[36px] md:rounded-b-none md:rounded-tl-none md:rounded-bl-none md:rounded-r-full shadow-none">
+        <div className="relative z-10 flex items-center justify-between">
           <button
             onClick={() => router.push("/")}
-            className="p-2 text-black hover:text-black cursor-pointer bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-sm"
+            className="p-2 text-black hover:text-gray-900 cursor-pointer bg-white/20 hover:bg-white/40 rounded-full transition-all backdrop-blur-sm"
             title="Return to Home"
           >
             <FiArrowLeft className="w-5 h-5" />
           </button>
+          <span className="md:hidden text-xs font-semibold uppercase tracking-wider text-black">
+            Admin Portal
+          </span>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="flex justify-center  rounded-full p-2 mb-6">
+        <div className="relative z-10 flex flex-col items-center text-center my-4 md:my-auto">
+          <div className="flex justify-center p-2 mb-4">
             <Image
               src="/homyorganic.png"
-              alt="Homy Orgaic logo"
+              alt="Homy Organic logo"
               width={72}
               height={72}
-            
               priority
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
             />
           </div>
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4 tracking-tight">
+          <h2 className="text-2xl lg:text-4xl font-bold mb-3 tracking-tight text-black font-serif">
             Admin Portal
           </h2>
-          <p className="text-black text-base leading-relaxed max-w-md">
-            Log in to manage your store, track active sessions, oversee users,
-            and control contents cleanly securely.
+          <p className="text-black text-xs sm:text-sm leading-relaxed max-w-md font-medium">
+            Log in to manage your store, track active sessions, oversee users, and control content securely.
           </p>
         </div>
 
-        <div className="relative z-10 text-sm text-black font-medium tracking-wide text-center">
-          © {new Date().getFullYear()} Homy Orgaic
+        <div className="relative z-10 text-xs text-black font-medium tracking-wide text-center hidden md:block">
+          &copy; {new Date().getFullYear()} Homy Organic
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
-      <div className="w-full md:w-3/5 p-6 sm:p-10 md:p-16 lg:p-24 flex flex-col justify-center h-full overflow-y-auto">
-        {/* Mobile Header (Only visible on small screens) */}
-        <div className="md:hidden flex items-center justify-between mb-10 w-full max-w-md mx-auto">
-          <button
-            onClick={() => router.push("/")}
-            className="p-2 text-gray-500 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-full transition-all"
-            title="Return to Home"
-          >
-            <FiArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex justify-center  p-1 ">
-            <Image
-              src="/homyorganic.png"
-              alt="Homy Orgaic logo"
-              width={40}
-              height={40}
-  
-              priority
-            />
-          </div>
-        </div>
-
-        <div className="w-full max-w-md mx-auto">
-          <div className="mb-10">
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+      {/* Right Side - Form inside a Clean White Card with NO SHADOW */}
+      <div className="w-full md:w-3/5 p-4 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center min-h-[calc(100vh-240px)] md:min-h-screen">
+        <div className="w-full max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-none">
+          
+          <div className="mb-8 sm:mb-10">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
               Welcome back
             </h1>
-            <p className="text-gray-500 mt-2 text-sm">
+            <p className="text-gray-500 mt-2 text-xs sm:text-sm font-light">
               Please enter your admin credentials to continue.
             </p>
           </div>
 
-          {statusMessage ? (
+          {statusMessage && (
             <div
-              className={`mb-6 p-4 text-sm ${
+              className={`mb-6 p-4 rounded-xl text-xs sm:text-sm font-medium ${
                 statusMessage.type === "error"
-                  ? "bg-red-50 text-red-600"
-                  : "bg-green-50 text-green-600"
+                  ? "bg-red-50 text-red-600 border border-red-100"
+                  : "bg-green-50 text-green-700 border border-green-100"
               }`}
             >
-              <span className="font-medium">{statusMessage.text}</span>
+              {statusMessage.text}
             </div>
-          ) : null}
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-900"
+                className="block text-xs font-semibold uppercase tracking-wider text-gray-700"
               >
                 Email Address
               </label>
@@ -167,20 +137,18 @@ export default function AdminSignInPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-0 py-2 border-b border-gray-300 bg-transparent focus:border-black outline-none transition-colors duration-200 placeholder-gray-400 text-gray-900"
+                className="w-full px-0 py-2.5 border-b border-gray-300 bg-transparent focus:border-black outline-none transition-colors duration-200 placeholder-gray-400 text-gray-900 text-sm font-normal"
                 placeholder="admin@example.com"
               />
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-900"
-                >
-                  Password
-                </label>
-              </div>
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold uppercase tracking-wider text-gray-700"
+              >
+                Password
+              </label>
               <div className="relative">
                 <input
                   id="password"
@@ -190,13 +158,13 @@ export default function AdminSignInPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="w-full px-0 py-2 border-b border-gray-300 bg-transparent focus:border-black outline-none transition-colors duration-200 pr-10 placeholder-gray-400 text-gray-900"
+                  className="w-full px-0 py-2.5 border-b border-gray-300 bg-transparent focus:border-black outline-none transition-colors duration-200 pr-10 placeholder-gray-400 text-gray-900 text-sm font-normal"
                   placeholder="••••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center text-gray-400 hover:text-black focus:outline-none transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center text-gray-400 hover:text-black focus:outline-none transition-colors cursor-pointer"
                 >
                   {showPassword ? (
                     <FiEyeOff className="h-4 w-4" />
@@ -210,7 +178,7 @@ export default function AdminSignInPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-8 bg-black text-white font-medium py-3 hover:bg-gray-800 transition-colors duration-200 disabled:opacity-60 cursor-pointer disabled:cursor-wait flex items-center justify-center gap-2"
+              className="w-full mt-8 bg-[#B9853A] hover:bg-[#a3722e] text-white font-bold py-3.5 px-6 rounded-full transition-colors duration-200 disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2 text-sm tracking-wider uppercase shadow-none"
             >
               {isLoading ? "Authenticating..." : "Sign In"}
               {isLoading ? (
@@ -223,8 +191,10 @@ export default function AdminSignInPage() {
               )}
             </button>
           </form>
+
         </div>
       </div>
+
     </div>
   );
 }

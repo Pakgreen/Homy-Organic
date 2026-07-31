@@ -23,6 +23,7 @@ import {
   FiLogOut,
   FiGift,
   FiAward,
+  FiMail,
 } from "react-icons/fi";
 
 interface MenuItem {
@@ -136,6 +137,12 @@ const menuItems: MenuItem[] = [
     label: "FAQ Accordion",
     href: "/admin/faq",
     requiredPermission: "manage_faq",
+  },
+  {
+    icons: <FiMail size={22} />,
+    label: "Subscribers",
+    href: "/admin/subscribers",
+    requiredPermission: "manage_settings",
   },
   // ── Storefront
   {

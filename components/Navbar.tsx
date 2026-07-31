@@ -37,6 +37,7 @@ export default function Navbar() {
   const [isMounted, setIsMounted] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [siteLogo, setSiteLogo] = useState("/homyorganic.png");
+  const [tagline, setTagline] = useState("Where Beauty Meets Wellness");
   const totalItems = useCartStore((state) => state.getTotalItems());
   const router = useRouter();
   const pathname = usePathname();
@@ -68,8 +69,9 @@ export default function Navbar() {
   const fetchSiteLogo = async () => {
     try {
       const { data } = await axios.get("/api/settings/site");
-      if (data && data.logo) {
-        setSiteLogo(data.logo);
+      if (data) {
+        if (data.logo) setSiteLogo(data.logo);
+        if (data.tagline) setTagline(data.tagline);
       }
     } catch (error) {
       console.error("Error fetching site logo:", error);
@@ -93,7 +95,7 @@ export default function Navbar() {
         }}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8 relative">
-          <div className="flex items-center justify-between h-20 py-2">
+          <div className="flex items-center justify-between h-22 sm:h-24 py-2">
             {/* Left items */}
             <div className="flex items-center gap-4 shrink-0 z-10">
               <div className="relative hidden md:block group">
@@ -139,30 +141,40 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Exact Centered Logo - Eager Priority Loaded */}
+            {/* Exact Centered Logo & Tagline */}
             <Link
               href="/"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-10 group"
             >
               <Image
                 src={siteLogo}
                 alt="Homy Organic"
-                width={150}
-                height={75}
+                width={200}
+                height={100}
                 priority
                 loading="eager"
                 // @ts-ignore
                 fetchPriority="high"
-                sizes="(max-width: 768px) 120px, 150px"
-                className="max-h-16 w-auto object-contain"
+                sizes="(max-width: 768px) 160px, 200px"
+                className="max-h-14 sm:max-h-16 md:max-h-18 w-auto object-contain transition-transform group-hover:scale-105"
               />
+              <span className="text-[8.5px] sm:text-[10px] tracking-[0.16em] sm:tracking-[0.22em] font-semibold text-[#B9853A] uppercase mt-0.5 whitespace-nowrap">
+                {tagline}
+              </span>
             </Link>
 
             {/* Right items */}
             <div className="flex items-center gap-4 shrink-0 z-10">
               <Link
+                href="/track-order"
+                className="hidden md:inline-flex items-center text-[15px] font-medium text-[#B9853A] hover:text-black transition-colors"
+              >
+                Track Order
+              </Link>
+
+              <Link
                 href="/about"
-                className="hidden md:inline-flex items-center text-[15px] font-medium  text-black hover:text-gray-600 transition-colors"
+                className="hidden md:inline-flex items-center text-[15px] font-medium text-black hover:text-gray-600 transition-colors"
               >
                 About Us
               </Link>

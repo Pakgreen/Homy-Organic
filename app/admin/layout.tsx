@@ -17,27 +17,57 @@ export default function AdminLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Instant zero-delay authentication check
   useEffect(() => {
+    // 1. Fast browser cookie pre-check (if no next-auth session cookie exists, redirect instantly)
+    if (typeof window !== "undefined") {
+      const hasSessionCookie =
+        document.cookie.includes("next-auth.session-token") ||
+        document.cookie.includes("__Secure-next-auth.session-token");
+
+      if (!hasSessionCookie) {
+        router.replace("/auth/admin-login");
+        return;
+      }
+    }
+
+    // 2. NextAuth status validation
     if (status === "unauthenticated") {
-      router.push("/auth/admin-login");
+      router.replace("/auth/admin-login");
     } else if (status === "authenticated" && session?.user) {
       const canAccess = canAccessAdminPanel(session.user.role);
       if (!canAccess) {
-        router.push("/auth/admin-login");
+        router.replace("/auth/admin-login");
       }
     }
   }, [status, session, router]);
 
-  // Show nothing while checking auth
+  // Fast pre-render guard: If unauthenticated, return null so login page opens immediately without loader delay
+  if (
+    status === "unauthenticated" ||
+    (!session &&
+      typeof window !== "undefined" &&
+      !document.cookie.includes("next-auth.session-token") &&
+      !document.cookie.includes("__Secure-next-auth.session-token"))
+  ) {
+    return null;
+  }
+
+  // Quick minimal spinner during active session verification
   if (status === "loading" || !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
         <div
           className="animate-spin rounded-full h-8 w-8 border-b-2"
           style={{ borderColor: "var(--primary-color, #000000)" }}
-        ></div>
+        />
       </div>
     );
+  }
+
+  // Strict role security check
+  if (!canAccessAdminPanel(session?.user?.role)) {
+    return null;
   }
 
   return (

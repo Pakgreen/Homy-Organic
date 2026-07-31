@@ -5,7 +5,21 @@ import { useParams } from "next/navigation";
 import axios from "axios";
 import { toast } from "sonner";
 import { formatPrice, formatDate } from "@/lib/utils";
-import { FiCopy, FiMessageCircle } from "react-icons/fi";
+import {
+  FiCopy,
+  FiMessageCircle,
+  FiPackage,
+  FiUser,
+  FiCreditCard,
+  FiMapPin,
+  FiTruck,
+  FiDownload,
+  FiCheckCircle,
+  FiClock,
+  FiXCircle,
+  FiMaximize2,
+  FiX,
+} from "react-icons/fi";
 import {
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
@@ -22,6 +36,7 @@ export default function AdminOrderDetailPage() {
   const [isPaid, setIsPaid] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (params?.id) {
@@ -50,23 +65,26 @@ export default function AdminOrderDetailPage() {
       setPaymentRef(refFallback);
       setPaymentProof(proofFallback);
     } catch (error) {
-      toast.error("Failed to fetch order");
+      toast.error("Failed to fetch order details");
     }
   };
 
   const handleUpdate = async () => {
     const id = params?.id;
     if (!id) return;
+    setUpdating(true);
     try {
       await axios.put(`/api/orders/${id}`, {
         status,
         trackingNumber,
         isPaid,
       });
-      toast.success("Order updated successfully");
+      toast.success("Order updated successfully!");
       fetchOrder();
     } catch (error) {
       toast.error("Failed to update order");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -92,386 +110,270 @@ export default function AdminOrderDetailPage() {
     }
   };
 
-  if (!order)
+  if (!order) {
     return (
-      <div className="text-xs font-light uppercase tracking-widest text-gray-500 min-h-screen pt-24 text-center">
-        Loading order details...
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-400 space-y-3">
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+        <p className="text-sm font-medium">Loading order details...</p>
       </div>
     );
+  }
+
+  const getStatusBadge = (st: string) => {
+    switch (st) {
+      case "delivered":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "shipped":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "processing":
+        return "bg-amber-50 text-amber-800 border-amber-200";
+      case "cancelled":
+        return "bg-red-50 text-red-700 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto pb-24 overflow-x-hidden sm:overflow-visible">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-6 mb-12">
-        <div className="min-w-0">
-          <h2 className="text-xl font-light text-gray-900 uppercase tracking-widest break-all">
-            Order{" "}
-            <span className="font-semibold">
-              {order._id.substring(0, 8)}...
+    <div className="max-w-7xl mx-auto space-y-6 pb-20">
+      
+      {/* Top Header Card */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-mono tracking-tight">
+              Order #{order._id}
+            </h1>
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getStatusBadge(
+                order.status
+              )}`}
+            >
+              {order.status}
             </span>
-          </h2>
-          <p className="mt-2 text-xs text-gray-400 uppercase tracking-widest">
-            PLACED ON {formatDate(order.createdAt)}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Placed on {formatDate(order.createdAt)}
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(order._id);
+              toast.success("Order ID copied!");
+            }}
+            className="px-3.5 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <FiCopy size={14} />
+            Copy Order ID
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-        <div className="lg:col-span-2 space-y-12">
-          {/* Order Info */}
-          <div className="border-b border-gray-100 pb-8">
-            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-6">
-              Order Information
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
-              <div className="flex flex-col items-start gap-1">
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
-                  Order ID
-                </p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(order._id || "");
-                    toast.success("Order ID copied!");
-                  }}
-                  className="group flex items-center gap-2 font-mono text-left cursor-pointer hover:text-black focus:outline-none transition-colors"
-                  title="Click to copy Order ID"
-                >
-                  <span className="text-sm font-light text-gray-900 break-all">
-                    {order._id}
-                  </span>
-                  <FiCopy
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity shrink-0"
-                    size={12}
-                  />
-                </button>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Column: Details Cards */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Card 1: Customer & Order Overview */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+              <FiUser className="text-[#B9853A]" />
+              Customer Information
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 font-medium">Customer Name</p>
+                <p className="font-semibold text-gray-900">{order.user?.name || order.shippingAddress?.fullName || "N/A"}</p>
               </div>
-              <div className="flex flex-col items-start gap-1">
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
-                  Date
-                </p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      formatDate(order.createdAt) || "",
-                    );
-                    toast.success("Date copied!");
-                  }}
-                  className="group flex items-center gap-2 text-left cursor-pointer hover:text-black focus:outline-none transition-colors"
-                  title="Click to copy Date"
-                >
-                  <span className="text-sm font-light text-gray-900">
-                    {formatDate(order.createdAt)}
-                  </span>
-                  <FiCopy
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
-                    size={12}
-                  />
-                </button>
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 font-medium">Customer Email</p>
+                <p className="font-medium text-gray-900 break-all">{order.user?.email || order.contactEmail || "N/A"}</p>
               </div>
-              <div className="flex flex-col items-start gap-1">
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
-                  Customer
-                </p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(order.user?.name || "");
-                    toast.success("Customer name copied!");
-                  }}
-                  className="group flex items-center gap-2 font-medium text-left cursor-pointer hover:text-black focus:outline-none transition-colors"
-                  title="Click to copy Name"
-                >
-                  <span className="text-sm text-gray-900 uppercase tracking-widest">
-                    {order.user?.name}
-                  </span>
-                  <FiCopy
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
-                    size={12}
-                  />
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(order.user?.email || "");
-                    toast.success("Customer email copied!");
-                  }}
-                  className="group flex items-center gap-2 text-sm text-gray-500 font-light text-left cursor-pointer hover:text-black focus:outline-none transition-colors mt-0.5"
-                  title="Click to copy Email"
-                >
-                  <span className="break-all">{order.user?.email}</span>
-                  <FiCopy
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity shrink-0"
-                    size={12}
-                  />
-                </button>
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 font-medium">Phone Number</p>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900">{order.shippingAddress?.phone || "N/A"}</span>
+                  {order.shippingAddress?.phone && (
+                    <button
+                      onClick={() => {
+                        let num = order.shippingAddress.phone.replace(/[^0-9]/g, "");
+                        if (num.startsWith("0")) num = "92" + num.slice(1);
+                        else if (!num.startsWith("92")) num = "92" + num;
+                        const msg = `Hi ${order.shippingAddress.fullName}, regarding your order #${order._id.substring(0, 8)} at Homy Organic...`;
+                        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
+                      }}
+                      className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer border border-emerald-200"
+                      title="Send WhatsApp Message"
+                    >
+                      <FiMessageCircle size={13} />
+                      WhatsApp
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col items-start gap-1">
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
-                  Payment Method
-                </p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(order.paymentMethod || "");
-                    toast.success("Payment method copied!");
-                  }}
-                  className="group flex items-center gap-2 text-left cursor-pointer hover:text-black focus:outline-none transition-colors"
-                  title="Click to copy Payment Method"
-                >
-                  <span className="text-sm font-light text-gray-900 uppercase tracking-wider">
-                    {order.paymentMethod}
-                  </span>
-                  <FiCopy
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
-                    size={12}
-                  />
-                </button>
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 font-medium">Payment Method</p>
+                <p className="font-semibold text-gray-900 uppercase">{order.paymentMethod || "JazzCash"}</p>
               </div>
             </div>
           </div>
 
-          {/* Payment Proof */}
-          <div className="border-b border-gray-100 pb-8">
-            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-6">
+          {/* Card 2: Payment Verification */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+              <FiCreditCard className="text-[#B9853A]" />
               Payment Verification
-            </h3>
-            <div className="space-y-6">
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">
-                  Paid Status
-                </p>
-                <p
-                  className={`text-xs uppercase tracking-widest font-medium ${
-                    order.isPaid ? "text-green-600" : "text-yellow-600"
+                <p className="text-xs text-gray-400 font-medium">Payment Status</p>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase mt-1 border ${
+                    order.isPaid
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}
                 >
-                  {order.isPaid ? "Paid" : "Pending"}
-                </p>
+                  <span className={`w-1.5 h-1.5 rounded-full ${order.isPaid ? "bg-emerald-500" : "bg-amber-500"}`} />
+                  {order.isPaid ? "Paid" : "Pending Payment"}
+                </span>
               </div>
+
               {paymentRef && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">
-                    Transaction ID
-                  </p>
-                  <p className="font-mono text-sm text-gray-900 break-all">
-                    {paymentRef}
-                  </p>
+                  <p className="text-xs text-gray-400 font-medium">Transaction Reference / TID</p>
+                  <p className="font-mono text-sm font-bold text-gray-900 mt-1 break-all">{paymentRef}</p>
                 </div>
               )}
-              {paymentProof ? (
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-3">
-                    Payment Screenshot
-                  </p>
-                  <img
-                    src={paymentProof}
-                    alt="Payment proof"
+            </div>
+
+            {/* Payment Proof Screenshot */}
+            {paymentProof ? (
+              <div className="pt-3 border-t border-gray-100 space-y-3">
+                <p className="text-xs font-semibold text-gray-700">Payment Screenshot</p>
+                <div className="flex items-start gap-4">
+                  <div
                     onClick={() => setIsModalOpen(true)}
-                    className="w-48 h-48 object-cover border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity bg-gray-50"
-                    title="Click to view full size"
-                  />
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={handleDownloadProof}
-                      disabled={isDownloading}
-                      className="text-[10px] text-gray-500 uppercase tracking-widest hover:text-black border-b border-transparent hover:border-black cursor-pointer font-medium disabled:opacity-60 pb-0.5 transition-all"
-                    >
-                      {isDownloading
-                        ? "DOWNLOADING..."
-                        : "DOWNLOAD PAYMENT PROOF"}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs font-light text-gray-500">
-                  No payment screenshot uploaded.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Shipping Address */}
-          <div className="border-b border-gray-100 pb-8">
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
-                Shipping Address
-              </h3>
-              <button
-                onClick={() => {
-                  const details = `${order.shippingAddress.fullName}\n${order.shippingAddress.address}\n${order.shippingAddress.city}, ${order.shippingAddress.postalCode}\n${order.shippingAddress.country}\nPhone: ${order.shippingAddress.phone}`;
-                  navigator.clipboard.writeText(details);
-                  toast.success("Shipping details copied!");
-                }}
-                className="text-[10px] text-gray-500 uppercase tracking-widest hover:text-black border border-gray-200 hover:border-black px-3 py-1 cursor-pointer transition-colors"
-                title="Copy full shipping details"
-              >
-                Copy All
-              </button>
-            </div>
-            <div className="flex flex-col items-start gap-2">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    order.shippingAddress.fullName || "",
-                  );
-                  toast.success("Name copied!");
-                }}
-                className="group flex items-center gap-2 text-left cursor-pointer hover:text-black focus:outline-none transition-colors"
-              >
-                <span className="text-sm font-medium text-gray-900 uppercase tracking-widest">
-                  {order.shippingAddress.fullName}
-                </span>
-                <FiCopy
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
-                  size={12}
-                />
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    order.shippingAddress.address || "",
-                  );
-                  toast.success("Address copied!");
-                }}
-                className="group flex items-center gap-2 text-left cursor-pointer hover:text-black focus:outline-none transition-colors max-w-full"
-              >
-                <span className="text-sm font-light text-gray-600 break-words">
-                  {order.shippingAddress.address}
-                </span>
-                <FiCopy
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity shrink-0"
-                  size={12}
-                />
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    `${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`,
-                  );
-                  toast.success("City/Postal copied!");
-                }}
-                className="group flex items-center gap-2 text-left cursor-pointer hover:text-black focus:outline-none transition-colors max-w-full"
-              >
-                <span className="text-sm font-light text-gray-600 break-words">
-                  {order.shippingAddress.city},{" "}
-                  {order.shippingAddress.postalCode}
-                </span>
-                <FiCopy
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity shrink-0"
-                  size={12}
-                />
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    order.shippingAddress.country || "",
-                  );
-                  toast.success("Country copied!");
-                }}
-                className="group flex items-center gap-2 text-left cursor-pointer hover:text-black focus:outline-none transition-colors"
-              >
-                <span className="text-sm font-light text-gray-600 uppercase tracking-widest">
-                  {order.shippingAddress.country}
-                </span>
-                <FiCopy
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
-                  size={12}
-                />
-              </button>
-              <p className="text-gray-400 text-[10px] uppercase font-light flex items-center gap-2 mt-2 break-all flex-wrap">
-                PHONE:
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(order.shippingAddress.phone);
-                    toast.success("Phone number copied!");
-                  }}
-                  className="group flex items-center gap-2 font-medium text-gray-900 hover:text-black cursor-pointer transition-colors focus:outline-none text-sm normal-case tracking-normal"
-                  title="Click to copy"
-                >
-                  <span>{order.shippingAddress.phone}</span>
-                  <FiCopy
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 transition-opacity"
-                    size={12}
-                  />
-                </button>
-                <button
-                  onClick={() => {
-                    if (!order.shippingAddress.phone) return;
-                    let num = order.shippingAddress.phone.replace(
-                      /[^0-9]/g,
-                      "",
-                    );
-                    if (num.startsWith("0")) num = "92" + num.slice(1);
-                    else if (!num.startsWith("92")) num = "92" + num; // default to pk format if missing code
-
-                    const introText = `Your order (${order._id.substring(0, 8)}) has been placed successfully. It will be delivered to you in 2 to 3 working days. Thank you for shopping with us! If you did not purchase this order, please contact us at ${window.location.origin}/contact`;
-                    const url = `https://wa.me/${num}?text=${encodeURIComponent(introText)}`;
-                    window.open(url, "_blank");
-                  }}
-                  className="ml-2 group flex items-center gap-1.5 font-medium text-green-600 hover:text-green-700 hover:bg-green-50 px-2 py-1 rounded-sm cursor-pointer transition-colors focus:outline-none text-xs uppercase tracking-widest border border-green-200 hover:border-green-300"
-                  title="Message on WhatsApp"
-                >
-                  <FiMessageCircle size={14} />
-                  <span>WhatsApp</span>
-                </button>
-              </p>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div className="pb-8">
-            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-6">
-              Order Items
-            </h3>
-            <div className="space-y-6">
-              {order.orderItems.map((item: any, index: number) => (
-                <div
-                  key={index}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6 last:border-b-0"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-20 h-20 object-cover border border-gray-100 mix-blend-multiply bg-gray-50"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 text-[10px] uppercase tracking-widest">
-                        No Img
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-light text-gray-900">
-                        {item.name}
-                      </p>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">
-                        QTY: {item.quantity}
-                      </p>
+                    className="relative group w-36 h-36 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 cursor-pointer"
+                  >
+                    <img
+                      src={paymentProof}
+                      alt="Payment Proof"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                      <FiMaximize2 size={20} />
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-gray-900">
+
+                  <button
+                    type="button"
+                    onClick={handleDownloadProof}
+                    disabled={isDownloading}
+                    className="px-3.5 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <FiDownload size={14} />
+                    {isDownloading ? "Downloading..." : "Download Screenshot"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-gray-50 text-gray-500 text-xs font-light">
+                No payment screenshot uploaded for this order.
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Shipping Address */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 flex items-center gap-2">
+                <FiMapPin className="text-[#B9853A]" />
+                Shipping Address
+              </h2>
+
+              <button
+                onClick={() => {
+                  const details = `${order.shippingAddress?.fullName}\n${order.shippingAddress?.address}\n${order.shippingAddress?.city}, ${order.shippingAddress?.postalCode}\nPhone: ${order.shippingAddress?.phone}`;
+                  navigator.clipboard.writeText(details);
+                  toast.success("Full shipping address copied!");
+                }}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Copy Address
+              </button>
+            </div>
+
+            <div className="text-xs sm:text-sm space-y-1.5 text-gray-700">
+              <p className="font-bold text-gray-900 text-base">{order.shippingAddress?.fullName}</p>
+              <p className="leading-relaxed">{order.shippingAddress?.address}</p>
+              <p className="font-medium text-gray-800">{order.shippingAddress?.city} {order.shippingAddress?.postalCode}</p>
+              <p className="text-gray-500 pt-1 font-mono">Phone: {order.shippingAddress?.phone}</p>
+            </div>
+          </div>
+
+          {/* Card 4: Ordered Items */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+              <FiPackage className="text-[#B9853A]" />
+              Ordered Items ({order.orderItems?.length || 0})
+            </h2>
+
+            <div className="divide-y divide-gray-100">
+              {order.orderItems?.map((item: any, idx: number) => (
+                <div key={idx} className="py-3.5 first:pt-0 last:pb-0 flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl border border-gray-100 overflow-hidden bg-gray-50 shrink-0">
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <FiPackage className="w-6 h-6 text-gray-300 m-auto mt-5" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {formatPrice(item.price)} × {item.quantity}
+                    </p>
+                  </div>
+
+                  <div className="font-bold text-gray-900 text-sm">
                     {formatPrice(item.price * item.quantity)}
-                  </p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
 
-        {/* Update Order & Summary */}
-        <div className="space-y-12 shrink-0 w-full lg:w-auto">
-          <div className="border border-gray-200 p-6 bg-gray-50/30">
-            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-6">
+        {/* Right Column: Update Controls & Order Summary */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Card 5: Update Order Controls */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-5">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+              <FiTruck className="text-[#B9853A]" />
               Update Order
-            </h3>
+            </h2>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-semibold text-gray-900 uppercase tracking-widest mb-2">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                   Order Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 font-light appearance-none text-gray-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white focus:outline-none focus:border-black transition-colors"
                 >
                   <option value={ORDER_STATUS.PENDING}>Pending</option>
                   <option value={ORDER_STATUS.PROCESSING}>Processing</option>
@@ -482,125 +384,99 @@ export default function AdminOrderDetailPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-semibold text-gray-900 uppercase tracking-widest mb-3">
-                  Tracking Number
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                  Courier Tracking Number
                 </label>
                 <input
                   type="text"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 placeholder:text-gray-300 font-light"
-                  placeholder="Enter tracking number"
+                  placeholder="Enter tracking ID"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white focus:outline-none focus:border-black transition-colors placeholder:text-gray-300"
                 />
               </div>
 
-              <div className="pt-2 flex flex-col justify-end">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={isPaid}
-                      onChange={(e) => setIsPaid(e.target.checked)}
-                      className="peer sr-opacity w-4 h-4 opacity-0 absolute"
-                    />
-                    <div className="w-4 h-4 border border-gray-300 rounded-sm bg-transparent peer-checked:bg-black peer-checked:border-black transition-colors flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-white hidden peer-checked:block pointer-events-none"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                      >
-                        <path
-                          d="M3 8L6 11L11 3.5"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          stroke="currentColor"
-                        ></path>
-                      </svg>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-semibold text-gray-900 uppercase tracking-widest group-hover:text-black">
-                    Mark As Paid
+              <div className="pt-1">
+                <label className="flex items-center gap-3 cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    checked={isPaid}
+                    onChange={(e) => setIsPaid(e.target.checked)}
+                    className="w-4 h-4 rounded text-black focus:ring-0 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-gray-800 uppercase tracking-wider group-hover:text-black">
+                    Mark Order as Paid
                   </span>
                 </label>
               </div>
 
-              <div className="pt-4">
-                <button
-                  onClick={handleUpdate}
-                  className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-gray-800 transition-colors cursor-pointer"
-                >
-                  Update Order
-                </button>
+              <button
+                type="button"
+                onClick={handleUpdate}
+                disabled={updating}
+                className="w-full py-3 px-4 rounded-xl bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50 mt-2"
+              >
+                {updating ? "Updating..." : "Save Order Changes"}
+              </button>
+            </div>
+          </div>
+
+          {/* Card 6: Order Summary */}
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-3">
+              Order Summary
+            </h2>
+
+            <div className="space-y-3 text-xs sm:text-sm">
+              <div className="flex justify-between items-center text-gray-600">
+                <span>Items Subtotal</span>
+                <span className="font-semibold text-gray-900">{formatPrice(order.itemsPrice || 0)}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-gray-600">
+                <span>Shipping Fee</span>
+                <span className="font-semibold text-gray-900">{formatPrice(order.shippingPrice || 0)}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-gray-600">
+                <span>Tax</span>
+                <span className="font-semibold text-gray-900">{formatPrice(order.taxPrice || 0)}</span>
+              </div>
+
+              <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-base font-bold text-gray-900">
+                <span>Total Amount</span>
+                <span className="text-[#B9853A] text-lg">{formatPrice(order.totalPrice || 0)}</span>
               </div>
             </div>
           </div>
 
-          {/* Order Summary */}
-          <div className="border-t border-gray-100 pt-8">
-            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-6">
-              Order Summary
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-sm font-light">
-                <span className="text-gray-500 uppercase tracking-wider text-[10px]">
-                  Subtotal
-                </span>
-                <span className="text-gray-900">
-                  {formatPrice(order.itemsPrice)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm font-light">
-                <span className="text-gray-500 uppercase tracking-wider text-[10px]">
-                  Shipping
-                </span>
-                <span className="text-gray-900">
-                  {formatPrice(order.shippingPrice)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm font-light">
-                <span className="text-gray-500 uppercase tracking-wider text-[10px]">
-                  Tax
-                </span>
-                <span className="text-gray-900">
-                  {formatPrice(order.taxPrice)}
-                </span>
-              </div>
-              <div className="border-t border-gray-100 pt-4 mt-2 flex justify-between items-center">
-                <span className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
-                  Total
-                </span>
-                <span className="font-semibold text-gray-900">
-                  {formatPrice(order.totalPrice)}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
+
       </div>
 
-      {/* Image Modal */}
+      {/* Screenshot Modal View */}
       {isModalOpen && paymentProof && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs"
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="relative max-w-5xl w-full flex flex-col justify-center items-center"
+            className="relative max-w-4xl w-full bg-white rounded-2xl p-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full flex justify-end mb-6">
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
+              <h3 className="font-bold text-sm text-gray-900">Payment Screenshot Proof</h3>
               <button
-                className="text-gray-400 hover:text-black uppercase tracking-widest text-[10px] font-semibold transition-colors cursor-pointer"
                 onClick={() => setIsModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer"
               >
-                Close
+                <FiX size={20} />
               </button>
             </div>
             <img
               src={paymentProof}
               alt="Payment proof full"
-              className="w-full h-auto max-h-[85vh] object-contain border border-gray-200 bg-gray-50"
+              className="w-full max-h-[75vh] object-contain rounded-xl bg-gray-50"
             />
           </div>
         </div>

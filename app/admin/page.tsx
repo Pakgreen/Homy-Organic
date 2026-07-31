@@ -14,11 +14,14 @@ import {
   FiTruck,
   FiCheckCircle,
   FiAlertCircle,
+  FiPrinter,
+  FiFileText,
 } from "react-icons/fi";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from "@/lib/constants";
 import Link from "next/link";
 import { canAccessAdminPanel } from "@/lib/rolePermissions";
+import AdminStatementModal from "@/components/admin/AdminStatementModal";
 
 const STATS_CACHE_KEY = "admin-dashboard-stats";
 const STATS_CACHE_TTL = 60 * 1000;
@@ -32,6 +35,7 @@ export default function AdminDashboard() {
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasWarmCache, setHasWarmCache] = useState(false);
+  const [isStatementOpen, setIsStatementOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -160,22 +164,39 @@ export default function AdminDashboard() {
     <div className="space-y-8">
 
       {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Overview</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Overview</h2>
           {formattedUpdatedTime && (
             <p className="text-xs text-gray-400 mt-0.5">Last synced at {formattedUpdatedTime}</p>
           )}
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-black transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100 border border-gray-200 disabled:opacity-40 cursor-pointer w-fit"
-        >
-          <FiRefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
-          {isRefreshing ? "Syncing..." : "Refresh"}
-        </button>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsStatementOpen(true)}
+            className="flex items-center gap-2 text-xs font-bold text-white bg-black hover:bg-neutral-800 transition-all px-4 py-2 rounded-xl shadow-2xs cursor-pointer uppercase tracking-wider"
+          >
+            <FiPrinter size={15} />
+            Print Statement (PDF)
+          </button>
+
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-700 hover:text-black transition-colors px-3 py-2 rounded-xl hover:bg-gray-100 border border-gray-200 disabled:opacity-40 cursor-pointer shadow-2xs"
+          >
+            <FiRefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
+            {isRefreshing ? "Syncing..." : "Refresh"}
+          </button>
+        </div>
       </div>
+
+      {/* Financial Statement PDF Modal */}
+      <AdminStatementModal
+        isOpen={isStatementOpen}
+        onClose={() => setIsStatementOpen(false)}
+      />
 
       {errorMessage && stats && (
         <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 text-xs text-amber-700">

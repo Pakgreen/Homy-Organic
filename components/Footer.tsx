@@ -3,15 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiFacebook, FiTwitter, FiInstagram, FiMail } from "react-icons/fi";
+import { FiFacebook, FiTwitter, FiInstagram, FiMail, FiSend } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 
 export default function Footer() {
   const pathname = usePathname();
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
   const [footerData, setFooterData] = useState({
     brandName: "Homy Orgaic",
-    tagline: "Modern essentials crafted for everyday elegance.",
+    tagline: "Where Beauty Meets Wellness",
     contact: {
       email: "info@homyorganic.store",
       phone: "+92302 3735860",
@@ -22,10 +25,37 @@ export default function Footer() {
       twitter: "https://twitter.com/homyorganic",
       instagram: "https://instagram.com/homyorganic",
     },
-    links: [{ label: "Shop", url: "/products" }],
+    links: [
+      { label: "Shop All", url: "/products" },
+      { label: "Track Order", url: "/track-order" },
+      { label: "About Us", url: "/about" },
+      { label: "Contact Us", url: "/contact" },
+      { label: "Privacy Policy", url: "/privacy-policy" },
+    ],
   });
   const [siteLogo, setSiteLogo] = useState("/homyorganic.png");
   const [loaded, setLoaded] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subscribeEmail.trim()) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+
+    setSubscribing(true);
+    try {
+      const res = await axios.post("/api/newsletter", { email: subscribeEmail });
+      toast.success(res.data.message || "Subscribed successfully!");
+      setSubscribeEmail("");
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.error || "Failed to subscribe. Please try again."
+      );
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchFooterData = async () => {
@@ -72,7 +102,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-3 -mt-2">
               <Image
                 src={siteLogo}
@@ -84,8 +114,12 @@ export default function Footer() {
                 style={{ height: "auto", width: "auto" }}
               />
             </div>
-            <p className="text-gray-500 mt-13 text-sm leading-relaxed">
+            <p className="text-gray-800 text-sm font-semibold tracking-wide uppercase">
               {footerData.tagline}
+            </p>
+            <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-light">
+              All our products are carefully hand-blended in small batches to
+              ensure maximum freshness, quality, and effectiveness.
             </p>
           </div>
 
@@ -130,56 +164,78 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Social */}
+          {/* Newsletter & Social */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-base text-gray-900">Follow</h4>
-            <div className="flex space-x-3 text-gray-500">
-              {footerData.socials.facebook && (
-                <a
-                  href={footerData.socials.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                  className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
-                >
-                  <FiFacebook size={18} />
-                </a>
-              )}
-              {footerData.socials.twitter && (
-                <a
-                  href={footerData.socials.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter"
-                  className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
-                >
-                  <FiTwitter size={18} />
-                </a>
-              )}
-              {footerData.socials.instagram && (
-                <a
-                  href={footerData.socials.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
-                >
-                  <FiInstagram size={18} />
-                </a>
-              )}
-              {footerData.contact.email && (
-                <a
-                  href={`mailto:${footerData.contact.email}`}
-                  aria-label="Email"
-                  className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
-                >
-                  <FiMail size={18} />
-                </a>
-              )}
-            </div>
-            <p className="text-gray-500 text-sm">
-              New drops and offers straight to your inbox.
+            <h4 className="font-semibold text-base text-gray-900">Newsletter</h4>
+            <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
+              Subscribe to receive exclusive offers, new drops, and organic care tips.
             </p>
+
+            <form onSubmit={handleSubscribe} className="relative flex items-center mt-2">
+              <input
+                type="email"
+                required
+                placeholder="Enter your email"
+                value={subscribeEmail}
+                onChange={(e) => setSubscribeEmail(e.target.value)}
+                className="w-full pl-4 pr-12 py-2.5 rounded-full border border-gray-200 text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black transition-all bg-gray-50/50"
+              />
+              <button
+                type="submit"
+                disabled={subscribing}
+                className="absolute right-1.5 w-8.5 h-8.5 rounded-full bg-black text-white flex items-center justify-center hover:bg-neutral-900 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                title="Subscribe"
+              >
+                <FiSend size={14} className="text-white" style={{ color: "#ffffff" }} />
+              </button>
+            </form>
+
+            <div className="pt-2">
+              <div className="flex space-x-2.5 text-gray-500">
+                {footerData.socials.facebook && (
+                  <a
+                    href={footerData.socials.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                    className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
+                  >
+                    <FiFacebook size={16} />
+                  </a>
+                )}
+                {footerData.socials.twitter && (
+                  <a
+                    href={footerData.socials.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter"
+                    className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
+                  >
+                    <FiTwitter size={16} />
+                  </a>
+                )}
+                {footerData.socials.instagram && (
+                  <a
+                    href={footerData.socials.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
+                  >
+                    <FiInstagram size={16} />
+                  </a>
+                )}
+                {footerData.contact.email && (
+                  <a
+                    href={`mailto:${footerData.contact.email}`}
+                    aria-label="Email"
+                    className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
+                  >
+                    <FiMail size={16} />
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

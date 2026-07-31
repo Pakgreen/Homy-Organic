@@ -11,7 +11,7 @@ export async function GET() {
     if (!settings) {
       return NextResponse.json({
         brandName: "Homy Orgaic",
-        tagline: "Modern essentials crafted for everyday elegance.",
+        tagline: "Where Beauty Meets Wellness",
         contact: {
           email: "info@homyorganic.store",
           phone: "+92302 3735860",
