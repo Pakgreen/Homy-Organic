@@ -7,6 +7,8 @@ import { FiArrowUpRight, FiSearch } from "react-icons/fi";
 type Product = {
   _id: string;
   name: string;
+  slug?: string;
+  image?: string;
   images?: string[];
 };
 
@@ -28,8 +30,11 @@ export default function ProductSearchSuggest({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const firstImage = (images?: string[]) =>
-    images && images.length > 0 ? images[0] : "/homyorganic.png";
+  const firstImage = (p: Product) => {
+    if (Array.isArray(p.images) && p.images.length > 0 && p.images[0]) return p.images[0];
+    if (typeof p.image === "string" && p.image.trim()) return p.image;
+    return "/homyorganic.png";
+  };
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -151,13 +156,13 @@ export default function ProductSearchSuggest({
               results.map((p) => (
                 <button
                   key={p._id}
-                  onClick={() => goTo(p._id)}
+                  onClick={() => goTo(p.slug || p._id)}
                   className="w-full text-left flex items-center justify-between cursor-pointer py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors group pl-2 pr-4"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-16 bg-gray-100 rounded-md overflow-hidden shrink-0">
                       <img
-                        src={firstImage(p.images)}
+                        src={firstImage(p)}
                         alt={p.name}
                         className="w-full h-full object-cover"
                       />

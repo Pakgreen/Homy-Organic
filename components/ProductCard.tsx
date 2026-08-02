@@ -106,7 +106,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </div>
         )}
 
-        <Link href={`/products/${product._id}`} className="absolute inset-0">
+        <Link href={`/products/${product.slug || product._id}`} className="absolute inset-0">
           {primaryImage && (
             <>
               <Image
@@ -146,7 +146,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             <FiShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
           <Link
-            href={`/products/${product._id}`}
+            href={`/products/${product.slug || product._id}`}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-900 flex items-center justify-center shadow-md sm:shadow-sm hover:bg-black hover:text-white transition-colors"
             title="Quick View"
           >
@@ -172,7 +172,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
 
         {/* Title */}
-        <Link href={`/products/${product._id}`}>
+        <Link href={`/products/${product.slug || product._id}`}>
           <h3 className="line-clamp-2 text-sm font-bold uppercase tracking-tight text-gray-900 leading-snug hover:text-[#B9853A] transition-colors">
             {product.name}
           </h3>

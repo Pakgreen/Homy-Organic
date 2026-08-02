@@ -500,7 +500,7 @@ export default function AdminValuePacksPage() {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/products/${pack._id}`}
+                            href={`/products/${pack.slug || pack._id}`}
                             target="_blank"
                             className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-black hover:border-black transition-colors"
                             title="View Pack"

@@ -13,9 +13,11 @@ const withPriceAliases = (product: any) => {
     typeof product?.toObject === "function" ? product.toObject() : product;
   const oldPrice =
     typeof plain?.originalPrice === "number" ? plain.originalPrice : undefined;
+  const slug = plain?.slug || generateSlug(plain?.name || "product");
 
   return {
     ...plain,
+    slug,
     newPrice: plain?.price,
     oldPrice,
     keyBenefits: Array.isArray(plain?.keyBenefits)
@@ -77,7 +79,26 @@ export async function GET(req: NextRequest) {
     }
 
     if (category) {
-      query.category = category;
+      if (/^[0-9a-fA-F]{24}$/.test(category)) {
+        query.category = category;
+      } else {
+        const catDoc = await Category.findOne({
+          $or: [
+            { slug: category.toLowerCase() },
+            {
+              name: {
+                $regex: `^${category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+                $options: "i",
+              },
+            },
+          ],
+        });
+        if (catDoc) {
+          query.category = catDoc._id;
+        } else {
+          query.category = null;
+        }
+      }
     }
 
     if (search) {

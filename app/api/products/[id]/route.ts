@@ -14,9 +14,11 @@ const withPriceAliases = (product: any) => {
     typeof product?.toObject === "function" ? product.toObject() : product;
   const oldPrice =
     typeof plain?.originalPrice === "number" ? plain.originalPrice : undefined;
+  const slug = plain?.slug || generateSlug(plain?.name || "product");
 
   return {
     ...plain,
+    slug,
     newPrice: plain?.price,
     oldPrice,
     keyBenefits: Array.isArray(plain?.keyBenefits)

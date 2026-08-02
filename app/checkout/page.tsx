@@ -10,6 +10,7 @@ import LocalImageUpload from "@/components/LocalImageUpload";
 import { useSession } from "next-auth/react";
 import { FiInfo, FiCheckCircle, FiX } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
+import CountryPhoneInput from "@/components/CountryPhoneInput";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function CheckoutPage() {
     enabled: boolean;
     amount: number;
   }>({ enabled: false, amount: 0 });
+  const [selectedCountryCode, setSelectedCountryCode] = useState("+92");
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -34,6 +36,14 @@ export default function CheckoutPage() {
     paymentReference: "",
     paymentProofUrl: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -127,62 +137,78 @@ export default function CheckoutPage() {
   const deliveryPrice = deliveryData.enabled ? deliveryData.amount : 0;
   const total = subtotal + deliveryPrice;
 
-  // Basic client-side validation to block malformed orders
+  // Comprehensive client-side validation to block invalid/malformed orders
   const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // 1. Full Name Validation
     const trimmedName = formData.fullName.trim();
     if (!trimmedName) {
-      toast.error("Full name is required");
-      return false;
-    }
-    if (trimmedName.length < 3) {
-      toast.error("Full name must be at least 3 characters long");
-      return false;
+      newErrors.fullName = "Full name is required";
+    } else if (trimmedName.length < 3) {
+      newErrors.fullName = "Full name must be at least 3 characters long";
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      toast.error("Email is required");
-      return false;
-    }
-    if (!emailRegex.test(formData.email.trim())) {
-      toast.error("Please enter a valid email address");
-      return false;
-    }
-
-    if (!formData.address.trim()) {
-      toast.error("Delivery address is required");
-      return false;
-    }
-    if (formData.address.trim().length < 10) {
-      toast.error("Please enter a complete delivery address");
-      return false;
+    // 2. Email Format Validation
+    const trimmedEmail = formData.email.trim();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!trimmedEmail) {
+      newErrors.email = "Email address is required";
+    } else if (!emailRegex.test(trimmedEmail)) {
+      newErrors.email = "Please enter a valid email address (e.g. name@gmail.com)";
     }
 
-    if (!formData.phone.trim()) {
-      toast.error("Phone number is required");
-      return false;
-    }
-    const digitsOnlyPhone = formData.phone.replace(/[^0-9]/g, "");
-    if (digitsOnlyPhone.length < 10 || digitsOnlyPhone.length > 15) {
-      toast.error("Please enter a valid phone number (10-15 digits)");
-      return false;
+    // 3. Address Validation
+    const trimmedAddress = formData.address.trim();
+    if (!trimmedAddress) {
+      newErrors.address = "Delivery address is required";
+    } else if (trimmedAddress.length < 10) {
+      newErrors.address = "Please enter a complete delivery address (street, house no, city)";
     }
 
+    // 4. Phone Number Validation (Pakistani & International Country Code)
+    const rawPhone = formData.phone.trim();
+    const cleanDigits = rawPhone.replace(/[^0-9]/g, "");
+
+    if (!rawPhone) {
+      newErrors.phone = "Phone number is required";
+    } else if (selectedCountryCode === "+92") {
+      const cleanPhone = rawPhone.replace(/[\s-]/g, "");
+      const is03Format = /^03[0-9]{9}$/.test(cleanPhone);
+      const is3Format = /^3[0-9]{9}$/.test(cleanPhone);
+      const is923Format = /^923[0-9]{9}$/.test(cleanPhone);
+      const isPlus923Format = /^\+923[0-9]{9}$/.test(cleanPhone);
+
+      if (!is03Format && !is3Format && !is923Format && !isPlus923Format) {
+        newErrors.phone =
+          "Invalid Pakistani phone number! Must be 11 digits starting with 03 (e.g. 0300 1234567 or +923001234567)";
+      }
+    } else {
+      if (cleanDigits.length < 6 || cleanDigits.length > 15) {
+        newErrors.phone = `Please enter a valid phone number for ${selectedCountryCode} (6-15 digits)`;
+      }
+    }
+
+    // 5. Prepaid Payment Verification
     if (paymentMethod === "Prepaid") {
       const reference = formData.paymentReference.trim();
       if (!reference) {
-        toast.error("Payment reference/Transaction ID is required");
-        return false;
-      }
-      if (reference.length < 5) {
-        toast.error("Please enter a valid Transaction ID");
-        return false;
+        newErrors.paymentReference = "Transaction ID / Reference is required";
+      } else if (reference.length < 5) {
+        newErrors.paymentReference = "Please enter a valid Transaction ID (at least 5 characters)";
       }
 
       if (!formData.paymentProofUrl) {
-        toast.error("Please upload the payment screenshot");
-        return false;
+        newErrors.paymentProofUrl = "Please upload payment screenshot proof";
       }
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      toast.error(firstError);
+      return false;
     }
 
     return true;
@@ -217,7 +243,9 @@ export default function CheckoutPage() {
         shippingAddress: {
           fullName: formData.fullName,
           address: formData.address,
-          phone: formData.phone,
+          phone: formData.phone.startsWith("+")
+            ? formData.phone
+            : `${selectedCountryCode} ${formData.phone.replace(/^0/, "")}`,
           city: "",
         },
         contactEmail: formData.email,
@@ -288,12 +316,19 @@ export default function CheckoutPage() {
                       type="text"
                       required
                       value={formData.fullName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fullName: e.target.value })
-                      }
-                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-black focus:border-black focus:bg-white focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-light placeholder:text-gray-400"
+                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
+                        errors.fullName
+                          ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                          : "border-gray-200 bg-gray-50 text-black focus:border-[#B9853B] focus:bg-white focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
+                      }`}
                       placeholder="Ahmad"
                     />
+                    {errors.fullName && (
+                      <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+                        <span>•</span> {errors.fullName}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -304,12 +339,19 @@ export default function CheckoutPage() {
                       type="email"
                       required
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-black focus:border-black focus:bg-white focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-light placeholder:text-gray-400"
-                      placeholder="ahmad@example.com"
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
+                        errors.email
+                          ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                          : "border-gray-200 bg-gray-50 text-black focus:border-[#B9853B] focus:bg-white focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
+                      }`}
+                      placeholder="ahmad@gmail.com"
                     />
+                    {errors.email && (
+                      <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+                        <span>•</span> {errors.email}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -320,28 +362,35 @@ export default function CheckoutPage() {
                   <textarea
                     required
                     value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-black focus:border-black focus:bg-white focus:ring-1 focus:ring-black focus:outline-none transition-all resize-none placeholder:font-light placeholder:text-gray-400"
-                    placeholder="Street, City, State, Zip"
+                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-all resize-none ${
+                      errors.address
+                        ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                        : "border-gray-200 bg-gray-50 text-black focus:border-[#B9853B] focus:bg-white focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
+                    }`}
+                    placeholder="House / Street No, Area, City"
                     rows={2}
                   />
+                  {errors.address && (
+                    <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+                      <span>•</span> {errors.address}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">
                     Phone Number *
                   </label>
-                  <input
-                    type="tel"
-                    required
+                  <CountryPhoneInput
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-black focus:border-black focus:bg-white focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-light placeholder:text-gray-400"
-                    placeholder="+1 234 567 8900"
+                    countryCode={selectedCountryCode}
+                    onCountryCodeChange={(code) => {
+                      setSelectedCountryCode(code);
+                      if (errors.phone) handleInputChange("phone", formData.phone);
+                    }}
+                    onPhoneChange={(val) => handleInputChange("phone", val)}
+                    error={errors.phone}
                   />
                 </div>
 
@@ -356,7 +405,7 @@ export default function CheckoutPage() {
                       onClick={() => setPaymentMethod("Cash on Delivery")}
                       className={`border rounded-lg p-5 cursor-pointer transition-all ${
                         paymentMethod === "Cash on Delivery"
-                          ? "border-black ring-1 ring-black bg-gray-50"
+                          ? "border-[#B9853B] ring-1 ring-[#B9853B] bg-amber-50/30"
                           : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
@@ -364,12 +413,12 @@ export default function CheckoutPage() {
                         <div
                           className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
                             paymentMethod === "Cash on Delivery"
-                              ? "border-black"
+                              ? "border-[#B9853B]"
                               : "border-gray-300"
                           }`}
                         >
                           {paymentMethod === "Cash on Delivery" && (
-                            <div className="w-2 h-2 bg-black rounded-full" />
+                            <div className="w-2 h-2 bg-[#B9853B] rounded-full" />
                           )}
                         </div>
                         <span className="font-bold text-sm tracking-wide text-gray-900">
@@ -380,14 +429,14 @@ export default function CheckoutPage() {
                       {paymentMethod === "Cash on Delivery" && (
                         <div className="mt-4 pl-7 animate-in fade-in slide-in-from-top-2">
                           <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium">
-                            <div className="flex items-center gap-1.5 text-orange-600 font-bold text-[11px] uppercase tracking-widest mb-1">
+                            <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
                               <FiInfo className="w-3.5 h-3.5" />
                               <span>Instruction / ضروری ہدایت</span>
                             </div>
                             <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
                               You can pay in cash to our courier when you
                               receive the parcel at your doorstep.{" "}
-                              <span className="text-black font-bold inline-block mt-0.5 bg-orange-100/50 px-1 py-0.5 rounded">
+                              <span className="text-black font-bold inline-block mt-0.5 bg-amber-100/60 px-1 py-0.5 rounded">
                                 (First Receive Parcel, Then Pay)
                               </span>
                             </span>
@@ -397,7 +446,7 @@ export default function CheckoutPage() {
                             >
                               پارسل وصول کرتے وقت آپ ہمارے کوریئر کو نقد رقم
                               (Cash) ادا کر سکتے ہیں۔{" "}
-                              <span className="font-bold bg-orange-100/50 px-1 py-0.5 rounded">
+                              <span className="font-bold bg-amber-100/60 px-1 py-0.5 rounded">
                                 (سامان ملنے کے بعد پیسے دیں)
                               </span>
                             </span>
@@ -411,7 +460,7 @@ export default function CheckoutPage() {
                       onClick={() => setPaymentMethod("Prepaid")}
                       className={`border rounded-lg p-5 cursor-pointer transition-all ${
                         paymentMethod === "Prepaid"
-                          ? "border-black ring-1 ring-black bg-gray-50"
+                          ? "border-[#B9853B] ring-1 ring-[#B9853B] bg-amber-50/30"
                           : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
@@ -419,12 +468,12 @@ export default function CheckoutPage() {
                         <div
                           className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
                             paymentMethod === "Prepaid"
-                              ? "border-black"
+                              ? "border-[#B9853B]"
                               : "border-gray-300"
                           }`}
                         >
                           {paymentMethod === "Prepaid" && (
-                            <div className="w-2 h-2 bg-black rounded-full" />
+                            <div className="w-2 h-2 bg-[#B9853B] rounded-full" />
                           )}
                         </div>
                         <span className="font-bold text-sm tracking-wide text-gray-900">
@@ -435,7 +484,7 @@ export default function CheckoutPage() {
                       {paymentMethod === "Prepaid" && (
                         <div className="mt-4 pl-7 animate-in fade-in slide-in-from-top-2">
                           <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium mb-6">
-                            <div className="flex items-center gap-1.5 text-orange-600 font-bold text-[11px] uppercase tracking-widest mb-1">
+                            <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
                               <FiInfo className="w-3.5 h-3.5" />
                               <span>Important / انتہائی اہم</span>
                             </div>
@@ -443,7 +492,7 @@ export default function CheckoutPage() {
                               Please transfer the total amount in advance to
                               confirm your order. After sending the payment,
                               attach the screenshot and transaction ID below.{" "}
-                              <span className="text-black font-bold inline-block mt-0.5 bg-orange-100/50 px-1 py-0.5 rounded">
+                              <span className="text-black font-bold inline-block mt-0.5 bg-amber-100/60 px-1 py-0.5 rounded">
                                 (Pay First, Then Receive Parcel)
                               </span>
                             </span>
@@ -454,7 +503,7 @@ export default function CheckoutPage() {
                               براہ کرم اپنا آرڈر کنفرم کرنے کے لیے کل رقم پہلے
                               ٹرانسفر کریں۔ ادائیگی کے بعد اسکرین شاٹ اور
                               ٹرانزیکشن آئی ڈی نیچے درج کریں۔{" "}
-                              <span className="font-bold bg-orange-100/50 px-1 py-0.5 rounded">
+                              <span className="font-bold bg-amber-100/60 px-1 py-0.5 rounded">
                                 (پہلے پیسے دیں، پھر سامان ملے گا)
                               </span>
                             </span>
@@ -470,15 +519,21 @@ export default function CheckoutPage() {
                                 required
                                 value={formData.paymentReference}
                                 onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    paymentReference: e.target.value,
-                                  })
+                                  handleInputChange("paymentReference", e.target.value)
                                 }
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-black focus:border-black focus:bg-white focus:ring-1 focus:ring-black focus:outline-none transition-all placeholder:font-light placeholder:text-gray-400"
+                                className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
+                                  errors.paymentReference
+                                    ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600"
+                                    : "border-gray-200 bg-white text-black focus:border-[#B9853B] focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
+                                }`}
                                 placeholder="TXN123456789"
                               />
+                              {errors.paymentReference && (
+                                <p className="mt-1 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                  <span>•</span> {errors.paymentReference}
+                                </p>
+                              )}
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3">
@@ -486,24 +541,39 @@ export default function CheckoutPage() {
                               </label>
                               <div
                                 onClick={(e) => e.stopPropagation()}
-                                className="border border-dashed border-gray-300 p-1 hover:border-black transition-colors rounded-lg bg-white"
+                                className={`border border-dashed p-1 transition-colors rounded-lg bg-white ${
+                                  errors.paymentProofUrl
+                                    ? "border-red-500 bg-red-50/20"
+                                    : "border-gray-300 hover:border-[#B9853B]"
+                                }`}
                               >
                                 <LocalImageUpload
                                   value={formData.paymentProofUrl}
-                                  onChange={(url) =>
-                                    setFormData({
-                                      ...formData,
+                                  onChange={(url) => {
+                                    setFormData((prev) => ({
+                                      ...prev,
                                       paymentProofUrl: url,
-                                    })
-                                  }
+                                    }));
+                                    if (errors.paymentProofUrl) {
+                                      setErrors((prev) => ({
+                                        ...prev,
+                                        paymentProofUrl: "",
+                                      }));
+                                    }
+                                  }}
                                   onRemove={() =>
-                                    setFormData({
-                                      ...formData,
+                                    setFormData((prev) => ({
+                                      ...prev,
                                       paymentProofUrl: "",
-                                    })
+                                    }))
                                   }
                                 />
                               </div>
+                              {errors.paymentProofUrl && (
+                                <p className="mt-1 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                  <span>•</span> {errors.paymentProofUrl}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -516,7 +586,7 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-black text-white text-xs tracking-[0.2em] font-bold uppercase py-5 hover:bg-gray-800 transition-colors disabled:opacity-60 cursor-pointer"
+                    className="w-full bg-[#B9853B] hover:bg-[#9a6d2f] text-white text-xs tracking-[0.2em] font-bold uppercase py-5 transition-all shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer rounded-lg"
                   >
                     {isSubmitting ? "Processing..." : "Complete Order"}
                   </button>

@@ -35,7 +35,10 @@ export async function GET(req: NextRequest) {
       Order.find({}).select('totalPrice createdAt status'),
     ]);
 
-    const totalRevenue = orders.reduce((acc, order) => acc + order.totalPrice, 0);
+    const totalRevenue = (orders || []).reduce(
+      (acc, order) => acc + (typeof order?.totalPrice === "number" ? order.totalPrice : 0),
+      0
+    );
 
     const pendingOrders = orders.filter((o) => o.status === 'pending').length;
     const processingOrders = orders.filter((o) => o.status === 'processing').length;

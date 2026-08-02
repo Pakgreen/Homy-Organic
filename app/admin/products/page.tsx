@@ -683,7 +683,7 @@ export default function AdminProductsPage() {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/products/${product._id}`}
+                            href={`/products/${product.slug || product._id}`}
                             target="_blank"
                             className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-black hover:border-black transition-colors"
                             title="View on store"
