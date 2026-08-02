@@ -14,6 +14,7 @@ import {
   FiExternalLink,
   FiAward,
   FiCheckCircle,
+  FiMenu,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -53,7 +54,7 @@ export default function AdminBestSellersPage() {
 
   const fetchAllProducts = async () => {
     try {
-      const res = await axios.get("/api/products?limit=100&includeDisabled=true&sort=order");
+      const res = await axios.get("/api/products?regularOnly=true&limit=100&includeDisabled=true&sort=order");
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.products || [];
@@ -99,66 +100,54 @@ export default function AdminBestSellersPage() {
     }
   };
 
-  const handleMoveUp = async (index: number) => {
-    if (index <= 0) return;
-    const current = bestSellers[index];
-    const prev = bestSellers[index - 1];
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-    const currentOrder = current.order !== undefined ? current.order : index;
-    const prevOrder = prev.order !== undefined ? prev.order : index - 1;
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
 
-    // Optimistic Swap
-    setBestSellers((prevList) => {
-      const updated = [...prevList];
-      const idxCurrent = updated.findIndex((p) => p._id === current._id);
-      const idxPrev = updated.findIndex((p) => p._id === prev._id);
-      if (idxCurrent !== -1 && idxPrev !== -1) {
-        updated[idxCurrent] = { ...current, order: prevOrder };
-        updated[idxPrev] = { ...prev, order: currentOrder };
-      }
-      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    });
-
-    try {
-      await Promise.all([
-        axios.put(`/api/products/${current._id}`, { order: prevOrder }),
-        axios.put(`/api/products/${prev._id}`, { order: currentOrder }),
-      ]);
-      fetchBestSellers(false);
-    } catch (error) {
-      console.error("Error moving product up:", error);
-      fetchBestSellers(false);
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
     }
   };
 
-  const handleMoveDown = async (index: number) => {
-    if (index >= bestSellers.length - 1) return;
-    const current = bestSellers[index];
-    const next = bestSellers[index + 1];
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
 
-    const currentOrder = current.order !== undefined ? current.order : index;
-    const nextOrder = next.order !== undefined ? next.order : index + 1;
+    const updated = [...filteredBestSellers];
+    const [moved] = updated.splice(draggedIndex, 1);
+    updated.splice(dropIndex, 0, moved);
 
-    // Optimistic Swap
-    setBestSellers((prevList) => {
-      const updated = [...prevList];
-      const idxCurrent = updated.findIndex((p) => p._id === current._id);
-      const idxNext = updated.findIndex((p) => p._id === next._id);
-      if (idxCurrent !== -1 && idxNext !== -1) {
-        updated[idxCurrent] = { ...current, order: nextOrder };
-        updated[idxNext] = { ...next, order: currentOrder };
-      }
-      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    });
+    // Re-assign 1-indexed sequence order starting from 1
+    const reorderedBestSellers = updated.map((item, idx) => ({
+      ...item,
+      order: idx + 1,
+    }));
+
+    setBestSellers(reorderedBestSellers);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
 
     try {
-      await Promise.all([
-        axios.put(`/api/products/${current._id}`, { order: nextOrder }),
-        axios.put(`/api/products/${next._id}`, { order: currentOrder }),
-      ]);
-      fetchBestSellers(false);
+      await Promise.all(
+        reorderedBestSellers.map((item) =>
+          axios.put(`/api/products/${item._id}`, { order: item.order })
+        )
+      );
+      toast.success("Best Sellers reordered successfully!");
     } catch (error) {
-      console.error("Error moving product down:", error);
+      console.error("Error saving best sellers order:", error);
+      toast.error("Failed to save order");
       fetchBestSellers(false);
     }
   };
@@ -190,14 +179,14 @@ export default function AdminBestSellersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200/80 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-orange-600 mb-1">
+          <div className="flex items-center gap-2 text-[#B9853B] mb-1">
             <FiAward size={18} />
             <span className="text-xs font-bold uppercase tracking-widest">
               Homepage Showcase
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-            Best Selling Products 🔥
+            Best Selling Products
           </h2>
           <p className="text-xs text-gray-500 mt-0.5 font-medium">
             Manage products featured in the &quot;Our Best Selling Products&quot; section right after Hero Slider.
@@ -206,7 +195,7 @@ export default function AdminBestSellersPage() {
 
         <button
           onClick={() => setShowAddSelector(!showAddSelector)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#B9853B] hover:bg-[#9a6d2f] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer"
         >
           <FiPlus size={16} /> {showAddSelector ? "Close Selection" : "Add Best Sellers"}
         </button>
@@ -214,10 +203,10 @@ export default function AdminBestSellersPage() {
 
       {/* Select Products to Mark as Best Seller Popup / Drawer */}
       {showAddSelector && (
-        <div className="bg-orange-50/50 rounded-2xl p-5 border border-orange-200/70 space-y-4">
+        <div className="bg-amber-50/50 rounded-2xl p-5 border border-amber-200/70 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <span>🔥 Select Products to add to Best Sellers</span>
+              <span>Select Products to add to Best Sellers</span>
             </h3>
             <span className="text-xs text-gray-500 font-medium">
               {availableToAdd.length} product(s) available
@@ -233,7 +222,7 @@ export default function AdminBestSellersPage() {
               {availableToAdd.map((prod) => (
                 <div
                   key={prod._id}
-                  className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between gap-3 shadow-2xs hover:border-orange-400 transition-all"
+                  className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between gap-3 shadow-2xs hover:border-[#B9853B] transition-all"
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">
                     <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 border border-gray-200">
@@ -251,7 +240,7 @@ export default function AdminBestSellersPage() {
 
                   <button
                     onClick={() => toggleBestSeller(prod, true)}
-                    className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold uppercase transition-all shrink-0 cursor-pointer shadow-2xs"
+                    className="px-3 py-1.5 rounded-lg bg-[#B9853B] hover:bg-[#9a6d2f] text-white text-[10px] font-bold uppercase transition-all shrink-0 cursor-pointer shadow-2xs"
                   >
                     + Add
                   </button>
@@ -270,7 +259,7 @@ export default function AdminBestSellersPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search Best Sellers..."
-          className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500 transition-all font-medium"
+          className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-full text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#B9853B] transition-all font-medium"
         />
         {searchTerm && (
           <button
@@ -308,31 +297,25 @@ export default function AdminBestSellersPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredBestSellers.map((item: any, idx: number) => (
-                    <tr key={item._id} className="hover:bg-gray-50/60 transition-colors">
-                      {/* Order Controls */}
+                    <tr
+                      key={item._id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDrop={(e) => handleDrop(e, idx)}
+                      className={`transition-colors ${
+                        dragOverIndex === idx
+                          ? "bg-amber-100/60 border-b-2 border-[#B9853B]"
+                          : "hover:bg-gray-50/60"
+                      }`}
+                    >
+                      {/* Order Drag Handle & 1-Indexed Sequence Badge */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold text-gray-900 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
+                        <div className="flex items-center gap-2">
+                          <FiMenu className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-black shrink-0" size={16} title="Drag to reorder" />
+                          <span className="text-[10px] font-bold text-gray-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                             #{idx + 1}
                           </span>
-                          <div className="flex flex-col gap-0.5">
-                            <button
-                              onClick={() => handleMoveUp(idx)}
-                              disabled={idx === 0}
-                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer"
-                              title="Move Up"
-                            >
-                              ▲
-                            </button>
-                            <button
-                              onClick={() => handleMoveDown(idx)}
-                              disabled={idx === filteredBestSellers.length - 1}
-                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer"
-                              title="Move Down"
-                            >
-                              ▼
-                            </button>
-                          </div>
                         </div>
                       </td>
 
@@ -350,8 +333,8 @@ export default function AdminBestSellersPage() {
                           </div>
                           <div>
                             <p className="font-bold text-gray-900 text-xs">{item.name}</p>
-                            <span className="inline-block px-2 py-0.5 rounded bg-orange-100 text-orange-900 text-[9px] font-bold uppercase">
-                              🔥 Best Seller
+                            <span className="inline-block px-2 py-0.5 rounded bg-amber-100 text-[#B9853B] text-[9px] font-bold uppercase">
+                              Best Seller
                             </span>
                           </div>
                         </div>
@@ -396,7 +379,15 @@ export default function AdminBestSellersPage() {
               {filteredBestSellers.map((item: any, idx: number) => (
                 <div
                   key={item._id}
-                  className="bg-orange-50/20 rounded-xl p-4 border border-orange-200/50 flex gap-3 items-start justify-between"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  className={`rounded-xl p-4 border flex gap-3 items-start justify-between cursor-grab active:cursor-grabbing transition-all ${
+                    dragOverIndex === idx
+                      ? "bg-amber-100/70 border-[#B9853B]"
+                      : "bg-amber-50/20 border-amber-200/50"
+                  }`}
                 >
                   <div className="w-16 h-16 bg-white rounded-lg overflow-hidden border border-gray-200 shrink-0 relative">
                     {item.images?.[0] ? (
@@ -412,11 +403,12 @@ export default function AdminBestSellersPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-[9px] font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-orange-200 shadow-2xs">
+                          <FiMenu className="text-gray-400 hover:text-black shrink-0" size={14} title="Drag to reorder" />
+                          <span className="text-[9px] font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-amber-200 shadow-2xs">
                             Order #{idx + 1}
                           </span>
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-orange-700">
-                            🔥 Best Seller
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-[#B9853B]">
+                            Best Seller
                           </span>
                         </div>
                         <h3 className="text-xs font-bold text-gray-900 leading-snug">{item.name}</h3>
@@ -424,25 +416,6 @@ export default function AdminBestSellersPage() {
 
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className="text-xs font-bold text-gray-900">{formatPrice(item.price)}</span>
-                        
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <button
-                            onClick={() => handleMoveUp(idx)}
-                            disabled={idx === 0}
-                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
-                            title="Move Up"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            onClick={() => handleMoveDown(idx)}
-                            disabled={idx === filteredBestSellers.length - 1}
-                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
-                            title="Move Down"
-                          >
-                            ▼
-                          </button>
-                        </div>
                       </div>
                     </div>
 

@@ -24,7 +24,7 @@ function ProductsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
-  const sortBy = "-createdAt";
+  const sortBy = "order";
 
   useEffect(() => {
     fetchProducts();
@@ -43,6 +43,7 @@ function ProductsContent() {
       const isValuePack =
         searchParams?.get("valuePack") === "true" ||
         searchParams?.get("valuePacks") === "true";
+      const isBestSeller = searchParams?.get("bestSeller") === "true";
 
       let url = `/api/products?sort=${sortBy}`;
 
@@ -56,13 +57,20 @@ function ProductsContent() {
 
       if (isValuePack) {
         url += `&valuePack=true`;
+      } else if (isBestSeller) {
+        url += `&bestSeller=true`;
+      } else {
+        url += `&regularOnly=true`;
       }
 
       const res = await axios.get(url);
-      const payload = Array.isArray(res.data)
+      const data = Array.isArray(res.data)
         ? res.data
         : res.data?.products || [];
-      setProducts(payload);
+      const sorted = [...data].sort(
+        (a: any, b: any) => (a.order ?? 1) - (b.order ?? 1)
+      );
+      setProducts(sorted as any);
     } catch (error) {
       console.error("Error fetching products:", error);
       setProducts([]);

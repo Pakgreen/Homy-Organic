@@ -15,6 +15,7 @@ import {
   FiAlertTriangle,
   FiGift,
   FiPackage,
+  FiMenu,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -139,66 +140,54 @@ export default function AdminValuePacksPage() {
     }
   };
 
-  const handleMovePackUp = async (index: number) => {
-    if (index <= 0) return;
-    const current = filteredPacks[index];
-    const prev = filteredPacks[index - 1];
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-    const currentOrder = current.order !== undefined ? current.order : index;
-    const prevOrder = prev.order !== undefined ? prev.order : index - 1;
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
 
-    // Optimistic UI Swap
-    setValuePacks((prevPacks) => {
-      const updated = [...prevPacks];
-      const idxCurrent = updated.findIndex((p) => p._id === current._id);
-      const idxPrev = updated.findIndex((p) => p._id === prev._id);
-      if (idxCurrent !== -1 && idxPrev !== -1) {
-        updated[idxCurrent] = { ...current, order: prevOrder };
-        updated[idxPrev] = { ...prev, order: currentOrder };
-      }
-      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    });
-
-    try {
-      await Promise.all([
-        axios.put(`/api/products/${current._id}`, { order: prevOrder }),
-        axios.put(`/api/products/${prev._id}`, { order: currentOrder }),
-      ]);
-      fetchValuePacks();
-    } catch (error) {
-      console.error("Error moving value pack up:", error);
-      fetchValuePacks();
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
     }
   };
 
-  const handleMovePackDown = async (index: number) => {
-    if (index >= filteredPacks.length - 1) return;
-    const current = filteredPacks[index];
-    const next = filteredPacks[index + 1];
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
 
-    const currentOrder = current.order !== undefined ? current.order : index;
-    const nextOrder = next.order !== undefined ? next.order : index + 1;
+    const updated = [...filteredPacks];
+    const [movedPack] = updated.splice(draggedIndex, 1);
+    updated.splice(dropIndex, 0, movedPack);
 
-    // Optimistic UI Swap
-    setValuePacks((prevPacks) => {
-      const updated = [...prevPacks];
-      const idxCurrent = updated.findIndex((p) => p._id === current._id);
-      const idxNext = updated.findIndex((p) => p._id === next._id);
-      if (idxCurrent !== -1 && idxNext !== -1) {
-        updated[idxCurrent] = { ...current, order: nextOrder };
-        updated[idxNext] = { ...next, order: currentOrder };
-      }
-      return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    });
+    // Re-assign 1-indexed sequence order starting from 1
+    const reorderedPacks = updated.map((p, idx) => ({
+      ...p,
+      order: idx + 1,
+    }));
+
+    setValuePacks(reorderedPacks);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
 
     try {
-      await Promise.all([
-        axios.put(`/api/products/${current._id}`, { order: nextOrder }),
-        axios.put(`/api/products/${next._id}`, { order: currentOrder }),
-      ]);
-      fetchValuePacks();
+      await Promise.all(
+        reorderedPacks.map((p) =>
+          axios.put(`/api/products/${p._id}`, { order: p.order })
+        )
+      );
+      toast.success("Value Packs reordered successfully!");
     } catch (error) {
-      console.error("Error moving value pack down:", error);
+      console.error("Error saving value pack order:", error);
+      toast.error("Failed to save value pack order");
       fetchValuePacks();
     }
   };
@@ -441,32 +430,23 @@ export default function AdminValuePacksPage() {
                   {filteredPacks.map((pack: any, idx: number) => (
                     <tr
                       key={pack._id}
-                      className="hover:bg-gray-50/60 transition-colors"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDrop={(e) => handleDrop(e, idx)}
+                      className={`transition-colors ${
+                        dragOverIndex === idx
+                          ? "bg-amber-100/60 border-b-2 border-[#B9853B]"
+                          : "hover:bg-gray-50/60"
+                      }`}
                     >
-                      {/* Order Controls & Index */}
+                      {/* Order Drag Handle & 1-Indexed Sequence Badge */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <FiMenu className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-black shrink-0" size={16} title="Drag to reorder" />
                           <span className="text-[10px] font-bold text-gray-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
                             #{idx + 1}
                           </span>
-                          <div className="flex flex-col gap-0.5">
-                            <button
-                              onClick={() => handleMovePackUp(idx)}
-                              disabled={idx === 0}
-                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 transition-colors cursor-pointer"
-                              title="Move Up"
-                            >
-                              ▲
-                            </button>
-                            <button
-                              onClick={() => handleMovePackDown(idx)}
-                              disabled={idx === filteredPacks.length - 1}
-                              className="w-5 h-4 bg-gray-100 hover:bg-black hover:text-white text-[9px] font-bold rounded flex items-center justify-center disabled:opacity-20 transition-colors cursor-pointer"
-                              title="Move Down"
-                            >
-                              ▼
-                            </button>
-                          </div>
                         </div>
                       </td>
 
@@ -558,7 +538,15 @@ export default function AdminValuePacksPage() {
               {filteredPacks.map((pack: any, idx: number) => (
                 <div
                   key={pack._id}
-                  className="bg-amber-50/20 rounded-xl p-4 border border-amber-200/50 flex gap-3 items-start justify-between"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  className={`rounded-xl p-4 border flex gap-3 items-start justify-between cursor-grab active:cursor-grabbing transition-all ${
+                    dragOverIndex === idx
+                      ? "bg-amber-100/70 border-[#B9853B]"
+                      : "bg-amber-50/20 border-amber-200/50"
+                  }`}
                 >
                   <div className="w-16 h-16 bg-white rounded-lg overflow-hidden border border-amber-200 shrink-0 relative">
                     {pack.images && pack.images.length > 0 ? (
@@ -578,6 +566,7 @@ export default function AdminValuePacksPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5 mb-1">
+                          <FiMenu className="text-gray-400 hover:text-black shrink-0" size={14} title="Drag to reorder" />
                           <span className="text-[9px] font-bold text-gray-900 bg-white px-2 py-0.5 rounded border border-amber-200 shadow-2xs">
                             Order #{idx + 1}
                           </span>
@@ -594,26 +583,6 @@ export default function AdminValuePacksPage() {
                         <span className="text-xs font-bold text-[#E55353]">
                           {formatPrice(pack.price)}
                         </span>
-
-                        {/* Order Navigation Arrows on Mobile */}
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <button
-                            onClick={() => handleMovePackUp(idx)}
-                            disabled={idx === 0}
-                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
-                            title="Move Up"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            onClick={() => handleMovePackDown(idx)}
-                            disabled={idx === filteredPacks.length - 1}
-                            className="w-6 h-6 bg-white border border-gray-200 hover:bg-black hover:text-white text-gray-700 text-[10px] font-bold rounded flex items-center justify-center disabled:opacity-20 cursor-pointer shadow-2xs"
-                            title="Move Down"
-                          >
-                            ▼
-                          </button>
-                        </div>
                       </div>
                     </div>
 

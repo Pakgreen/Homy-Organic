@@ -8,7 +8,7 @@ import axios from "axios";
 export default function ProductsContent() {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const sortBy = "-createdAt";
+  const sortBy = "order";
 
   useEffect(() => {
     fetchProducts();
@@ -30,14 +30,17 @@ export default function ProductsContent() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      // Fetch all active products continuously
-      const url = `/api/products?sort=${sortBy}&limit=100`;
+      // Fetch all active regular products continuously sorted by order
+      const url = `/api/products?regularOnly=true&sort=${sortBy}&limit=100`;
       const res = await fetchWithRetry(url, 2);
       const payload = Array.isArray(res.data)
         ? res.data
         : res.data?.products || [];
 
-      setProducts(payload);
+      const sorted = [...payload].sort(
+        (a: any, b: any) => (a.order ?? 1) - (b.order ?? 1)
+      );
+      setProducts(sorted);
     } catch (error) {
       console.error("Error fetching products:", error);
       setProducts([]);

@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get max order
+    // Get max order (1-indexed sequence)
     const maxSlider = await Slider.findOne().sort("-order");
-    const nextOrder = maxSlider ? maxSlider.order + 1 : 0;
+    const nextOrder = maxSlider && typeof maxSlider.order === "number" ? maxSlider.order + 1 : 1;
 
     const slider = await Slider.create({
       title: data.title,

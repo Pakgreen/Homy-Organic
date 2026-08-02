@@ -17,21 +17,8 @@ export default function AdminLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Instant zero-delay authentication check
+  // Authentication guard
   useEffect(() => {
-    // 1. Fast browser cookie pre-check (if no next-auth session cookie exists, redirect instantly)
-    if (typeof window !== "undefined") {
-      const hasSessionCookie =
-        document.cookie.includes("next-auth.session-token") ||
-        document.cookie.includes("__Secure-next-auth.session-token");
-
-      if (!hasSessionCookie) {
-        router.replace("/auth/admin-login");
-        return;
-      }
-    }
-
-    // 2. NextAuth status validation
     if (status === "unauthenticated") {
       router.replace("/auth/admin-login");
     } else if (status === "authenticated" && session?.user) {
@@ -40,21 +27,15 @@ export default function AdminLayout({
         router.replace("/auth/admin-login");
       }
     }
-  }, [status, session, router]);
+  }, [status, session?.user?.role, router]);
 
-  // Fast pre-render guard: If unauthenticated, return null so login page opens immediately without loader delay
-  if (
-    status === "unauthenticated" ||
-    (!session &&
-      typeof window !== "undefined" &&
-      !document.cookie.includes("next-auth.session-token") &&
-      !document.cookie.includes("__Secure-next-auth.session-token"))
-  ) {
+  // If unauthenticated, render nothing while redirecting
+  if (status === "unauthenticated") {
     return null;
   }
 
-  // Quick minimal spinner during active session verification
-  if (status === "loading" || !session) {
+  // Spinner during initial session load only
+  if (status === "loading" && !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
         <div
@@ -66,7 +47,7 @@ export default function AdminLayout({
   }
 
   // Strict role security check
-  if (!canAccessAdminPanel(session?.user?.role)) {
+  if (!session || !canAccessAdminPanel(session?.user?.role)) {
     return null;
   }
 

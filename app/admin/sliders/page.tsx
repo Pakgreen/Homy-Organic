@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiPlus, FiMenu } from "react-icons/fi";
+import { toast } from "sonner";
 import LocalImageUpload from "@/components/LocalImageUpload";
 import Image from "next/image";
 
@@ -72,41 +73,55 @@ export default function AdminSlidersPage() {
     }
   };
 
-  const handleMoveUp = async (index: number) => {
-    if (index <= 0) return;
-    const current = sliders[index];
-    const prev = sliders[index - 1];
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-    const currentOrder = current.order !== undefined ? current.order : index;
-    const prevOrder = prev.order !== undefined ? prev.order : index - 1;
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
 
-    try {
-      await Promise.all([
-        axios.put(`/api/sliders/${current._id}`, { order: prevOrder }),
-        axios.put(`/api/sliders/${prev._id}`, { order: currentOrder }),
-      ]);
-      await fetchSliders();
-    } catch (error) {
-      console.error("Error moving slider up:", error);
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
     }
   };
 
-  const handleMoveDown = async (index: number) => {
-    if (index >= sliders.length - 1) return;
-    const current = sliders[index];
-    const next = sliders[index + 1];
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
 
-    const currentOrder = current.order !== undefined ? current.order : index;
-    const nextOrder = next.order !== undefined ? next.order : index + 1;
+    const updated = [...sliders];
+    const [moved] = updated.splice(draggedIndex, 1);
+    updated.splice(dropIndex, 0, moved);
+
+    // Re-assign 1-indexed sequence order starting from 1
+    const reorderedSliders = updated.map((s, idx) => ({
+      ...s,
+      order: idx + 1,
+    }));
+
+    setSliders(reorderedSliders);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
 
     try {
-      await Promise.all([
-        axios.put(`/api/sliders/${current._id}`, { order: nextOrder }),
-        axios.put(`/api/sliders/${next._id}`, { order: currentOrder }),
-      ]);
-      await fetchSliders();
+      await Promise.all(
+        reorderedSliders.map((s) =>
+          axios.put(`/api/sliders/${s._id}`, { order: s.order })
+        )
+      );
+      toast.success("Slider order updated!");
     } catch (error) {
-      console.error("Error moving slider down:", error);
+      console.error("Error saving slider order:", error);
+      toast.error("Failed to save slider order");
+      fetchSliders();
     }
   };
 
@@ -192,7 +207,15 @@ export default function AdminSlidersPage() {
         {sliders.map((slider, idx) => (
           <div
             key={slider._id}
-            className="group flex flex-col border-b border-gray-100 pb-6 last:border-0"
+            draggable
+            onDragStart={(e) => handleDragStart(e, idx)}
+            onDragOver={(e) => handleDragOver(e, idx)}
+            onDrop={(e) => handleDrop(e, idx)}
+            className={`group flex flex-col border-b border-gray-100 pb-6 last:border-0 cursor-grab active:cursor-grabbing p-3 rounded-2xl transition-all ${
+              dragOverIndex === idx
+                ? "bg-amber-50 border-2 border-[#B9853B]"
+                : "hover:bg-gray-50/50"
+            }`}
           >
             <div className="relative h-48 w-full bg-gray-50 border border-gray-100 mb-4 overflow-hidden rounded-xl">
               <Image
@@ -201,9 +224,10 @@ export default function AdminSlidersPage() {
                 fill
                 className="object-cover mix-blend-multiply"
               />
-              <div className="absolute top-3 left-3 z-10">
-                <span className="text-[10px] font-bold text-gray-900 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full border border-gray-200/80 shadow-2xs">
-                  Order #{slider.order !== undefined ? slider.order + 1 : idx + 1}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full border border-gray-200/80 shadow-2xs">
+                <FiMenu className="text-gray-400 hover:text-black shrink-0" size={13} title="Drag to reorder" />
+                <span className="text-[10px] font-bold text-gray-900">
+                  Order #{idx + 1}
                 </span>
               </div>
               {!slider.isActive && (
@@ -221,26 +245,6 @@ export default function AdminSlidersPage() {
                   <p className="text-[10px] font-semibold text-[#B9853A] uppercase tracking-widest">
                     Hero Banner
                   </p>
-                  
-                  {/* Order Navigation Arrows */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleMoveUp(idx)}
-                      disabled={idx === 0}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-black hover:text-white text-gray-700 disabled:opacity-25 disabled:hover:bg-gray-100 disabled:hover:text-gray-700 transition-colors text-xs font-bold cursor-pointer"
-                      title="Move Slider Up"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      onClick={() => handleMoveDown(idx)}
-                      disabled={idx === sliders.length - 1}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-black hover:text-white text-gray-700 disabled:opacity-25 disabled:hover:bg-gray-100 disabled:hover:text-gray-700 transition-colors text-xs font-bold cursor-pointer"
-                      title="Move Slider Down"
-                    >
-                      ▼
-                    </button>
-                  </div>
                 </div>
 
                 <h3 className="text-sm font-medium text-gray-900 uppercase tracking-widest break-words leading-relaxed">

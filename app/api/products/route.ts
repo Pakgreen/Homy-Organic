@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
     const featured = searchParams.get("featured");
     const bestSeller = searchParams.get("bestSeller");
     const valuePack = searchParams.get("valuePack");
+    const regularOnly = searchParams.get("regularOnly") === "true";
     const includeDisabled = searchParams.get("includeDisabled") === "true";
     const sort = searchParams.get("sort") || "-createdAt";
     const page = parseInt(searchParams.get("page") || "1");
@@ -59,11 +60,20 @@ export async function GET(req: NextRequest) {
 
     if (valuePack === "true") {
       query.isValuePack = true;
-    } else if (valuePack === "false") {
+    } else if (valuePack === "false" || regularOnly) {
       query.isValuePack = { $ne: true };
-    } else if (!includeDisabled) {
-      // By default for customer store, exclude Value Packs from standard product grid
+    } else if (bestSeller !== "true") {
+      // By default exclude Value Packs unless valuePack=true is explicitly requested
       query.isValuePack = { $ne: true };
+    }
+
+    if (bestSeller === "true") {
+      query.isBestSeller = true;
+    } else if (bestSeller === "false" || regularOnly) {
+      query.isBestSeller = { $ne: true };
+    } else if (valuePack !== "true") {
+      // By default exclude Best Sellers unless bestSeller=true is explicitly requested
+      query.isBestSeller = { $ne: true };
     }
 
     if (category) {
@@ -80,10 +90,6 @@ export async function GET(req: NextRequest) {
 
     if (featured === "true") {
       query.isFeatured = true;
-    }
-
-    if (bestSeller === "true") {
-      query.isBestSeller = true;
     }
 
     const skip = (page - 1) * limit;
@@ -204,6 +210,11 @@ export async function POST(req: NextRequest) {
     }
 
     const slug = generateSlug(data.name);
+
+    if (typeof data.order !== "number") {
+      const maxProduct = await Product.findOne().sort("-order");
+      data.order = maxProduct && typeof maxProduct.order === "number" ? maxProduct.order + 1 : 1;
+    }
 
     const product = await Product.create({
       ...data,

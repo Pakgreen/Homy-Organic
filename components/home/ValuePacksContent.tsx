@@ -15,11 +15,14 @@ export default function ValuePacksContent() {
   const fetchValuePacks = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get("/api/products?valuePack=true&limit=10");
+      const res = await axios.get("/api/products?valuePack=true&limit=10&sort=order");
       const payload = Array.isArray(res.data)
         ? res.data
         : res.data?.products || [];
-      setValuePacks(payload);
+      const sorted = [...payload].sort(
+        (a: any, b: any) => (a.order ?? 1) - (b.order ?? 1)
+      );
+      setValuePacks(sorted);
     } catch (error) {
       console.error("Error fetching value packs:", error);
       setValuePacks([]);
