@@ -40,6 +40,10 @@ function ProductsContent() {
     try {
       const search = searchParams?.get("search") || "";
       const category = searchParams?.get("category") || "";
+      const isValuePack =
+        searchParams?.get("valuePack") === "true" ||
+        searchParams?.get("valuePacks") === "true";
+
       let url = `/api/products?sort=${sortBy}`;
 
       if (search) {
@@ -48,6 +52,10 @@ function ProductsContent() {
 
       if (category) {
         url += `&category=${category}`;
+      }
+
+      if (isValuePack) {
+        url += `&valuePack=true`;
       }
 
       const res = await axios.get(url);
@@ -85,12 +93,18 @@ function ProductsContent() {
     }
   };
 
+  const isValuePack =
+    searchParams?.get("valuePack") === "true" ||
+    searchParams?.get("valuePacks") === "true";
+
   if (isLoading) {
     const skeletons = Array.from({ length: 8 });
     const categoryId = searchParams?.get("category") as string;
-    const headingText = categoryId
-      ? categoryMap[categoryId] || "Loading..."
-      : "All Products";
+    const headingText = isValuePack
+      ? "Value Packs & Bundles"
+      : categoryId
+        ? categoryMap[categoryId] || "Loading..."
+        : "All Products";
 
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -110,9 +124,11 @@ function ProductsContent() {
   }
 
   const categoryId = searchParams?.get("category") as string;
-  const headingText = categoryId
-    ? categoryMap[categoryId] || "Products"
-    : "All Products";
+  const headingText = isValuePack
+    ? "Value Packs & Bundles"
+    : categoryId
+      ? categoryMap[categoryId] || "Products"
+      : "All Products";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

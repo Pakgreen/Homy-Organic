@@ -72,22 +72,26 @@ export default function ProductClient({ productId }: ProductClientProps) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
-  const productImageVariants = Array.isArray(product?.imageVariants)
-    ? product.imageVariants.filter(
-        (image: any) => image && typeof image.url === "string" && image.url.trim().length > 0,
-      )
-    : Array.isArray(product?.images)
-      ? product.images
-          .filter(
-            (image: unknown): image is string =>
-              typeof image === "string" && image.trim().length > 0,
-          )
-          .map((url: string, index: number) => ({
-            url,
-            index,
-            name: `Design ${index + 1}`,
-          }))
-      : [];
+  const productImageVariants =
+    Array.isArray(product?.imageVariants) && product.imageVariants.length > 0
+      ? product.imageVariants.filter(
+          (image: any) =>
+            image && typeof image.url === "string" && image.url.trim().length > 0,
+        )
+      : Array.isArray(product?.images) && product.images.length > 0
+        ? product.images
+            .filter(
+              (image: unknown): image is string =>
+                typeof image === "string" && image.trim().length > 0,
+            )
+            .map((url: string, index: number) => ({
+              url,
+              index,
+              name: product?.imageLabels?.[index] || `Design ${index + 1}`,
+            }))
+        : typeof product?.image === "string" && product.image.trim().length > 0
+          ? [{ url: product.image, index: 0, name: "Main Image" }]
+          : [];
 
   useEffect(() => {
     fetchProduct();
@@ -206,7 +210,12 @@ export default function ProductClient({ productId }: ProductClientProps) {
     fetchSuggestions();
   }, [product]);
 
-  const heroImage = productImageVariants[selectedImage]?.url || productImageVariants[0]?.url || "/logo.png";
+  const heroImage =
+    productImageVariants[selectedImage]?.url ||
+    productImageVariants[0]?.url ||
+    (typeof product?.image === "string" && product.image.trim().length > 0 ? product.image : null) ||
+    (Array.isArray(product?.images) && product.images.find((img: any) => typeof img === "string" && img.trim().length > 0)) ||
+    "/logo.png";
 
   const handleSelectImage = (index: number) => {
     if (index < 0 || index >= productImageVariants.length) return;
@@ -354,6 +363,8 @@ export default function ProductClient({ productId }: ProductClientProps) {
                 <img
                   src={heroImage}
                   alt={product.name}
+                  loading="eager"
+                  fetchPriority="high"
                   className="w-auto h-auto max-w-full max-h-[480px] object-contain transition-all duration-300"
                 />
               )}
@@ -417,7 +428,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
               {/* Clean Description Header */}
               {product.description && (
                 <div className="pt-2 border-t border-gray-100">
-                  <p className="text-xs sm:text-sm text-gray-600 font-normal leading-relaxed">
+                  <p className="text-sm sm:text-base text-gray-700 font-normal leading-relaxed">
                     {product.description}
                   </p>
                 </div>
@@ -445,13 +456,14 @@ export default function ProductClient({ productId }: ProductClientProps) {
                 </div>
               </div>
 
-              {/* Action Buttons (Minimal & Sleek) */}
-              <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap sm:flex-nowrap">
+              {/* Action Buttons (Minimal, Smooth & Sleek) */}
+              <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-black hover:bg-neutral-800 text-white px-7 py-3 rounded-full text-xs font-semibold tracking-wider transition-all cursor-pointer text-center"
+                  className="flex-1 inline-flex items-center justify-center gap-2.5 bg-black hover:bg-neutral-900 active:scale-[0.97] text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider transition-all duration-200 shadow-md cursor-pointer text-center"
                 >
-                  Add to Cart
+                  <FiShoppingCart className="w-4 h-4 text-white" />
+                  <span>Add to Cart</span>
                 </button>
 
                 <div className="relative inline-block">
@@ -464,11 +476,12 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
                   <button
                     onClick={handleShare}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-gray-200 hover:border-black text-xs font-semibold text-gray-800 hover:text-black transition-all cursor-pointer bg-white shrink-0"
+                    className="inline-flex items-center gap-2 px-5 py-3.5 rounded-full border border-gray-200 hover:border-black active:scale-95 text-xs font-semibold text-gray-800 hover:text-black transition-all cursor-pointer bg-white shrink-0 shadow-sm hover:shadow"
                     title="Share / Copy Product Link"
                   >
                     <FiShare2 className="w-3.5 h-3.5 text-gray-600" />
-                    <span>Share / Copy Link</span>
+                    <span className="hidden sm:inline">Share / Copy Link</span>
+                    <span className="sm:hidden">Share</span>
                   </button>
                 </div>
               </div>
@@ -481,12 +494,12 @@ export default function ProductClient({ productId }: ProductClientProps) {
           Array.isArray(product.whichIncluded) &&
           product.whichIncluded.length > 0 && (
             <div className="pt-6 border-t border-amber-200/80">
-              <div className="bg-[#FAF6F0] p-6 rounded-2xl border border-[#EADBCC] space-y-3">
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                  <span className="text-base">🎁</span>
+              <div className="bg-[#FAF6F0] p-6 sm:p-7 rounded-2xl border border-[#EADBCC] shadow-md hover:shadow-lg transition-all space-y-4">
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                  <span className="text-lg sm:text-xl">🎁</span>
                   <span>Items Included in this Value Pack</span>
                 </h3>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   {product.whichIncluded.map((item: any, idx: number) => {
                     const isObject = typeof item === "object" && item !== null;
                     const itemName = isObject ? item.name : String(item);
@@ -494,15 +507,15 @@ export default function ProductClient({ productId }: ProductClientProps) {
                     const itemPrice = isObject && typeof item.price === "number" ? item.price : undefined;
 
                     return (
-                      <li key={idx} className="flex items-center justify-between gap-3 text-xs text-gray-800 font-semibold bg-white p-3 rounded-xl border border-amber-100/80 shadow-2xs">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-5.5 h-5.5 rounded-full bg-[#B9853A] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                      <li key={idx} className="flex items-center justify-between gap-3 text-sm sm:text-base text-gray-800 font-semibold bg-white p-3.5 sm:p-4 rounded-xl border border-amber-200/80 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-[#B9853A] text-white flex items-center justify-center text-xs font-bold shrink-0">
                             {itemQty}x
                           </span>
                           <span className="font-bold text-gray-900">{itemName}</span>
                         </div>
                         {itemPrice !== undefined && (
-                          <span className="text-[11px] font-semibold text-[#B9853A] bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200/60 shrink-0">
+                          <span className="text-xs sm:text-sm font-semibold text-[#B9853A] bg-amber-50 px-3 py-1 rounded-md border border-amber-200/60 shrink-0">
                             {formatPrice(itemPrice)}
                           </span>
                         )}
@@ -524,28 +537,28 @@ export default function ProductClient({ productId }: ProductClientProps) {
           <div className="pt-10 border-t border-gray-100 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-[#B9853A] font-bold">
+                <p className="text-xs uppercase tracking-[0.25em] text-[#B9853A] font-bold">
                   ORGANIC SPECIFICATIONS
                 </p>
-                <h2 className="text-xl font-bold text-gray-900 tracking-tight mt-0.5">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mt-1">
                   Product Details & Guide
                 </h2>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
               {/* Key Benefits Card */}
               {benefitsList.length > 0 && (
-                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all space-y-3">
-                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
-                    <span className="w-1.5 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200/80 shadow-md hover:shadow-xl transition-all space-y-4">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                    <span className="w-2 h-5 bg-[#C59B27] rounded-full mr-3 inline-block" />
                     Key Benefits
                   </h3>
-                  <ul className="space-y-2.5 pt-1">
+                  <ul className="space-y-3 pt-1">
                     {benefitsList.map((b: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2.5 text-xs text-gray-700 font-medium leading-relaxed">
-                        <span className="w-4 h-4 rounded-full bg-[#E5F5EB] text-[#2E7D32] flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">
+                      <li key={i} className="flex items-start gap-3 text-sm sm:text-base text-gray-700 font-medium leading-relaxed">
+                        <span className="w-5 h-5 rounded-full bg-[#E5F5EB] text-[#2E7D32] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                           ✓
                         </span>
                         <span>{b}</span>
@@ -557,15 +570,15 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
               {/* Natural Ingredients Card (List View) */}
               {ingredientsList.length > 0 && (
-                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all space-y-3">
-                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
-                    <span className="w-1.5 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200/80 shadow-md hover:shadow-xl transition-all space-y-4">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                    <span className="w-2 h-5 bg-[#C59B27] rounded-full mr-3 inline-block" />
                     Natural Ingredients
                   </h3>
-                  <ul className="space-y-2 pt-1">
+                  <ul className="space-y-2.5 pt-1">
                     {ingredientsList.map((ing: string, i: number) => (
-                      <li key={i} className="flex items-center gap-2.5 text-xs text-gray-700 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#B9853A] shrink-0" />
+                      <li key={i} className="flex items-center gap-3 text-sm sm:text-base text-gray-700 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-[#B9853A] shrink-0" />
                         <span>{ing}</span>
                       </li>
                     ))}
@@ -575,25 +588,25 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
               {/* How to Use Card */}
               {typeof product.howToUse === "string" && product.howToUse.trim().length > 0 && (
-                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all space-y-3">
-                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
-                    <span className="w-1.5 h-4 bg-[#C59B27] rounded-full mr-2.5 inline-block" />
+                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200/80 shadow-md hover:shadow-xl transition-all space-y-4">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                    <span className="w-2 h-5 bg-[#C59B27] rounded-full mr-3 inline-block" />
                     How to Use
                   </h3>
-                  <p className="text-xs text-gray-600 font-normal leading-relaxed whitespace-pre-line pt-1">
+                  <p className="text-sm sm:text-base text-gray-700 font-medium leading-relaxed whitespace-pre-line pt-1">
                     {product.howToUse}
                   </p>
                 </div>
               )}
 
-              {/* Precautions Green Card (Soft Green Theme + Soft Shadow, No Icons) */}
+              {/* Precautions Green Card */}
               {typeof product.precautions === "string" && product.precautions.trim().length > 0 && (
-                <div className="bg-[#F0FDF4] p-5 sm:p-6 rounded-2xl border border-[#DCFCE7] shadow-sm hover:shadow-md transition-all space-y-3">
-                  <h3 className="text-xs font-bold text-[#15803D] uppercase tracking-wider flex items-center">
-                    <span className="w-1.5 h-4 bg-[#16A34A] rounded-full mr-2.5 inline-block" />
+                <div className="bg-[#F0FDF4] p-6 sm:p-7 rounded-2xl border border-[#BBF7D0] shadow-md hover:shadow-xl transition-all space-y-4">
+                  <h3 className="text-sm sm:text-base font-bold text-[#15803D] uppercase tracking-wider flex items-center">
+                    <span className="w-2 h-5 bg-[#16A34A] rounded-full mr-3 inline-block" />
                     Precautions & Safety
                   </h3>
-                  <p className="text-xs text-[#166534] font-medium leading-relaxed whitespace-pre-line pt-1">
+                  <p className="text-sm sm:text-base text-[#166534] font-medium leading-relaxed whitespace-pre-line pt-1">
                     {product.precautions}
                   </p>
                 </div>
@@ -601,12 +614,12 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
               {/* Our Quality Card */}
               {typeof product.ourQuality === "string" && product.ourQuality.trim().length > 0 && (
-                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all space-y-3 md:col-span-2">
-                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
-                    <span className="w-1.5 h-4 bg-[#2E5B3E] rounded-full mr-2.5 inline-block" />
+                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-gray-200/80 shadow-md hover:shadow-xl transition-all space-y-4 md:col-span-2">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                    <span className="w-2 h-5 bg-[#2E5B3E] rounded-full mr-3 inline-block" />
                     Our Quality Assurance
                   </h3>
-                  <p className="text-xs text-gray-700 font-medium leading-relaxed whitespace-pre-line pt-1">
+                  <p className="text-sm sm:text-base text-gray-700 font-medium leading-relaxed whitespace-pre-line pt-1">
                     {product.ourQuality}
                   </p>
                 </div>
@@ -682,7 +695,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
             {/* Submission Form (Only Rendered When Logged-in) */}
             {isLoggedIn && (
-              <div className="space-y-3 bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs">
+              <div className="space-y-4 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-md hover:shadow-lg transition-all">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-gray-900 mb-1">
                   Write a Review
                 </h3>
@@ -806,6 +819,26 @@ export default function ProductClient({ productId }: ProductClientProps) {
           </section>
         )}
 
+      </div>
+
+      {/* Sticky Mobile Add to Cart Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/80 p-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex items-center justify-between gap-3">
+        <div className="flex flex-col min-w-0">
+          <span className="text-xs font-bold text-gray-900 truncate max-w-[150px]">
+            {product.name}
+          </span>
+          <span className="text-sm font-bold text-[#E55353]">
+            {formatPrice(product.price)}
+          </span>
+        </div>
+
+        <button
+          onClick={handleAddToCart}
+          className="flex-1 max-w-[190px] inline-flex items-center justify-center gap-2 bg-black hover:bg-neutral-900 active:scale-95 text-white px-5 py-3 rounded-full text-xs font-bold shadow-md transition-all cursor-pointer"
+        >
+          <FiShoppingCart className="w-3.5 h-3.5" />
+          <span>Add to Cart</span>
+        </button>
       </div>
     </div>
   );

@@ -1336,7 +1336,7 @@ export default function AdminProductsPage() {
                 />
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-gray-900">
-                    Add to Value Pack 🎁
+                    Add to Value Pack 
                   </span>
                   <span className="text-xs text-gray-500 font-medium">
                     Renders exclusively in the Value Packs section (hidden from standard product catalog).
