@@ -101,9 +101,16 @@ export default function CartDrawer() {
                   </div>
                   <div className="flex flex-1 flex-col">
                     <div className="flex justify-between items-start">
-                      <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                        {item.name}
-                      </h3>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                          {item.name}
+                        </h3>
+                        {item.size && (
+                          <span className="text-[11px] font-semibold text-[#B9853B] bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 inline-block mt-0.5">
+                            Size: {item.size}
+                          </span>
+                        )}
+                      </div>
                       <button
                         onClick={() => removeItem(item._id)}
                         className="text-gray-400 hover:text-red-500 p-1 cursor-pointer"

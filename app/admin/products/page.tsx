@@ -55,6 +55,7 @@ export default function AdminProductsPage() {
     badge: string;
     images: string[];
     imageLabels: string[];
+    sizes: Array<{ name: string; price: number | ""; originalPrice: number | "" }>;
     isFeatured: boolean;
     isBestSeller: boolean;
     isDisabled: boolean;
@@ -75,6 +76,7 @@ export default function AdminProductsPage() {
     badge: "",
     images: [],
     imageLabels: [],
+    sizes: [],
     isFeatured: false,
     isBestSeller: false,
     isDisabled: false,
@@ -122,6 +124,32 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleAddSizeRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      sizes: [...(prev.sizes || []), { name: "", price: "", originalPrice: "" }],
+    }));
+  };
+
+  const handleRemoveSizeRow = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      sizes: (prev.sizes || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSizeChange = (
+    index: number,
+    field: "name" | "price" | "originalPrice",
+    value: any
+  ) => {
+    setFormData((prev) => {
+      const updated = [...(prev.sizes || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, sizes: updated };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNumber = Number(formData.price);
@@ -143,6 +171,21 @@ export default function AdminProductsPage() {
       price: priceNumber,
       originalPrice:
         formData.originalPrice === "" ? undefined : originalPriceNumber,
+      sizes: (formData.sizes || [])
+        .filter(
+          (s) =>
+            typeof s.name === "string" &&
+            s.name.trim().length > 0 &&
+            Number(s.price) > 0
+        )
+        .map((s) => ({
+          name: s.name.trim(),
+          price: Number(s.price),
+          originalPrice:
+            s.originalPrice !== "" && Number(s.originalPrice) > 0
+              ? Number(s.originalPrice)
+              : undefined,
+        })),
       imageLabels: formData.images.map((_, index) => {
         const label = formData.imageLabels[index];
         return typeof label === "string" && label.trim().length > 0
@@ -278,6 +321,13 @@ export default function AdminProductsPage() {
           : (product.images || []).map((_: string, index: number) =>
               `Design ${index + 1}`,
             ),
+      sizes: Array.isArray(product.sizes)
+        ? product.sizes.map((s: any) => ({
+            name: s.name || "",
+            price: typeof s.price === "number" ? s.price : "",
+            originalPrice: typeof s.originalPrice === "number" ? s.originalPrice : "",
+          }))
+        : [],
       isFeatured: product.isFeatured || false,
       isBestSeller: product.isBestSeller || false,
       isDisabled: product.isDisabled || false,
@@ -318,6 +368,7 @@ export default function AdminProductsPage() {
       badge: "",
       images: [],
       imageLabels: [],
+      sizes: [],
       isFeatured: false,
       isBestSeller: false,
       isDisabled: false,
@@ -361,10 +412,12 @@ export default function AdminProductsPage() {
       if (uploadedUrls.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, ...uploadedUrls],
+          images: [...(prev.images || []), ...uploadedUrls],
           imageLabels: [
-            ...prev.imageLabels,
-            ...uploadedUrls.map((_, index) => `Design ${prev.images.length + index + 1}`),
+            ...(prev.imageLabels || []),
+            ...uploadedUrls.map(
+              (_, index) => `Design ${(prev.images || []).length + index + 1}`,
+            ),
           ],
         }));
         toast.success(`${uploadedUrls.length} image(s) uploaded`);
@@ -379,18 +432,20 @@ export default function AdminProductsPage() {
   const removeImageAtIndex = (indexToRemove: number) => {
     setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove),
-      imageLabels: prev.imageLabels.filter((_, index) => index !== indexToRemove),
+      images: (prev.images || []).filter((_, index) => index !== indexToRemove),
+      imageLabels: (prev.imageLabels || []).filter(
+        (_, index) => index !== indexToRemove,
+      ),
     }));
   };
 
   const updateImageLabel = (indexToUpdate: number, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      imageLabels: prev.images.map((_, index) =>
+      imageLabels: (prev.images || []).map((_, index) =>
         index === indexToUpdate
           ? value
-          : prev.imageLabels[index] || `Design ${index + 1}`,
+          : (prev.imageLabels || [])[index] || `Design ${index + 1}`,
       ),
     }));
   };
@@ -990,6 +1045,74 @@ export default function AdminProductsPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Product Sizes / Variant Options Form */}
+              <div className="border border-amber-200/80 bg-[#FAF6F0]/60 p-4 sm:p-5 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 flex items-center gap-2">
+                      <span>🏷️</span>
+                      <span>Product Sizes / Option Variants (Optional)</span>
+                    </h4>
+                    <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                      Add size options (e.g. 50ml, 100ml, 250ml) with custom prices for each size.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddSizeRow}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#B9853A] hover:bg-[#9a6d2f] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                  >
+                    <FiPlus size={14} /> Add Size
+                  </button>
+                </div>
+
+                {Array.isArray(formData.sizes) && formData.sizes.length > 0 && (
+                  <div className="space-y-3 pt-1">
+                    {formData.sizes.map((s, idx) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2.5 bg-white p-3 rounded-xl border border-amber-200/80 items-center">
+                        <div className="col-span-5">
+                          <input
+                            type="text"
+                            placeholder="Size Name (e.g. 50ml, 100ml, 250g)"
+                            value={s.name}
+                            onChange={(e) => handleSizeChange(idx, "name", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-[#B9853B] outline-none"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <input
+                            type="number"
+                            placeholder="Price (Rs.)"
+                            value={s.price}
+                            onChange={(e) => handleSizeChange(idx, "price", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-[#B9853B] outline-none"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <input
+                            type="number"
+                            placeholder="Old Price"
+                            value={s.originalPrice}
+                            onChange={(e) => handleSizeChange(idx, "originalPrice", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-[#B9853B] outline-none"
+                          />
+                        </div>
+                        <div className="col-span-1 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSizeRow(idx)}
+                            className="text-gray-400 hover:text-rose-600 p-1 cursor-pointer"
+                            title="Remove Size"
+                          >
+                            <FiX size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Value Pack Included Items Form OR Standard Organic Highlights */}

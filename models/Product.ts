@@ -1,6 +1,12 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import "./Category";
 
+export interface IProductSize {
+  name: string;
+  price: number;
+  originalPrice?: number;
+}
+
 export interface IProduct extends Document {
   name: string;
   slug: string;
@@ -10,6 +16,7 @@ export interface IProduct extends Document {
   category: mongoose.Types.ObjectId;
   images: string[];
   imageLabels?: string[];
+  sizes?: IProductSize[];
   brand?: string;
   ratings: number;
   isFeatured: boolean;
@@ -64,6 +71,16 @@ const ProductSchema: Schema = new Schema(
     },
     imageLabels: {
       type: [String],
+      default: [],
+    },
+    sizes: {
+      type: [
+        {
+          name: { type: String, required: true },
+          price: { type: Number, required: true },
+          originalPrice: { type: Number },
+        },
+      ],
       default: [],
     },
     brand: {

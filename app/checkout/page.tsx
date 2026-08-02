@@ -208,10 +208,11 @@ export default function CheckoutPage() {
       const orderData = {
         orderItems: items.map((item) => ({
           product: item._id,
-          name: item.name,
+          name: item.size ? `${item.name} (${item.size})` : item.name,
           quantity: item.quantity,
           price: item.price,
           image: item.image,
+          size: item.size,
         })),
         shippingAddress: {
           fullName: formData.fullName,

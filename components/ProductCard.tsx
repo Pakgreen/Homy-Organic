@@ -63,15 +63,21 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const customBadge = product.badge?.trim() || "";
 
+  const hasSizes = Array.isArray((product as any).sizes) && (product as any).sizes.length > 0;
+  const firstSize = hasSizes ? (product as any).sizes[0] : null;
+  const cardPrice = firstSize ? firstSize.price : currentPrice;
+  const cardOriginalPrice = firstSize && firstSize.originalPrice ? firstSize.originalPrice : previousPrice;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({
       _id: product._id,
       name: product.name,
-      price: currentPrice,
+      price: cardPrice,
       quantity: 1,
       image: product.images[0] || "",
+      size: firstSize ? firstSize.name : undefined,
     });
     toast.success("Added to cart!");
   };
@@ -154,9 +160,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       <div className="flex flex-1 flex-col pt-3 pb-1 text-left space-y-1">
         
         {/* Category Label */}
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-          {categoryName}
-        </span>
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+            {categoryName}
+          </span>
+          {hasSizes && (
+            <span className="text-[9px] font-bold text-[#B9853B] bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 uppercase">
+              {(product as any).sizes.length} Options
+            </span>
+          )}
+        </div>
 
         {/* Title */}
         <Link href={`/products/${product._id}`}>
@@ -178,11 +191,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         {/* Price Row */}
         <div className="flex items-baseline gap-2 pt-1 font-semibold text-sm">
           <span className="text-[#E55353] font-bold text-base">
-            {formatPrice(currentPrice)}
+            {formatPrice(cardPrice)}
           </span>
-          {showOldPrice && previousPrice !== undefined && (
+          {cardOriginalPrice && cardOriginalPrice > cardPrice && (
             <span className="text-xs text-gray-400 line-through font-normal">
-              {formatPrice(previousPrice)}
+              {formatPrice(cardOriginalPrice)}
             </span>
           )}
         </div>

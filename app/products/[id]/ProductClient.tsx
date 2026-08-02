@@ -59,6 +59,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedSize, setSelectedSize] = useState<any>(null);
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
   const [sharePopup, setSharePopup] = useState<string | null>(null);
   const shareTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -100,6 +101,11 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
   useEffect(() => {
     setSelectedImage(0);
+    if (Array.isArray(product?.sizes) && product.sizes.length > 0) {
+      setSelectedSize(product.sizes[0]);
+    } else {
+      setSelectedSize(null);
+    }
   }, [product?._id]);
 
   useEffect(() => {
@@ -217,6 +223,9 @@ export default function ProductClient({ productId }: ProductClientProps) {
     (Array.isArray(product?.images) && product.images.find((img: any) => typeof img === "string" && img.trim().length > 0)) ||
     "/logo.png";
 
+  const currentPrice = selectedSize?.price ?? product?.price ?? 0;
+  const currentOriginalPrice = selectedSize?.originalPrice ?? product?.originalPrice;
+
   const handleSelectImage = (index: number) => {
     if (index < 0 || index >= productImageVariants.length) return;
     setIsMainImageLoaded(false);
@@ -227,9 +236,10 @@ export default function ProductClient({ productId }: ProductClientProps) {
     addItem({
       _id: product._id,
       name: product.name,
-      price: product.price,
+      price: currentPrice,
       quantity,
       image: productImageVariants[selectedImage]?.url || productImageVariants[0]?.url || "",
+      size: selectedSize?.name,
     });
     toast.success(`Added ${quantity} item(s) to cart!`);
   };
@@ -416,14 +426,54 @@ export default function ProductClient({ productId }: ProductClientProps) {
               {/* Price Tag */}
               <div className="flex items-baseline gap-3 pt-1">
                 <span className="text-2xl sm:text-3xl font-bold text-[#E55353]">
-                  {formatPrice(product.price)}
+                  {formatPrice(currentPrice)}
                 </span>
-                {product.originalPrice && product.originalPrice > product.price && (
+                {currentOriginalPrice && currentOriginalPrice > currentPrice && (
                   <span className="text-sm font-normal text-gray-400 line-through">
-                    {formatPrice(product.originalPrice)}
+                    {formatPrice(currentOriginalPrice)}
                   </span>
                 )}
               </div>
+
+              {/* Size Selector Options */}
+              {Array.isArray(product.sizes) && product.sizes.length > 0 && (
+                <div className="pt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Select Size / Option:
+                    </span>
+                    {selectedSize?.name && (
+                      <span className="text-xs font-semibold text-[#B9853B]">
+                        Selected: {selectedSize.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    {product.sizes.map((s: any, idx: number) => {
+                      const isSelected = selectedSize?.name === s.name;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedSize(s)}
+                          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer flex items-center gap-2 ${
+                            isSelected
+                              ? "border-[#B9853B] bg-[#B9853B] text-white shadow-md scale-105"
+                              : "border-gray-200 bg-gray-50 text-gray-800 hover:border-gray-400 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span>{s.name}</span>
+                          {s.price && (
+                            <span className={isSelected ? "text-amber-100 font-normal" : "text-gray-500 font-normal"}>
+                              ({formatPrice(s.price)})
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Clean Description Header */}
               {product.description && (
@@ -828,7 +878,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
             {product.name}
           </span>
           <span className="text-sm font-bold text-[#E55353]">
-            {formatPrice(product.price)}
+            {formatPrice(currentPrice)}
           </span>
         </div>
 
