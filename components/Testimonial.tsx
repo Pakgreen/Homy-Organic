@@ -5,32 +5,32 @@ import { Autoplay } from "swiper/modules";
 
 const testimonials = [
   {
-    text: "Oil ki quality bohat achi hai. Packaging bhi premium hai aur delivery time par mil gayi. Main dobara bhi order karungi.",
+    text: "The quality of the oil is excellent. The packaging is premium, and my order was delivered on time. I will definitely order again.",
     name: "Areeba Khan",
     company: "Lahore, Pakistan",
   },
   {
-    text: "Maine pehli dafa ye oil try kiya aur result bohat acha raha. Product original hai aur quality bhi expected se kaafi better hai.",
+    text: "This was my first time trying this oil, and I was very impressed. The product is authentic, and the quality exceeded my expectations.",
     name: "Hania Ahmed",
     company: "Karachi, Pakistan",
   },
   {
-    text: "Bohat zabardast quality ka oil hai. Khushboo achi hai aur product bilkul fresh laga. Overall experience bohat acha raha.",
+    text: "The oil is of outstanding quality. It has a pleasant fragrance, and the product felt fresh. Overall, I had a great experience.",
     name: "Eman Fatima",
     company: "Dubai, UAE",
   },
   {
-    text: "Mujhe product ki quality sab se zyada pasand aayi. Order karna easy tha aur parcel bhi safely receive ho gaya.",
+    text: "What I liked most was the product quality. Ordering was simple, and the package arrived safely and in perfect condition.",
     name: "Maham Ali",
     company: "Abu Dhabi, UAE",
   },
   {
-    text: "Main is oil ko kuch time se use kar rahi hoon aur mujhe iska result bohat acha laga. Quality aur packaging dono excellent hain.",
+    text: "I have been using this oil for some time now, and the results have been very satisfying. Both the quality and packaging are excellent.",
     name: "Zoya Malik",
     company: "Islamabad, Pakistan",
   },
   {
-    text: "Achi quality, reasonable price aur fast delivery. Product bilkul waisa hi mila jaisa website par show kiya gaya tha.",
+    text: "Excellent quality, reasonable price, and fast delivery. The product was exactly as shown on the website.",
     name: "Laiba Iqbal",
     company: "Sharjah, UAE",
   },

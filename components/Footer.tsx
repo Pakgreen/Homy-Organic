@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiFacebook, FiTwitter, FiInstagram, FiMail, FiSend } from "react-icons/fi";
+import { FiFacebook, FiInstagram, FiMail, FiSend } from "react-icons/fi";
+import { FaTiktok } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -12,8 +13,8 @@ export default function Footer() {
   const pathname = usePathname();
   const [subscribeEmail, setSubscribeEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
-  const [footerData, setFooterData] = useState({
-    brandName: "Homy Orgaic",
+  const [footerData, setFooterData] = useState<any>({
+    brandName: "Homy Organic",
     tagline: "Where Beauty Meets Wellness",
     contact: {
       email: "info@homyorganic.store",
@@ -21,15 +22,17 @@ export default function Footer() {
       address: "Multan, Pakistan",
     },
     socials: {
-      facebook: "https://facebook.com/homyorganics",
-      twitter: "https://twitter.com/homyorganic",
-      instagram: "https://instagram.com/homyorganic",
+      facebook: "https://facebook.com/homyorganicspk",
+      tiktok: "https://tiktok.com/@homyorganicpk",
+      instagram: "https://instagram.com/homyorganicpk",
     },
     links: [
       { label: "Shop All", url: "/products" },
       { label: "Track Order", url: "/track-order" },
       { label: "About Us", url: "/about" },
       { label: "Contact Us", url: "/contact" },
+      { label: "Shipping Policy", url: "/shipping-policy" },
+      { label: "Return & Exchange", url: "/return-policy" },
       { label: "Privacy Policy", url: "/privacy-policy" },
     ],
   });
@@ -125,18 +128,20 @@ export default function Footer() {
 
           {/* Links */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-base text-gray-900">Explore</h4>
+            <h4 className="font-semibold text-base text-gray-900">Our Policies</h4>
             <ul className="space-y-2 text-sm">
-              {(footerData.links || []).map((link, index) => (
-                <li key={index}>
-                  <Link
-                    href={link.url}
-                    className="hover:text-black transition-colors block py-0.5"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+             {(footerData.links || []).map(
+  (link: { label: string; url: string }, index: number) => (
+    <li key={index}>
+      <Link
+        href={link.url}
+        className="hover:text-black transition-colors block py-0.5"
+      >
+        {link.label}
+      </Link>
+    </li>
+  )
+)}
             </ul>
           </div>
 
@@ -203,15 +208,15 @@ export default function Footer() {
                     <FiFacebook size={16} />
                   </a>
                 )}
-                {footerData.socials.twitter && (
+                {(footerData.socials.tiktok || footerData.socials.twitter) && (
                   <a
-                    href={footerData.socials.twitter}
+                    href={footerData.socials.tiktok || footerData.socials.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Twitter"
+                    aria-label="TikTok"
                     className="p-2 rounded-full border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-colors"
                   >
-                    <FiTwitter size={16} />
+                    <FaTiktok size={15} />
                   </a>
                 )}
                 {footerData.socials.instagram && (

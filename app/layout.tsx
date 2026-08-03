@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Syne } from "next/font/google";
+import { Jost } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ConditionalFooterAndSlider from "@/components/ConditionalFooterAndSlider";
@@ -8,7 +8,6 @@ import ThemeProvider from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import BottomNav from "@/components/BottomNav";
 import CartDrawer from "@/components/CartDrawer";
-import ChatWidget from "@/components/ChatWidget";
 import SitePopup from "@/components/SitePopup";
 import connectDB from "@/lib/mongodb";
 import Setting from "@/models/Setting";
@@ -32,7 +31,10 @@ const logoPath = "/homyorganic.png";
 const faviconPath = "/homyorganic.png";
 const logoUrl = new URL(logoPath, siteUrl).toString();
 
-const syne = Syne({ subsets: ["latin"] });
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -195,16 +197,14 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${syne.className} overflow-x-hidden`}
+        className={`${jost.className} overflow-x-hidden`}
         suppressHydrationWarning
       >
         <GoogleAnalytics />
         <AuthProvider>
-          <PagePreloader />
           <TopProgressBar />
           <ThemeProvider />
           <CartDrawer />
-          <ChatWidget />
           <SitePopup />
 
           <div className="flex flex-col min-h-screen">

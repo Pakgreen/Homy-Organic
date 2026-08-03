@@ -19,6 +19,12 @@ export interface IProduct extends Document {
   sizes?: IProductSize[];
   brand?: string;
   ratings: number;
+
+  order: {
+  type: Number,
+  default: 0,
+};
+
   isFeatured: boolean;
   isBestSeller?: boolean;
   isDisabled: boolean;

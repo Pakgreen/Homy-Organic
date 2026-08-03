@@ -16,10 +16,11 @@ export default function FooterSettingsPage() {
       address: "",
     },
     socials: {
-      facebook: "",
-      twitter: "",
-      instagram: "",
-    },
+  facebook: "",
+  twitter: "",
+  instagram: "",
+  tiktok: "",
+},
     links: [{ label: "Shop", url: "/products" }],
   });
 
@@ -258,14 +259,15 @@ export default function FooterSettingsPage() {
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Twitter URL
+                TikTok URL
               </label>
               <input
                 type="url"
-                name="socials.twitter"
-                value={formData.socials.twitter}
+                name="socials.tiktok"
+                value={formData.socials.tiktok || formData.socials.twitter || ""}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded-md"
+                placeholder="https://tiktok.com/@homyorganic"
               />
             </div>
 

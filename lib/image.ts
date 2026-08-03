@@ -4,10 +4,10 @@ export function isCloudinaryUrl(src?: string | null) {
 
 export function getOptimizedImageUrl(
   src?: string | null,
-  width = 600,
-  quality = "auto"
+  width = 400,
+  quality = "auto:eco"
 ): string {
-  if (!src || typeof src !== "string") return "/logo.png";
+  if (!src || typeof src !== "string") return "/homyorganic.png";
   
   // Handle Cloudinary URLs for auto WebP/AVIF format and auto quality + scaling
   if (src.includes("res.cloudinary.com") && src.includes("/upload/")) {

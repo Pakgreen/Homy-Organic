@@ -175,7 +175,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Title */}
         <Link href={`/products/${product.slug || product._id}`}>
-          <h3 className="line-clamp-2 text-sm font-bold uppercase tracking-tight text-gray-900 leading-snug hover:text-[#B9853A] transition-colors">
+          <h3 className="line-clamp-2 text-sm font-medium uppercase tracking-tight text-gray-900 leading-snug hover:text-[#B9853A] transition-colors">
             {product.name}
           </h3>
         </Link>
@@ -192,7 +192,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         {/* Price Row */}
         <div className="flex items-baseline gap-2 pt-1 font-semibold text-sm">
-          <span className="text-[#E55353] font-bold text-base">
+          <span className="text-[#E55353]  text-base">
             {formatPrice(cardPrice)}
           </span>
           {cardOriginalPrice && cardOriginalPrice > cardPrice && (

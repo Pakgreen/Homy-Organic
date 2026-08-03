@@ -5,7 +5,7 @@ function About() {
     <div className="bg-[#f6ede0]  w-full  text-center py-7 ">
       <h1 className="flex justify-center ">
         <p className="flex items-center gap-4 font-bold before:h-0.75 before:w-12 before:bg-[#b9812b] before:content-['']">
-          OUR PROMISE
+          About Us
         </p>
       </h1>
       <p className="p-6 md:px-34 ">

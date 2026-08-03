@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { io as ClientIO } from "socket.io-client";
 import { hasPermission, canAccessAdminPanel } from "@/lib/rolePermissions";
 
 // icons
@@ -75,11 +74,6 @@ const menuItems: MenuItem[] = [
     label: "Reviews",
     href: "/admin/reviews",
     requiredPermission: "manage_products",
-  },
-  {
-    icons: <FiMessageCircle size={22} />,
-    label: "Chats",
-    href: "/admin/chat",
   },
   // ── Media / Content
   {
@@ -156,9 +150,7 @@ export default function Sidebar() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
-  const pathnameRef = React.useRef(pathname);
 
   const user = session?.user;
   const firstLetter = user?.name ? user.name.charAt(0).toUpperCase() : "A";
@@ -171,57 +163,6 @@ export default function Sidebar() {
     }
   };
 
-  useEffect(() => {
-    pathnameRef.current = pathname;
-    // Clear unread when entering chat page
-    if (pathname === "/admin/chat") {
-      setUnreadCount(0);
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    let socketInstance: any;
-    let isMounted = true;
-
-    // Only connect socket logic if admin or staff
-    if (!canAccessAdminPanel(session?.user?.role as any)) return;
-
-    const initSocket = async () => {
-      try {
-        await fetch("/api/socket/io");
-        if (!isMounted) return;
-
-        socketInstance = ClientIO(process.env.NEXT_PUBLIC_SITE_URL || "", {
-          path: "/api/socket/io",
-          addTrailingSlash: false,
-        });
-
-        socketInstance.on("connect", () => {
-          socketInstance.emit("join-admin");
-        });
-
-        socketInstance.on("admin-new-message", (msg: any) => {
-          // If not already on chat page and sender is not admin, increment
-          if (
-            pathnameRef.current !== "/admin/chat" &&
-            msg?.senderModel !== "Admin"
-          ) {
-            setUnreadCount((c) => c + 1);
-          }
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    initSocket();
-
-    return () => {
-      isMounted = false;
-      if (socketInstance) socketInstance.disconnect();
-    };
-  }, [session]);
-
   return (
     <>
       {/* Floating Mobile Toggle Button (only when sidebar is closed) */}
@@ -232,9 +173,6 @@ export default function Sidebar() {
           style={{ backgroundColor: '#B9853A' }}
         >
           <MdMenuOpen size={26} className="rotate-180" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-white w-3 h-3 rounded-full border-2 border-[#B9853A]"></span>
-          )}
         </button>
       )}
 
@@ -314,23 +252,11 @@ export default function Sidebar() {
                 >
                   <div className="relative shrink-0 transition-colors">
                     {item.icons}
-                    {item.label === "Chats" && unreadCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-lg animate-bounce border border-white">
-                        {unreadCount}
-                      </span>
-                    )}
                   </div>
                   <p
                     className={`${!open && !isMobileMenuOpen ? "w-0 opacity-0 hidden md:block" : "w-auto opacity-100"} duration-300 overflow-hidden whitespace-nowrap font-medium text-sm md:text-base`}
                   >
                     {item.label}
-                    {item.label === "Chats" &&
-                      unreadCount > 0 &&
-                      (open || isMobileMenuOpen) && (
-                        <span className="ml-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full tracking-wide">
-                          {unreadCount} NEW
-                        </span>
-                      )}
                   </p>
                 </li>
               </Link>

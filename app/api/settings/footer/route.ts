@@ -19,7 +19,7 @@ export async function GET() {
         },
         socials: {
           facebook: "https://facebook.com/homyorganics",
-          twitter: "https://twitter.com/homyorganic",
+          tiktok: "https://tiktok.com/@homyorganic",
           instagram: "https://instagram.com/homyorganic",
         },
         links: [{ label: "Shop", url: "/products" }],
