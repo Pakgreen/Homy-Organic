@@ -21,15 +21,15 @@ import PagePreloader from "@/components/PagePreloader";
 export const fetchCache = "force-no-store";
 export const dynamic = "force-dynamic";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://homyorganic.store";
 const companyName = "Homy Organic";
-const companyFullName = "Homy Organic";
+const companyFullName = "Homy Organic Store";
 const companyTagline =
-  "Homy Orgaic is your one-stop destination for quality products, offering a wide range of items to meet your needs.";
+  "Where Beauty Meets Wellness - Organic Products, Clothing & Premium Collection";
 const companyDescription =
-  "Homy Orgaic provides a wide range of quality products to meet your needs.";
-const logoPath = "/logo.png";
-const faviconPath = "/logo.png";
+  "Homy Organic is your trusted destination for quality organic products, clothing, lawn suits, and wellness items in Pakistan.";
+const logoPath = "/homyorganic.png";
+const faviconPath = "/homyorganic.png";
 const logoUrl = new URL(logoPath, siteUrl).toString();
 
 const syne = Syne({ subsets: ["latin"] });
@@ -42,28 +42,36 @@ export const metadata: Metadata = {
   },
   description: companyDescription,
   keywords: [
-    companyName.toLowerCase(),
-    companyFullName.toLowerCase(),
-    "ecommerce",
-    "online shopping",
+    "homy organic",
+    "homyorganic",
+    "homy organic store",
+    "organic products pakistan",
+    "lawn suits pakistan",
+    "ladies clothing",
+    "men's fashion",
+    "bacho k kapray",
+    "online shopping pakistan",
     "featured products",
     "secure checkout",
-    "Homy Orgaic",
-    "quality products",
-    "trusted source",
-    "clothing",
-    "loan suits",
-    "men's fashion",
-    "ladies fashion",
-    "bacho k kapray",
   ],
   applicationName: companyName,
   authors: [{ name: companyName }],
   creator: companyName,
   publisher: companyName,
   category: "shopping",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   alternates: {
-    canonical: "/",
+    canonical: siteUrl,
   },
   openGraph: {
     title: `${companyName} | ${companyTagline}`,
@@ -78,7 +86,7 @@ export const metadata: Metadata = {
         alt: companyName,
       },
     ],
-    locale: "en_US",
+    locale: "en_PK",
     type: "website",
   },
   twitter: {
@@ -127,19 +135,46 @@ export default async function RootLayout({
   const footerBgColor = themeData?.footerBgColor || "#ffffff";
   const footerTextColor = themeData?.footerTextColor || "#374151";
 
+  // WebSite Schema with SearchAction (Crucial for Google Sitelinks Searchbox)
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: companyName,
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/products?search={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  // Organization Schema
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: companyFullName,
+    alternateName: companyName,
+    url: siteUrl,
+    logo: logoUrl,
+    sameAs: [],
+  };
+
   return (
     <html lang="en">
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: companyFullName,
-              url: siteUrl,
-              logo: logoUrl,
-            }),
+            __html: JSON.stringify(websiteSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
           }}
         />
         <style
