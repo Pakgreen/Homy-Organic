@@ -46,7 +46,7 @@ export default function SiteSettingsPage() {
           contactAddress: data.contactAddress || "",
           paymentAccountDetails:
             data.paymentAccountDetails ||
-            "JazzCash: 0308 6753520 (Rabia Malik)",
+            "0039300940940940940: (Sadia Riaz)",
           allowedPaymentMethods: data.allowedPaymentMethods || "both",
           deliveryChargesEnabled: data.deliveryChargesEnabled || false,
           deliveryChargeAmount: data.deliveryChargeAmount || "",
