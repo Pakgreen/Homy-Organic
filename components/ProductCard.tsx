@@ -142,6 +142,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             onClick={handleAddToCart}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-900 flex items-center justify-center shadow-md sm:shadow-sm hover:bg-black hover:text-white transition-colors cursor-pointer"
             title="Add to Cart"
+            aria-label={`Add ${product.name} to cart`}
           >
             <FiShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
@@ -149,6 +150,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             href={`/products/${product.slug || product._id}`}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-900 flex items-center justify-center shadow-md sm:shadow-sm hover:bg-black hover:text-white transition-colors"
             title="Quick View"
+            aria-label={`Quick view ${product.name}`}
           >
             <FiEye className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </Link>

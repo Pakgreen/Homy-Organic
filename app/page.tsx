@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import HeroSlider from "@/components/HeroSlider";
 import BestSellingProducts from "@/components/home/BestSellingProducts";
@@ -11,6 +12,26 @@ import InstagramFeed from "@/components/IntagramComp";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import connectDB from "@/lib/mongodb";
 import Slider from "@/models/Slider";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://homyorganic.store";
+
+export const metadata: Metadata = {
+  title: "Homy Organic Store | Premium Organic Products & Clothing",
+  description:
+    "Explore Homy Organic Store for premium organic wellness products, ladies lawn suits, men's fashion, and bachat value packs in Pakistan.",
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    title: "Homy Organic Store | Premium Organic Products & Clothing",
+    description:
+      "Explore Homy Organic Store for premium organic wellness products, ladies lawn suits, men's fashion, and bachat value packs.",
+    url: siteUrl,
+    siteName: "Homy Organic",
+    locale: "en_PK",
+    type: "website",
+  },
+};
 
 async function getSliders() {
   try {
@@ -34,12 +55,42 @@ export default async function ProductsPage() {
   
   const allSliders = await getSliders();
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What products are available on Homy Organic Store?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Homy Organic Store offers organic wellness items, clothing, lawn suits, men's fashion, and special value packs.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How can I place an order?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Select your desired items, add them to your cart, proceed to checkout, and complete your order with Cash on Delivery or Prepaid payment.",
+        },
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
+      <h1 className="sr-only">Homy Organic Store - Premium Organic Products & Clothing Collection</h1>
       <HeroSlider initialSliders={allSliders} />
     
       <About />
- <BestSellingProducts />
+      <BestSellingProducts />
       <Suspense fallback={<ProductSkeleton count={10} />}>
         <ProductsContent />
       </Suspense>

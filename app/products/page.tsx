@@ -1,14 +1,34 @@
-"use client";
-
+import type { Metadata } from "next";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Loading from "@/components/Loading";
+import Breadcrumb from "@/components/Breadcrumb";
 import axios from "axios";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://homyorganic.store";
+
+export const metadata: Metadata = {
+  title: "All Products & Organic Collection | Homy Organic Store",
+  description:
+    "Explore our full collection of organic wellness products, ladies lawn suits, clothing, and bachat bundles on Homy Organic Store.",
+  alternates: {
+    canonical: `${siteUrl}/products`,
+  },
+  openGraph: {
+    title: "All Products & Organic Collection | Homy Organic Store",
+    description:
+      "Explore our full collection of organic wellness products, ladies lawn suits, clothing, and bachat bundles.",
+    url: `${siteUrl}/products`,
+    siteName: "Homy Organic",
+    locale: "en_PK",
+    type: "website",
+  },
+};
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse  rounded-xl overflow-hidden bg-white ">
+    <div className="animate-pulse rounded-xl overflow-hidden bg-white">
       <div className="h-52 sm:h-64 bg-gray-100" />
       <div className="p-3 space-y-3">
         <div className="h-4 w-3/4 bg-gray-200 rounded" />
@@ -105,18 +125,20 @@ function ProductsContent() {
     searchParams?.get("valuePack") === "true" ||
     searchParams?.get("valuePacks") === "true";
 
+  const categoryId = searchParams?.get("category") as string;
+  const headingText = isValuePack
+    ? "Value Packs & Bundles"
+    : categoryId
+      ? categoryMap[categoryId] || "Products"
+      : "All Products";
+
   if (isLoading) {
     const skeletons = Array.from({ length: 8 });
-    const categoryId = searchParams?.get("category") as string;
-    const headingText = isValuePack
-      ? "Value Packs & Bundles"
-      : categoryId
-        ? categoryMap[categoryId] || "Loading..."
-        : "All Products";
 
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <Breadcrumb items={[{ name: "Products", url: "/products" }]} />
+        <div className="mb-8 mt-2">
           <h1 className="text-xl md:text-2xl font-bold mb-2 capitalize">
             {headingText}
           </h1>
@@ -131,16 +153,10 @@ function ProductsContent() {
     );
   }
 
-  const categoryId = searchParams?.get("category") as string;
-  const headingText = isValuePack
-    ? "Value Packs & Bundles"
-    : categoryId
-      ? categoryMap[categoryId] || "Products"
-      : "All Products";
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <Breadcrumb items={[{ name: headingText, url: "/products" }]} />
+      <div className="mb-8 mt-2">
         <h1 className="text-xl md:text-2xl font-bold mb-4 capitalize">
           {headingText}
         </h1>
