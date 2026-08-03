@@ -228,6 +228,21 @@ export async function POST(req: NextRequest) {
 
     const settingsDoc = await Setting.findOne({ key: "site" });
     const siteSettings = settingsDoc?.value || {};
+
+    const allowedMode = siteSettings.allowedPaymentMethods || "both";
+    if (allowedMode === "cod" && paymentMethod !== "Cash on Delivery") {
+      return NextResponse.json(
+        { error: "Only Cash on Delivery is currently allowed.", code: "PAYMENT_METHOD_DISABLED" },
+        { status: 400 }
+      );
+    }
+    if (allowedMode === "prepaid" && paymentMethod !== "Prepaid") {
+      return NextResponse.json(
+        { error: "Only Prepaid transfer payment is currently allowed.", code: "PAYMENT_METHOD_DISABLED" },
+        { status: 400 }
+      );
+    }
+
     const safeShipping = siteSettings.deliveryChargesEnabled
       ? Number(siteSettings.deliveryChargeAmount) || 0
       : 0;
@@ -235,8 +250,13 @@ export async function POST(req: NextRequest) {
     const safeTax = Number.isFinite(taxPrice) && taxPrice >= 0 ? taxPrice : 0;
     const computedTotal = computedItemsPrice + safeShipping + safeTax;
 
+    const validUserId =
+      session?.user?.id && typeof session.user.id === "string" && session.user.id.trim()
+        ? session.user.id.trim()
+        : undefined;
+
     const order = await Order.create({
-      user: session?.user?.id,
+      user: validUserId,
       contactEmail: recipientEmail,
       orderItems: normalizedOrderItems,
       shippingAddress: {
@@ -295,7 +315,10 @@ export async function POST(req: NextRequest) {
 
     if (error?.name === "ValidationError") {
       statusCode = 400;
-      errorMessage = `Validation error: ${Object.keys(error.errors).join(", ")}`;
+      errorMessage = `Validation error: ${Object.keys(error.errors || {}).join(", ")}`;
+    } else if (error?.name === "CastError") {
+      statusCode = 400;
+      errorMessage = `Invalid data format for field: ${error?.path || "unknown"}`;
     }
 
     return NextResponse.json(

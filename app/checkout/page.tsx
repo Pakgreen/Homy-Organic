@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import axios from "axios";
 import LocalImageUpload from "@/components/LocalImageUpload";
 import { useSession } from "next-auth/react";
-import { FiInfo, FiCheckCircle, FiX } from "react-icons/fi";
+import { FiInfo, FiCheckCircle, FiX, FiDownload, FiCopy } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import CountryPhoneInput from "@/components/CountryPhoneInput";
 
@@ -19,8 +19,12 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState<any>(null);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
-  const [whatsappNumber, setWhatsappNumber] = useState<string>("+923000000000"); // Add your own number or fetch it
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("+923000000000");
+  const [siteLogo, setSiteLogo] = useState<string>("/homyorganic.png");
+  const [storeContact, setStoreContact] = useState<{ phone: string; email: string }>({ phone: "", email: "" });
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<"both" | "cod" | "prepaid">("both");
   const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
   const [paymentDetails, setPaymentDetails] = useState("");
   const [deliveryData, setDeliveryData] = useState<{
@@ -28,6 +32,7 @@ export default function CheckoutPage() {
     amount: number;
   }>({ enabled: false, amount: 0 });
   const [selectedCountryCode, setSelectedCountryCode] = useState("+92");
+  const [saveDetails, setSaveDetails] = useState(true);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -52,10 +57,44 @@ export default function CheckoutPage() {
     }
   }, [items, router, showSuccessPopup]);
 
+  // Load saved details from localStorage on initial render
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("homy_saved_checkout_details");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.saveDetails === "boolean") {
+          setSaveDetails(parsed.saveDetails);
+        }
+        setFormData((prev) => ({
+          ...prev,
+          fullName: parsed.fullName || prev.fullName,
+          email: parsed.email || prev.email,
+          address: parsed.address || prev.address,
+          phone: parsed.phone || prev.phone,
+        }));
+        if (parsed.countryCode) {
+          setSelectedCountryCode(parsed.countryCode);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load saved checkout details:", e);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchSiteSettings = async () => {
       try {
         const res = await axios.get("/api/settings/site");
+        if (res.data?.logo) {
+          setSiteLogo(res.data.logo);
+        }
+        if (res.data?.contactPhone) {
+          setStoreContact((prev) => ({ ...prev, phone: res.data.contactPhone }));
+        }
+        if (res.data?.contactEmail) {
+          setStoreContact((prev) => ({ ...prev, email: res.data.contactEmail }));
+        }
         if (res.data?.paymentAccountDetails) {
           setPaymentDetails(res.data.paymentAccountDetails);
         }
@@ -66,7 +105,16 @@ export default function CheckoutPage() {
           });
         }
         if (res.data?.whatsappNumber) {
-          setWhatsappNumber(res.data.whatsappNumber); // Optional if available but using default if not. Default is set above.
+          setWhatsappNumber(res.data.whatsappNumber);
+        }
+        if (res.data?.allowedPaymentMethods) {
+          const mode = res.data.allowedPaymentMethods as "both" | "cod" | "prepaid";
+          setAllowedPaymentMethods(mode);
+          if (mode === "prepaid") {
+            setPaymentMethod("Prepaid");
+          } else if (mode === "cod") {
+            setPaymentMethod("Cash on Delivery");
+          }
         }
       } catch (error) {
         console.error("Site settings fetch error:", error);
@@ -219,7 +267,6 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // Validate cart items aren't empty
       if (!items || items.length === 0) {
         toast.error("Your cart is empty");
         setIsSubmitting(false);
@@ -259,9 +306,33 @@ export default function CheckoutPage() {
       };
 
       const res = await axios.post("/api/orders", orderData);
+
+      if (saveDetails) {
+        try {
+          localStorage.setItem(
+            "homy_saved_checkout_details",
+            JSON.stringify({
+              saveDetails: true,
+              fullName: formData.fullName,
+              email: formData.email,
+              address: formData.address,
+              phone: formData.phone,
+              countryCode: selectedCountryCode,
+            })
+          );
+        } catch (e) {
+          console.error("Failed to save checkout details:", e);
+        }
+      } else {
+        try {
+          localStorage.removeItem("homy_saved_checkout_details");
+        } catch (e) {}
+      }
+
       toast.success("Order placed successfully!");
+      setPlacedOrder(res.data);
+      setPlacedOrderId(res.data._id || res.data.id);
       clearCart();
-      setPlacedOrderId(res.data._id);
       setShowSuccessPopup(true);
     } catch (error: any) {
       const errorMsg =
@@ -270,6 +341,171 @@ export default function CheckoutPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDownloadPdfSlip = () => {
+    const orderDataToPrint = placedOrder || {
+      _id: placedOrderId,
+      createdAt: new Date().toISOString(),
+      shippingAddress: {
+        fullName: formData.fullName,
+        address: formData.address,
+        phone: formData.phone,
+      },
+      contactEmail: formData.email,
+      paymentMethod,
+      orderItems: items,
+      itemsPrice: subtotal,
+      shippingPrice: deliveryPrice,
+      totalPrice: total,
+    };
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to download/print slip");
+      return;
+    }
+
+    const itemsListHtml = (orderDataToPrint.orderItems || [])
+      .map(
+        (item: any) => `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              ${
+                item.image
+                  ? `<img src="${item.image.startsWith("http") ? item.image : window.location.origin + item.image}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb; flex-shrink: 0;" />`
+                  : ""
+              }
+              <div>
+                <div style="font-weight: 600; color: #111827; font-size: 13px;">${item.name || "Item"}</div>
+                ${item.size ? `<div style="font-size: 11px; color: #6b7280; font-weight: 500;">Size: ${item.size}</div>` : ""}
+              </div>
+            </div>
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-weight: 600; font-size: 13px;">${item.quantity || 1}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600; font-size: 13px;">PKR ${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+        </tr>
+      `
+      )
+      .join("");
+
+    const logoSrc = siteLogo ? (siteLogo.startsWith("http") ? siteLogo : window.location.origin + siteLogo) : "";
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Order Receipt Slip - ${orderDataToPrint._id || "Invoice"}</title>
+          <meta charset="utf-8" />
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 25px; color: #1f2937; max-width: 600px; margin: 0 auto; line-height: 1.5; background: #fff; }
+            .top-bar { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 2px solid #B9853A; margin-bottom: 20px; }
+            .brand-left { text-align: left; }
+            .logo-img { max-height: 52px; max-width: 200px; object-fit: contain; display: block; margin-bottom: 4px; }
+            .logo-text { font-size: 24px; font-weight: 800; color: #B9853A; letter-spacing: 1.5px; text-transform: uppercase; }
+            .store-info { font-size: 11px; color: #4b5563; margin-top: 4px; line-height: 1.4; }
+            .title-right { text-align: right; }
+            .receipt-heading { font-size: 18px; font-weight: 800; color: #111827; letter-spacing: 1px; text-transform: uppercase; }
+            .order-id { font-family: monospace; font-size: 12px; font-weight: 700; color: #B9853A; margin-top: 2px; }
+            .order-date { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+            .details-box { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; background: #f9fafb; padding: 14px; border-radius: 10px; border: 1px solid #f3f4f6; font-size: 12px; }
+            .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 2px; }
+            .val { font-weight: 600; color: #111827; }
+
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .items-table th { background: #F8F5EE; padding: 8px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; text-align: left; border-bottom: 1px solid #e5e7eb; }
+            .items-table td { padding: 10px; border-bottom: 1px solid #f3f4f6; font-size: 12px; vertical-align: middle; }
+
+            .summary-card { width: 220px; margin-left: auto; background: #F8F5EE; padding: 12px 14px; border-radius: 10px; border: 1px solid #EFEAE0; font-size: 12px; }
+            .summary-row { display: flex; justify-content: space-between; padding: 3px 0; color: #4b5563; }
+            .summary-total { display: flex; justify-content: space-between; padding-top: 6px; margin-top: 6px; border-top: 1px dashed #d1d5db; font-weight: 800; font-size: 14px; color: #111827; }
+
+            .footer-note { margin-top: 28px; padding-top: 14px; border-top: 1px solid #f3f4f6; text-align: center; font-size: 11px; color: #6b7280; }
+            .footer-contact { font-weight: 600; color: #B9853A; margin-top: 3px; }
+
+            @media print {
+              body { padding: 0; }
+              @page { size: auto; margin: 12mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="top-bar">
+            <div class="brand-left">
+              ${logoSrc ? `<img src="${logoSrc}" class="logo-img" alt="Homy Organic" />` : `<div class="logo-text">Homy Organic</div>`}
+              <div class="store-info">
+                ${storeContact.phone ? `<div><strong>Phone/WhatsApp:</strong> ${storeContact.phone}</div>` : `<div><strong>WhatsApp:</strong> ${whatsappNumber}</div>`}
+                ${storeContact.email ? `<div><strong>Email:</strong> ${storeContact.email}</div>` : ""}
+              </div>
+            </div>
+            <div class="title-right">
+              <div class="receipt-heading">ORDER RECEIPT</div>
+              <div class="order-id">#${orderDataToPrint._id || "N/A"}</div>
+              <div class="order-date">Date: ${new Date(orderDataToPrint.createdAt || Date.now()).toLocaleDateString()}</div>
+            </div>
+          </div>
+
+          <div class="details-box">
+            <div>
+              <div class="label">Customer Information</div>
+              <div class="val">${orderDataToPrint.shippingAddress?.fullName || formData.fullName || "Customer"}</div>
+              <div style="color: #4b5563;">Phone: ${orderDataToPrint.shippingAddress?.phone || formData.phone}</div>
+              <div style="color: #4b5563;">Email: ${orderDataToPrint.contactEmail || formData.email}</div>
+            </div>
+            <div>
+              <div class="label">Shipping & Payment</div>
+              <div class="val">Method: ${orderDataToPrint.paymentMethod || paymentMethod}</div>
+              <div style="color: #4b5563; margin-top: 3px;">Address: ${orderDataToPrint.shippingAddress?.address || formData.address}</div>
+            </div>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item Description</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsListHtml}
+            </tbody>
+          </table>
+
+          <div class="summary-card">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>PKR ${(orderDataToPrint.itemsPrice || subtotal).toLocaleString()}</span>
+            </div>
+            <div class="summary-row">
+              <span>Delivery Charge</span>
+              <span>${(orderDataToPrint.shippingPrice || deliveryPrice) === 0 ? "Free" : "PKR " + (orderDataToPrint.shippingPrice || deliveryPrice).toLocaleString()}</span>
+            </div>
+            <div class="summary-total">
+              <span>Total Payable</span>
+              <span style="color: #B9853A;">PKR ${(orderDataToPrint.totalPrice || total).toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="footer-note">
+            <div>Thank you for your order with Homy Organic!</div>
+            <div class="footer-contact">Contact Us: ${storeContact.phone || whatsappNumber} | info@homyorganic.com</div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(receiptHtml);
+    printWindow.document.close();
   };
 
   if (!mounted || (items.length === 0 && !showSuccessPopup)) {
@@ -294,7 +530,11 @@ export default function CheckoutPage() {
             Review your details and place your order.
           </p>
           <p className="text-[11px] uppercase tracking-widest text-black font-bold border-b border-gray-200 pb-6">
-            Choose Cash on Delivery or prepay via Bank Transfer.
+            {allowedPaymentMethods === "cod"
+              ? "Cash on Delivery Available"
+              : allowedPaymentMethods === "prepaid"
+              ? "Prepay via Bank Transfer / EasyPaisa / JazzCash"
+              : "Choose Cash on Delivery or prepay via Bank Transfer."}
           </p>
         </div>
 
@@ -394,6 +634,25 @@ export default function CheckoutPage() {
                   />
                 </div>
 
+                <div className="pt-2">
+                  <label className="flex items-center gap-3 cursor-pointer group select-none bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={saveDetails}
+                      onChange={(e) => setSaveDetails(e.target.checked)}
+                      className="w-4.5 h-4.5 rounded border-gray-300 text-[#B9853A] focus:ring-[#B9853A] cursor-pointer accent-[#B9853A]"
+                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-1">
+                      <span className="text-xs font-semibold text-gray-800 group-hover:text-black transition-colors">
+                        Save my information for future orders
+                      </span>
+                      <span className="text-[11px] text-gray-500 font-urdu" dir="rtl">
+                        مستقبل کے آرڈرز کے لیے معلومات محفوظ کریں
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
                 <div className="pt-8">
                   <h3 className="text-sm uppercase tracking-widest text-black font-bold mb-6">
                     Payment Method
@@ -401,184 +660,186 @@ export default function CheckoutPage() {
 
                   <div className="flex flex-col gap-4">
                     {/* COD Option */}
-                    <div
-                      onClick={() => setPaymentMethod("Cash on Delivery")}
-                      className={`border rounded-lg p-5 cursor-pointer transition-all ${
-                        paymentMethod === "Cash on Delivery"
-                          ? "border-[#B9853B] ring-1 ring-[#B9853B] bg-amber-50/30"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
-                            paymentMethod === "Cash on Delivery"
-                              ? "border-[#B9853B]"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {paymentMethod === "Cash on Delivery" && (
-                            <div className="w-2 h-2 bg-[#B9853B] rounded-full" />
-                          )}
-                        </div>
-                        <span className="font-bold text-sm tracking-wide text-gray-900">
-                          Cash on Delivery
-                        </span>
-                      </div>
-
-                      {paymentMethod === "Cash on Delivery" && (
-                        <div className="mt-4 pl-7 animate-in fade-in slide-in-from-top-2">
-                          <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium">
-                            <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
-                              <FiInfo className="w-3.5 h-3.5" />
-                              <span>Instruction / ضروری ہدایت</span>
-                            </div>
-                            <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
-                              You can pay in cash to our courier when you
-                              receive the parcel at your doorstep.{" "}
-                              <span className="text-black font-bold inline-block mt-0.5 bg-amber-100/60 px-1 py-0.5 rounded">
-                                (First Receive Parcel, Then Pay)
-                              </span>
-                            </span>
-                            <span
-                              className="font-urdu text-sm sm:text-base text-gray-900 leading-relaxed border-t border-gray-200 pt-2 mt-1"
-                              dir="rtl"
-                            >
-                              پارسل وصول کرتے وقت آپ ہمارے کوریئر کو نقد رقم
-                              (Cash) ادا کر سکتے ہیں۔{" "}
-                              <span className="font-bold bg-amber-100/60 px-1 py-0.5 rounded">
-                                (سامان ملنے کے بعد پیسے دیں)
-                              </span>
-                            </span>
+                    {(allowedPaymentMethods === "both" || allowedPaymentMethods === "cod") && (
+                      <div
+                        onClick={() => setPaymentMethod("Cash on Delivery")}
+                        className={`border rounded-lg p-5 cursor-pointer transition-all ${
+                          paymentMethod === "Cash on Delivery"
+                            ? "border-[#B9853B] ring-1 ring-[#B9853B] bg-amber-50/30"
+                            : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
+                              paymentMethod === "Cash on Delivery"
+                                ? "border-[#B9853B]"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {paymentMethod === "Cash on Delivery" && (
+                              <div className="w-2 h-2 bg-[#B9853B] rounded-full" />
+                            )}
                           </div>
+                          <span className="font-bold text-sm tracking-wide text-gray-900">
+                            Cash on Delivery
+                          </span>
                         </div>
-                      )}
-                    </div>
+
+                        {paymentMethod === "Cash on Delivery" && (
+                          <div className="mt-4 pl-7 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium">
+                              <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
+                                <FiInfo className="w-3.5 h-3.5" />
+                                <span>Instruction / ضروری ہدایت</span>
+                              </div>
+                              <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
+                                You can pay in cash to our courier when you
+                                receive the parcel at your doorstep.{" "}
+                                <span className="text-black font-bold inline-block mt-0.5 bg-amber-100/60 px-1 py-0.5 rounded">
+                                  (First Receive Parcel, Then Pay)
+                                </span>
+                              </span>
+                              <span
+                                className="font-urdu text-sm sm:text-base text-gray-900 leading-relaxed border-t border-gray-200 pt-2 mt-1"
+                                dir="rtl"
+                              >
+                                پارسل وصول کرتے وقت آپ ہمارے کوریئر کو نقد رقم
+                                (Cash) ادا کر سکتے ہیں۔{" "}
+                                <span className="font-bold bg-amber-100/60 px-1 py-0.5 rounded">
+                                  (سامان ملنے کے بعد پیسے دیں)
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Prepaid Option */}
-                    <div
-                      onClick={() => setPaymentMethod("Prepaid")}
-                      className={`border rounded-lg p-5 cursor-pointer transition-all ${
-                        paymentMethod === "Prepaid"
-                          ? "border-[#B9853B] ring-1 ring-[#B9853B] bg-amber-50/30"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
-                            paymentMethod === "Prepaid"
-                              ? "border-[#B9853B]"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {paymentMethod === "Prepaid" && (
-                            <div className="w-2 h-2 bg-[#B9853B] rounded-full" />
-                          )}
-                        </div>
-                        <span className="font-bold text-sm tracking-wide text-gray-900">
-                          Prepaid Transfer
-                        </span>
-                      </div>
-
-                      {paymentMethod === "Prepaid" && (
-                        <div className="mt-4 pl-7 animate-in fade-in slide-in-from-top-2">
-                          <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium mb-6">
-                            <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
-                              <FiInfo className="w-3.5 h-3.5" />
-                              <span>Important / انتہائی اہم</span>
-                            </div>
-                            <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
-                              Please transfer the total amount in advance to
-                              confirm your order. After sending the payment,
-                              attach the screenshot and transaction ID below.{" "}
-                              <span className="text-black font-bold inline-block mt-0.5 bg-amber-100/60 px-1 py-0.5 rounded">
-                                (Pay First, Then Receive Parcel)
-                              </span>
-                            </span>
-                            <span
-                              className="font-urdu text-sm sm:text-base text-gray-900 leading-relaxed border-t border-gray-200 pt-2 mt-1"
-                              dir="rtl"
-                            >
-                              براہ کرم اپنا آرڈر کنفرم کرنے کے لیے کل رقم پہلے
-                              ٹرانسفر کریں۔ ادائیگی کے بعد اسکرین شاٹ اور
-                              ٹرانزیکشن آئی ڈی نیچے درج کریں۔{" "}
-                              <span className="font-bold bg-amber-100/60 px-1 py-0.5 rounded">
-                                (پہلے پیسے دیں، پھر سامان ملے گا)
-                              </span>
-                            </span>
+                    {(allowedPaymentMethods === "both" || allowedPaymentMethods === "prepaid") && (
+                      <div
+                        onClick={() => setPaymentMethod("Prepaid")}
+                        className={`border rounded-lg p-5 cursor-pointer transition-all ${
+                          paymentMethod === "Prepaid"
+                            ? "border-[#B9853B] ring-1 ring-[#B9853B] bg-amber-50/30"
+                            : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
+                              paymentMethod === "Prepaid"
+                                ? "border-[#B9853B]"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {paymentMethod === "Prepaid" && (
+                              <div className="w-2 h-2 bg-[#B9853B] rounded-full" />
+                            )}
                           </div>
+                          <span className="font-bold text-sm tracking-wide text-gray-900">
+                            Prepaid Transfer
+                          </span>
+                        </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
-                            <div>
-                              <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">
-                                Transaction ID *
-                              </label>
-                              <input
-                                type="text"
-                                required
-                                value={formData.paymentReference}
-                                onChange={(e) =>
-                                  handleInputChange("paymentReference", e.target.value)
-                                }
-                                onClick={(e) => e.stopPropagation()}
-                                className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
-                                  errors.paymentReference
-                                    ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600"
-                                    : "border-gray-200 bg-white text-black focus:border-[#B9853B] focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
-                                }`}
-                                placeholder="TXN123456789"
-                              />
-                              {errors.paymentReference && (
-                                <p className="mt-1 text-xs text-red-600 font-semibold flex items-center gap-1">
-                                  <span>•</span> {errors.paymentReference}
-                                </p>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3">
-                                Payment Screenshot *
-                              </label>
-                              <div
-                                onClick={(e) => e.stopPropagation()}
-                                className={`border border-dashed p-1 transition-colors rounded-lg bg-white ${
-                                  errors.paymentProofUrl
-                                    ? "border-red-500 bg-red-50/20"
-                                    : "border-gray-300 hover:border-[#B9853B]"
-                                }`}
+                        {paymentMethod === "Prepaid" && (
+                          <div className="mt-4 pl-7 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium mb-6">
+                              <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
+                                <FiInfo className="w-3.5 h-3.5" />
+                                <span>Important / انتہائی اہم</span>
+                              </div>
+                              <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
+                                Please transfer the total amount in advance to
+                                confirm your order. After sending the payment,
+                                attach the screenshot and transaction ID below.{" "}
+                                <span className="text-black font-bold inline-block mt-0.5 bg-amber-100/60 px-1 py-0.5 rounded">
+                                  (Pay First, Then Receive Parcel)
+                                </span>
+                              </span>
+                              <span
+                                className="font-urdu text-sm sm:text-base text-gray-900 leading-relaxed border-t border-gray-200 pt-2 mt-1"
+                                dir="rtl"
                               >
-                                <LocalImageUpload
-                                  value={formData.paymentProofUrl}
-                                  onChange={(url) => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      paymentProofUrl: url,
-                                    }));
-                                    if (errors.paymentProofUrl) {
-                                      setErrors((prev) => ({
+                                براہ کرم اپنا آرڈر کنفرم کرنے کے لیے کل رقم پہلے
+                                ٹرانسفر کریں۔ ادائیگی کے بعد اسکرین شاٹ اور
+                                ٹرانزیکشن آئی ڈی نیچے درج کریں۔{" "}
+                                
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
+                              <div>
+                                <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">
+                                  Transaction ID *
+                                </label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={formData.paymentReference}
+                                  onChange={(e) =>
+                                    handleInputChange("paymentReference", e.target.value)
+                                  }
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-all ${
+                                    errors.paymentReference
+                                      ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600"
+                                      : "border-gray-200 bg-white text-black focus:border-[#B9853B] focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
+                                  }`}
+                                  placeholder="TXN123456789"
+                                />
+                                {errors.paymentReference && (
+                                  <p className="mt-1 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <span>•</span> {errors.paymentReference}
+                                  </p>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3">
+                                  Payment Screenshot *
+                                </label>
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`border border-dashed p-1 transition-colors rounded-lg bg-white ${
+                                    errors.paymentProofUrl
+                                      ? "border-red-500 bg-red-50/20"
+                                      : "border-gray-300 hover:border-[#B9853B]"
+                                  }`}
+                                >
+                                  <LocalImageUpload
+                                    value={formData.paymentProofUrl}
+                                    onChange={(url) => {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        paymentProofUrl: url,
+                                      }));
+                                      if (errors.paymentProofUrl) {
+                                        setErrors((prev) => ({
+                                          ...prev,
+                                          paymentProofUrl: "",
+                                        }));
+                                      }
+                                    }}
+                                    onRemove={() =>
+                                      setFormData((prev) => ({
                                         ...prev,
                                         paymentProofUrl: "",
-                                      }));
+                                      }))
                                     }
-                                  }}
-                                  onRemove={() =>
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      paymentProofUrl: "",
-                                    }))
-                                  }
-                                />
+                                  />
+                                </div>
+                                {errors.paymentProofUrl && (
+                                  <p className="mt-1 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <span>•</span> {errors.paymentProofUrl}
+                                  </p>
+                                )}
                               </div>
-                              {errors.paymentProofUrl && (
-                                <p className="mt-1 text-xs text-red-600 font-semibold flex items-center gap-1">
-                                  <span>•</span> {errors.paymentProofUrl}
-                                </p>
-                              )}
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -586,9 +847,16 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#B9853B] hover:bg-[#9a6d2f] text-white text-xs tracking-[0.2em] font-bold uppercase py-5 transition-all shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer rounded-lg"
+                    className="w-full bg-[#B9853B] hover:bg-[#9a6d2f] text-white text-xs tracking-[0.2em] font-bold uppercase py-4 sm:py-5 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.99] disabled:opacity-60 cursor-pointer rounded-xl flex items-center justify-center gap-2"
                   >
-                    {isSubmitting ? "Processing..." : "Complete Order"}
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Processing Order...
+                      </span>
+                    ) : (
+                      "Complete Order"
+                    )}
                   </button>
                 </div>
               </form>
@@ -723,45 +991,100 @@ export default function CheckoutPage() {
 
       {/* Success Popup Modal */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-white/95 backdrop-blur-md animate-in fade-in duration-500">
-          <button
-            onClick={() => router.push("/")}
-            className="absolute top-6 right-6 p-2 cursor-pointer text-gray-500 hover:text-black transition-colors"
-          >
-            <FiX className="w-8 h-8" strokeWidth={1.5} />
-          </button>
-
-          <div className="max-w-sm w-full flex flex-col items-center text-center animate-in slide-in-from-bottom-8 duration-700">
-            <FiCheckCircle
-              className="w-16 h-16 text-black mb-6"
-              strokeWidth={1}
-            />
-
-            <h3 className="text-2xl font-bold text-black mb-3 tracking-tight">
-              Order Confirmed
-            </h3>
-            <p className="text-sm text-gray-500 mb-10 leading-relaxed max-w-[260px]">
-              Your order has been placed successfully. Thank you for shopping
-              with us.
-            </p>
-
-            <a
-              href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hi, I just placed an order! My Order ID is: " + placedOrderId)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full max-w-[280px] flex flex-col items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] text-white py-4 px-6 rounded-2xl font-bold transition-all duration-300"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative max-w-sm w-full bg-white rounded-2xl p-5 shadow-lg border border-gray-100 my-auto animate-in zoom-in-95 duration-250">
+            {/* Close Button */}
+            <button
+              onClick={() => router.push("/")}
+              className="absolute top-3.5 right-3.5 p-1 text-gray-400 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+              title="Close"
             >
-              <div className="flex items-center gap-2">
-                <FaWhatsapp className="w-5 h-5" />
-                <span className="text-sm tracking-wide">WhatsApp Us</span>
+              <FiX className="w-4.5 h-4.5" />
+            </button>
+
+            <div className="space-y-3.5 text-center">
+              {/* Header with Modern Blue Verified Tick */}
+              <div className="flex flex-col items-center gap-1.5 pt-1">
+                <div className="inline-flex items-center gap-1.5  px-3.5 py-1 rounded-full text-xs font-bold border border-blue-100 shadow-2xs">
+                  <FiCheckCircle className="w-4 h-4 text-[#000000] stroke-[2.5]" />
+                  <span>Order Confirmed</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight mt-0.5">
+                  Thank You for Your Order!
+                </h3>
+                
               </div>
-              <span
-                className="font-urdu text-xs font-normal opacity-90"
-                dir="rtl"
-              >
-                نمائندے سے رابطہ کریں
-              </span>
-            </a>
+
+              {/* Minimal Order Info Box */}
+              <div className="bg-gray-50/90 rounded-xl p-3 border border-gray-100 text-xs text-left space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium">Order ID:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-mono font-bold text-gray-900">#{placedOrderId}</span>
+                    <button
+                      onClick={() => {
+                        if (placedOrderId) {
+                          navigator.clipboard.writeText(placedOrderId);
+                          toast.success("Copied!");
+                        }
+                      }}
+                      className="text-gray-400 hover:text-[#1D9BF0] transition-colors p-0.5"
+                      title="Copy ID"
+                    >
+                      <FiCopy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium">Customer:</span>
+                  <span className="font-semibold text-gray-800 line-clamp-1">
+                    {placedOrder?.shippingAddress?.fullName || formData.fullName}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-gray-200/60">
+                  <span className="text-gray-500 font-medium">Total Amount:</span>
+                  <span className="font-bold text-gray-900 text-sm">
+                    {formatPrice(placedOrder?.totalPrice || total)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Compact Small Action Buttons Row (choty button) */}
+              <div className="space-y-2 pt-0.5">
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                      `Hi Homy Organic, I just placed an order!\nOrder ID: #${placedOrderId}\nTotal Amount: ${formatPrice(
+                        placedOrder?.totalPrice || total
+                      )}\nName: ${placedOrder?.shippingAddress?.fullName || formData.fullName}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] active:scale-[0.98] text-white py-2 px-3 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                  >
+                    <FaWhatsapp className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+
+                  <button
+                    onClick={handleDownloadPdfSlip}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#B9853B] hover:bg-[#9a6d2f] active:scale-[0.98] text-white py-2 px-3 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                  >
+                    <FiDownload className="w-3.5 h-3.5" />
+                    <span>Download Slip</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => router.push("/")}
+                  className="w-full py-1 text-[11px] font-semibold text-gray-400 hover:text-gray-800 transition-colors cursor-pointer"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

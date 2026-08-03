@@ -17,6 +17,7 @@ export default function SiteSettingsPage() {
     contactPhone: string;
     contactAddress: string;
     paymentAccountDetails: string;
+    allowedPaymentMethods: "both" | "cod" | "prepaid";
     deliveryChargesEnabled: boolean;
     deliveryChargeAmount: number | "";
   }>({
@@ -27,6 +28,7 @@ export default function SiteSettingsPage() {
     contactPhone: "",
     contactAddress: "",
     paymentAccountDetails: "",
+    allowedPaymentMethods: "both",
     deliveryChargesEnabled: false,
     deliveryChargeAmount: "",
   });
@@ -45,6 +47,7 @@ export default function SiteSettingsPage() {
           paymentAccountDetails:
             data.paymentAccountDetails ||
             "JazzCash: 0308 6753520 (Rabia Malik)",
+          allowedPaymentMethods: data.allowedPaymentMethods || "both",
           deliveryChargesEnabled: data.deliveryChargesEnabled || false,
           deliveryChargeAmount: data.deliveryChargeAmount || "",
         });
@@ -246,6 +249,88 @@ export default function SiteSettingsPage() {
                 placeholder="Store address, City, Country"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+              Allowed Checkout Payment Options (آرڈر پورٹل اپشنز)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <label
+                className={`relative flex flex-col items-center justify-center p-4 min-h-[100px] border rounded-xl cursor-pointer transition-all duration-200 select-none ${
+                  formData.allowedPaymentMethods === "both"
+                    ? "border-[#B9853A] bg-amber-50/50 text-gray-900 ring-1 ring-[#B9853A]"
+                    : "border-gray-200 bg-gray-50/70 text-gray-600 hover:bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="allowedPaymentMethods"
+                  value="both"
+                  checked={formData.allowedPaymentMethods === "both"}
+                  onChange={() =>
+                    setFormData((prev) => ({ ...prev, allowedPaymentMethods: "both" }))
+                  }
+                  className="sr-only"
+                />
+                <FiCreditCard className={`mb-1.5 transition-colors ${formData.allowedPaymentMethods === "both" ? "text-[#B9853A]" : "text-gray-400"}`} size={22} />
+                <span className="text-xs font-semibold text-center text-gray-900">Both Options</span>
+                <span className="text-[11px] text-gray-500 text-center mt-0.5">
+                  COD & Prepaid Advance
+                </span>
+              </label>
+
+              <label
+                className={`relative flex flex-col items-center justify-center p-4 min-h-[100px] border rounded-xl cursor-pointer transition-all duration-200 select-none ${
+                  formData.allowedPaymentMethods === "cod"
+                    ? "border-[#B9853A] bg-amber-50/50 text-gray-900 ring-1 ring-[#B9853A]"
+                    : "border-gray-200 bg-gray-50/70 text-gray-600 hover:bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="allowedPaymentMethods"
+                  value="cod"
+                  checked={formData.allowedPaymentMethods === "cod"}
+                  onChange={() =>
+                    setFormData((prev) => ({ ...prev, allowedPaymentMethods: "cod" }))
+                  }
+                  className="sr-only"
+                />
+                <FiTruck className={`mb-1.5 transition-colors ${formData.allowedPaymentMethods === "cod" ? "text-[#B9853A]" : "text-gray-400"}`} size={22} />
+                <span className="text-xs font-semibold text-center text-gray-900">COD Only</span>
+                <span className="text-[11px] text-gray-500 text-center mt-0.5">
+                  (آرڈر ملنے پر ادائیگی)
+                </span>
+              </label>
+
+              <label
+                className={`relative flex flex-col items-center justify-center p-4 min-h-[100px] border rounded-xl cursor-pointer transition-all duration-200 select-none ${
+                  formData.allowedPaymentMethods === "prepaid"
+                    ? "border-[#B9853A] bg-amber-50/50 text-gray-900 ring-1 ring-[#B9853A]"
+                    : "border-gray-200 bg-gray-50/70 text-gray-600 hover:bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="allowedPaymentMethods"
+                  value="prepaid"
+                  checked={formData.allowedPaymentMethods === "prepaid"}
+                  onChange={() =>
+                    setFormData((prev) => ({ ...prev, allowedPaymentMethods: "prepaid" }))
+                  }
+                  className="sr-only"
+                />
+                <FiCreditCard className={`mb-1.5 transition-colors ${formData.allowedPaymentMethods === "prepaid" ? "text-[#B9853A]" : "text-gray-400"}`} size={22} />
+                <span className="text-xs font-semibold text-center text-gray-900">Prepaid Only</span>
+                <span className="text-[11px] text-gray-500 text-center mt-0.5">
+                  (پہلے ادائیگی ٹرانسفر)
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Select which payment options are shown to customers on the checkout page.
+            </p>
           </div>
 
           <div>

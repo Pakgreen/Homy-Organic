@@ -264,16 +264,17 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log("[SESSION] Token received:", { id: token.id, role: token.role });
-      if (token && session.user) {
-        if (token.error === "SessionTerminated") {
-          // Effectively logging the user out visually if needed, but nextauth will just clear if we return null
-          return null as any;
-        }
+      if (token?.error === "SessionTerminated" || !token?.id) {
+        return {
+          user: { name: "", email: "", image: "", role: "" },
+          expires: new Date(0).toISOString(),
+          error: "SessionTerminated",
+        } as any;
+      }
+      if (token && session?.user) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
       }
-      console.log("[SESSION] Final session:", { role: session.user?.role });
       return session;
     },
   },

@@ -202,7 +202,7 @@ export default function Navbar() {
                 )}
               </button>
 
-              {session ? (
+              {session?.user?.email ? (
                 <div className="relative hidden md:block group">
                   <button className="flex items-center space-x-2  text-black hover:text-gray-600 transition-colors">
                     {session.user.image ? (
@@ -290,7 +290,7 @@ export default function Navbar() {
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b  ">
-          {session ? (
+          {session?.user?.email ? (
             <div className="flex items-center gap-3">
               {session.user.image ? (
                 <img
