@@ -358,9 +358,6 @@ export default function ProductClient({ productId }: ProductClientProps) {
         
         {/* Top Header Tagline */}
         <div className="text-center py-1">
-          <p className="text-[10px] tracking-[0.3em] font-semibold text-gray-400 uppercase">
-            PURE • NATURAL • PREMIUM
-          </p>
         </div>
 
         {/* Main Product Hero Grid - Frameless No-Card Design */}

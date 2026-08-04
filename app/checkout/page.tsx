@@ -562,7 +562,7 @@ export default function CheckoutPage() {
                           ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600 focus:ring-1 focus:ring-red-600"
                           : "border-gray-200 bg-gray-50 text-black focus:border-[#B9853B] focus:bg-white focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
                       }`}
-                      placeholder="Ahmad"
+                      placeholder="Enter Your Name"
                     />
                     {errors.fullName && (
                       <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
@@ -585,7 +585,7 @@ export default function CheckoutPage() {
                           ? "border-red-500 bg-red-50/20 text-red-900 focus:border-red-600 focus:ring-1 focus:ring-red-600"
                           : "border-gray-200 bg-gray-50 text-black focus:border-[#B9853B] focus:bg-white focus:ring-1 focus:ring-[#B9853B] focus:outline-none"
                       }`}
-                      placeholder="ahmad@gmail.com"
+                      placeholder="Enter your Email"
                     />
                     {errors.email && (
                       <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
@@ -646,9 +646,6 @@ export default function CheckoutPage() {
                       <span className="text-xs font-semibold text-gray-800 group-hover:text-black transition-colors">
                         Save my information for future orders
                       </span>
-                      <span className="text-[11px] text-gray-500 font-urdu" dir="rtl">
-                        مستقبل کے آرڈرز کے لیے معلومات محفوظ کریں
-                      </span>
                     </div>
                   </label>
                 </div>
@@ -691,7 +688,7 @@ export default function CheckoutPage() {
                             <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium">
                               <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
                                 <FiInfo className="w-3.5 h-3.5" />
-                                <span>Instruction / ضروری ہدایت</span>
+                                <span>Instruction </span>
                               </div>
                               <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
                                 You can pay in cash to our courier when you
@@ -700,16 +697,7 @@ export default function CheckoutPage() {
                                   (First Receive Parcel, Then Pay)
                                 </span>
                               </span>
-                              <span
-                                className="font-urdu text-sm sm:text-base text-gray-900 leading-relaxed border-t border-gray-200 pt-2 mt-1"
-                                dir="rtl"
-                              >
-                                پارسل وصول کرتے وقت آپ ہمارے کوریئر کو نقد رقم
-                                (Cash) ادا کر سکتے ہیں۔{" "}
-                                <span className="font-bold bg-amber-100/60 px-1 py-0.5 rounded">
-                                  (سامان ملنے کے بعد پیسے دیں)
-                                </span>
-                              </span>
+                              
                             </div>
                           </div>
                         )}
@@ -748,7 +736,7 @@ export default function CheckoutPage() {
                             <div className="flex flex-col gap-2 text-sm text-gray-600 font-medium mb-6">
                               <div className="flex items-center gap-1.5 text-[#B9853B] font-bold text-[11px] uppercase tracking-widest mb-1">
                                 <FiInfo className="w-3.5 h-3.5" />
-                                <span>Important / انتہائی اہم</span>
+                                <span>Important</span>
                               </div>
                               <span className="text-gray-800 text-xs sm:text-sm leading-relaxed">
                                 Please transfer the total amount in advance to
@@ -758,15 +746,7 @@ export default function CheckoutPage() {
                                   (Pay First, Then Receive Parcel)
                                 </span>
                               </span>
-                              <span
-                                className="font-urdu text-sm sm:text-base text-gray-900 leading-relaxed border-t border-gray-200 pt-2 mt-1"
-                                dir="rtl"
-                              >
-                                براہ کرم اپنا آرڈر کنفرم کرنے کے لیے کل رقم پہلے
-                                ٹرانسفر کریں۔ ادائیگی کے بعد اسکرین شاٹ اور
-                                ٹرانزیکشن آئی ڈی نیچے درج کریں۔{" "}
-                                
-                              </span>
+                            
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">

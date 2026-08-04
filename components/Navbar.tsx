@@ -285,7 +285,7 @@ export default function Navbar() {
 
       {/* Slide-in Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out rounded-tr-3xl overflow-hidden w-[80vw] max-w-sm bg-gray-100 backdrop-blur-xl z-999999 flex flex-col md:hidden font-[inherit] ${
+        className={`fixed top-0 left-0 h-full transition-transform duration-300 ease-in-out rounded-tr-3xl overflow-hidden w-[80vw] max-w-sm bg-white backdrop-blur-xl z-999999 flex flex-col md:hidden font-[inherit] ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -346,7 +346,7 @@ export default function Navbar() {
                     <Link
                       key={cat._id}
                       href={`/products?category=${cat._id}`}
-                      className="flex items-center gap-2 rounded-2xl px-3 py-3 text-xs text-gray-800 hover:bg-gray-50"
+                      className="flex hover:bg-[#F8F1EA] items-center gap-2 rounded-2xl px-3 py-3 text-xs text-gray-800"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       < FaRegArrowAltCircleRight/> {cat.name}
