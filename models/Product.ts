@@ -7,6 +7,12 @@ export interface IProductSize {
   originalPrice?: number;
 }
 
+export interface IProductIncludedItem {
+  name: string;
+  quantity: number;
+  price?: number;
+}
+
 export interface IProduct extends Document {
   name: string;
   slug: string;
@@ -35,7 +41,7 @@ export interface IProduct extends Document {
   precautions?: string;
   ourQuality?: string;
   badge?: string;
-  whichIncluded?: string[];
+  whichIncluded?: IProductIncludedItem[];
   inStock?: boolean;
   stock?: number;
   weight?: string;

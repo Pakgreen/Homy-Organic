@@ -60,6 +60,8 @@ export default function AdminProductsPage() {
     isFeatured: boolean;
     isBestSeller: boolean;
     isDisabled: boolean;
+    isValuePack: boolean;
+    whichIncluded: Array<{ name: string; quantity: number; price: number | "" }>;
     keyBenefits: string;
     naturalIngredients: string;
     howToUse: string;
@@ -83,6 +85,8 @@ export default function AdminProductsPage() {
     isFeatured: false,
     isBestSeller: false,
     isDisabled: false,
+    isValuePack: false,
+    whichIncluded: [{ name: "", quantity: 1, price: "" }],
     keyBenefits: "",
     naturalIngredients: "",
     howToUse: "",
@@ -208,7 +212,14 @@ export default function AdminProductsPage() {
       weight: formData.weight.trim(),
       inStock: formData.inStock,
       stock: formData.stock !== "" ? Number(formData.stock) : 100,
-      isValuePack: false,
+      isValuePack: formData.isValuePack,
+      whichIncluded: (formData.whichIncluded || [])
+        .filter((item) => typeof item.name === "string" && item.name.trim().length > 0)
+        .map((item) => ({
+          name: item.name.trim(),
+          quantity: Number(item.quantity) > 0 ? Number(item.quantity) : 1,
+          price: item.price !== "" ? Number(item.price) : undefined,
+        })),
     };
 
     try {
@@ -320,6 +331,15 @@ export default function AdminProductsPage() {
       isFeatured: product.isFeatured || false,
       isBestSeller: product.isBestSeller || false,
       isDisabled: product.isDisabled || false,
+      isValuePack: !!product.isValuePack,
+      whichIncluded:
+        Array.isArray(product.whichIncluded) && product.whichIncluded.length > 0
+          ? product.whichIncluded.map((item: any) => ({
+              name: item?.name || "",
+              quantity: typeof item?.quantity === "number" ? item.quantity : 1,
+              price: typeof item?.price === "number" ? item.price : "",
+            }))
+          : [{ name: "", quantity: 1, price: "" }],
       keyBenefits: Array.isArray(product.keyBenefits)
         ? product.keyBenefits.join("\n")
         : product.keyBenefits || "",

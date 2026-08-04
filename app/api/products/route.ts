@@ -151,6 +151,9 @@ export async function GET(req: NextRequest) {
 
 // POST - Create new product (Admin only)
 export async function POST(req: NextRequest) {
+  let data: any = {};
+  let normalizedImages: string[] = [];
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -170,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const data = await req.json();
+    data = await req.json();
 
     // Accept alias fields from clients: newPrice -> price, oldPrice -> originalPrice
     if (typeof data.newPrice === "number" && data.newPrice > 0) {
@@ -183,7 +186,7 @@ export async function POST(req: NextRequest) {
     ) {
       data.originalPrice = data.oldPrice;
     }
-    const normalizedImages = Array.isArray(data.images)
+    normalizedImages = Array.isArray(data.images)
       ? data.images.filter(
           (img: unknown): img is string =>
             typeof img === "string" && img.trim().length > 0,
@@ -247,7 +250,7 @@ export async function POST(req: NextRequest) {
 
     if (error?.code === 11000) {
       try {
-        const fallbackSlug = `${generateSlug(data.name || "product")}-${Date.now().toString(36)}`;
+        const fallbackSlug = `${generateSlug(String(data?.name ?? "product"))}-${Date.now().toString(36)}`;
         const product = await Product.create({
           ...data,
           slug: fallbackSlug,
