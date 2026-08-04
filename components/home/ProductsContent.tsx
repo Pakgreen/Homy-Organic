@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import axios from "axios";
@@ -49,52 +49,35 @@ export default function ProductsContent() {
     }
   };
 
-  // Chunk products into rows of 5 items each (full 5-column grid per row on desktop)
-  const productRows = useMemo(() => {
-    if (!products || products.length === 0) return [];
-    const rows: any[][] = [];
-    const chunkSize = 5; // 5 items per row
-    for (let i = 0; i < products.length; i += chunkSize) {
-      rows.push(products.slice(i, i + chunkSize));
-    }
-    return rows;
-  }, [products]);
-
   return (
-    <div className="w-full">
-      {isLoading ? (
-        <ProductSkeleton count={10} />
-      ) : productRows.length > 0 ? (
-        productRows.map((rowItems, rowIndex) => (
-          <div key={rowIndex}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-              {rowIndex === 0 && (
-                <div className="flex items-center justify-between mb-4">
-                   <h2 className="text-4xl text-center md:px-2  font-light tracking-tight text-white md:text-6xl">
+    <section className="w-full py-6 sm:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="flex flex-col items-center justify-center mb-8">
+          <h2 className="text-4xl text-center md:px-2 font-light tracking-tight text-white md:text-6xl">
             Our{" "}
             <span className="font-serif italic text-[#B9853B]">
-             Premium Collection
+              Premium Collection
             </span>
           </h2>
-                </div>
-              )}
-
-              {/* 5-Column Grid Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-                {rowItems.map((product: any) => (
-                  <div key={product._id} className="w-full">
-                    <ProductCard product={product} priority={rowIndex === 0} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No products found</p>
         </div>
-      )}
-    </div>
+
+        {isLoading ? (
+          <ProductSkeleton count={10} />
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+            {products.map((product: any, idx: number) => (
+              <div key={product._id} className="w-full">
+                <ProductCard product={product} priority={idx < 5} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg">No products found</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

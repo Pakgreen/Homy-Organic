@@ -104,9 +104,12 @@ export const metadata: Metadata = {
     images: [logoUrl],
   },
   icons: {
-    icon: faviconPath,
-    shortcut: faviconPath,
-    apple: faviconPath,
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/homyorganic.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/homyorganic.png",
   },
 };
 
@@ -116,23 +119,34 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   let themeData = null;
+  let siteSettings: any = null;
   try {
-    const fetchTheme = async () => {
+    const fetchLayoutData = async () => {
       await connectDB();
-      return await Setting.findOne({ key: "theme_colors" }).lean();
+      const [themeDoc, siteDoc] = await Promise.all([
+        Setting.findOne({ key: "theme_colors" }).lean(),
+        Setting.findOne({ key: "site" }).lean(),
+      ]);
+      return {
+        theme: themeDoc?.value || null,
+        site: siteDoc?.value || null,
+      };
     };
 
     const timeoutPromise = new Promise((resolve) =>
-      setTimeout(() => resolve(null), 300)
+      setTimeout(() => resolve(null), 400)
     );
 
-    const settings: any = await Promise.race([fetchTheme(), timeoutPromise]);
-    if (settings && settings.value) {
-      themeData = settings.value;
+    const layoutData: any = await Promise.race([fetchLayoutData(), timeoutPromise]);
+    if (layoutData) {
+      themeData = layoutData.theme;
+      siteSettings = layoutData.site;
     }
   } catch (error) {
-    console.error("Failed to load layout theme", error);
+    console.error("Failed to load layout theme & site settings", error);
   }
+
+  const dynamicFavicon = siteSettings?.favicon || siteSettings?.logo || "/homyorganic.png";
 
   const primaryColor = themeData?.primaryColor || "#000000";
   const headingColor = themeData?.headingColor || "#000000";
@@ -173,6 +187,10 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href={dynamicFavicon} sizes="any" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="shortcut icon" href={dynamicFavicon} />
+        <link rel="apple-touch-icon" href={dynamicFavicon} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Syne:ital,wght@1,600&display=swap" rel="stylesheet" />

@@ -11,6 +11,7 @@ export default function SiteSettingsPage() {
   const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState<{
     logo: string;
+    favicon: string;
     aboutUsText: string;
     contactUsText: string;
     contactEmail: string;
@@ -22,6 +23,7 @@ export default function SiteSettingsPage() {
     deliveryChargeAmount: number | "";
   }>({
     logo: "",
+    favicon: "",
     aboutUsText: "",
     contactUsText: "",
     contactEmail: "",
@@ -39,6 +41,7 @@ export default function SiteSettingsPage() {
         const { data } = await axios.get("/api/settings/site");
         setFormData({
           logo: data.logo || "/homyorganic.png",
+          favicon: data.favicon || "",
           aboutUsText: data.aboutUsText || "",
           contactUsText: data.contactUsText || "",
           contactEmail: data.contactEmail || "",
@@ -141,20 +144,38 @@ export default function SiteSettingsPage() {
             <h3 className="text-base font-bold text-gray-900">Brand Identity</h3>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
-              Site Logo
-            </label>
-            <div className="w-full max-w-md sm:max-w-lg">
-              <LocalImageUpload
-                value={formData.logo}
-                onChange={handleImageUpload}
-                onRemove={handleImageRemove}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                Site Logo
+              </label>
+              <div className="w-full">
+                <LocalImageUpload
+                  value={formData.logo}
+                  onChange={handleImageUpload}
+                  onRemove={handleImageRemove}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Appears in navbar and footer (PNG/SVG).
+              </p>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
-              Recommended: PNG or SVG with transparent background. Appears in navbar and footer.
-            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                Site Favicon (Browser Tab Icon)
+              </label>
+              <div className="w-full">
+                <LocalImageUpload
+                  value={formData.favicon}
+                  onChange={(url) => setFormData((prev) => ({ ...prev, favicon: url }))}
+                  onRemove={() => setFormData((prev) => ({ ...prev, favicon: "" }))}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Appears in browser tabs & bookmarks (Square PNG/ICO).
+              </p>
+            </div>
           </div>
         </div>
 
