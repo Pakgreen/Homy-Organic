@@ -290,6 +290,14 @@ export default function AdminValuePacksPage() {
           continue;
         }
 
+        if (file.size > 3 * 1024 * 1024) {
+          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          const msg = `⚠️ Image "${file.name}" (${fileSizeMB}MB) exceeds the 3MB limit! Please compress or reduce image size.`;
+          toast.error(msg, { duration: 6000 });
+          alert(msg);
+          continue;
+        }
+
         const payload = new FormData();
         payload.append("file", file);
 

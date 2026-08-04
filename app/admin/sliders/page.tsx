@@ -11,6 +11,7 @@ interface Slider {
   _id: string;
   title: string;
   image: string;
+  desktopImage?: string;
   position: string;
   buttonText: string;
   buttonLink: string;
@@ -26,6 +27,7 @@ export default function AdminSlidersPage() {
   const [formData, setFormData] = useState({
     title: "",
     image: "",
+    desktopImage: "",
     position: "top",
     buttonText: "",
     buttonLink: "",
@@ -52,22 +54,36 @@ export default function AdminSlidersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.image) {
+      toast.error("Please upload a Mobile Banner Image!");
+      return;
+    }
     setIsLoading(true);
     try {
+      const payload = {
+        title: formData.title,
+        image: formData.image,
+        desktopImage: formData.desktopImage || "",
+        position: formData.position || "top",
+        buttonText: formData.buttonText || "",
+        buttonLink: formData.buttonLink || "",
+        isActive: formData.isActive,
+      };
+
       if (editingSlider) {
-        await axios.put(`/api/sliders/${editingSlider._id}`, {
-          ...formData,
-        });
+        await axios.put(`/api/sliders/${editingSlider._id}`, payload);
+        toast.success("Slider banner updated successfully!");
       } else {
-        await axios.post("/api/sliders", {
-          ...formData,
-        });
+        await axios.post("/api/sliders", payload);
+        toast.success("Slider banner created successfully!");
       }
       setShowModal(false);
       setEditingSlider(null);
       resetForm();
       await fetchSliders();
     } catch (error: any) {
+      console.error("Slider save error:", error);
+      toast.error(error.response?.data?.error || "Failed to save slider banner");
     } finally {
       setIsLoading(false);
     }
@@ -141,12 +157,13 @@ export default function AdminSlidersPage() {
   const handleEdit = (slider: Slider) => {
     setEditingSlider(slider);
     setFormData({
-      title: slider.title,
-      image: slider.image,
+      title: slider.title || "",
+      image: slider.image || "",
+      desktopImage: slider.desktopImage || "",
       position: slider.position || "top",
-      buttonText: "",
-      buttonLink: "",
-      isActive: slider.isActive,
+      buttonText: slider.buttonText || "",
+      buttonLink: slider.buttonLink || "",
+      isActive: slider.isActive ?? true,
     });
     setShowModal(true);
   };
@@ -155,6 +172,7 @@ export default function AdminSlidersPage() {
     setFormData({
       title: "",
       image: "",
+      desktopImage: "",
       position: "top",
       buttonText: "",
       buttonLink: "",
@@ -229,6 +247,20 @@ export default function AdminSlidersPage() {
                 <span className="text-[10px] font-bold text-gray-900">
                   Order #{idx + 1}
                 </span>
+              </div>
+              <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1">
+                <span className="text-[9px] font-bold px-2 py-0.5 bg-white  shadow-2xs">
+                   Mobile
+                </span>
+                {slider.desktopImage ? (
+                  <span className="text-[9px] font-bold px-2 py-0.5 bg-white   shadow-2xs">
+                     Web Banner
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-medium px-2 py-0.5 bg-white ">
+                     Auto Mobile
+                  </span>
+                )}
               </div>
               {!slider.isActive && (
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center">
@@ -333,13 +365,13 @@ export default function AdminSlidersPage() {
                   />
                 </div>
 
-                {/* Image Upload */}
+                {/* Mobile Image Upload */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
-                    Slider Image <span className="text-red-400">*</span>
+                    Mobile Banner Image <span className="text-red-400">*</span>
                   </label>
                   <p className="text-[11px] text-gray-400 mb-2">
-                    Recommended ratio: 1920 × 800 px (3:1)
+                    Used for mobile screens (e.g. 800 × 800 px or square/vertical)
                   </p>
                   <div className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 flex justify-center">
                     <div className="w-full max-w-sm aspect-[3/1]">
@@ -349,6 +381,27 @@ export default function AdminSlidersPage() {
                           setFormData({ ...formData, image: url })
                         }
                         onRemove={() => setFormData({ ...formData, image: "" })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop & Web Image Upload */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+                    Desktop & Web Banner Image <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <p className="text-[11px] text-gray-400 mb-2">
+                    Used for desktop/laptop screens (Recommended: 1920 × 480 px wide landscape)
+                  </p>
+                  <div className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 flex justify-center">
+                    <div className="w-full max-w-sm aspect-[3/1]">
+                      <LocalImageUpload
+                        value={formData.desktopImage}
+                        onChange={(url) =>
+                          setFormData({ ...formData, desktopImage: url })
+                        }
+                        onRemove={() => setFormData({ ...formData, desktopImage: "" })}
                       />
                     </div>
                   </div>

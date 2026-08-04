@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface ISlider extends Document {
   title: string;
   image: string;
+  desktopImage?: string;
   buttonText?: string;
   buttonLink?: string;
   position: string;
@@ -22,6 +23,10 @@ const SliderSchema: Schema = new Schema(
     image: {
       type: String,
       required: [true, "Slider image is required"],
+    },
+    desktopImage: {
+      type: String,
+      default: "",
     },
     buttonText: {
       type: String,
@@ -46,8 +51,13 @@ const SliderSchema: Schema = new Schema(
   },
   {
     timestamps: true,
+    strict: false,
   },
 );
+
+if (mongoose.models.Slider) {
+  delete (mongoose.models as any).Slider;
+}
 
 const Slider: Model<ISlider> =
   mongoose.models.Slider || mongoose.model<ISlider>("Slider", SliderSchema);

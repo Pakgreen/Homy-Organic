@@ -59,6 +59,7 @@ export async function PUT(
     const updateData: Record<string, any> = {};
     if (typeof data.title === "string") updateData.title = data.title;
     if (typeof data.image === "string") updateData.image = data.image;
+    if (typeof data.desktopImage === "string") updateData.desktopImage = data.desktopImage;
     if (typeof data.buttonText === "string")
       updateData.buttonText = data.buttonText;
     if (typeof data.buttonLink === "string")

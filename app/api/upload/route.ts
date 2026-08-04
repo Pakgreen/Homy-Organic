@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (max 3MB)
+    if (file.size > 3 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "File size should be less than 10MB" },
+        { error: "Image size exceeds 3MB limit! Please compress or reduce the image size before uploading." },
         { status: 400 },
       );
     }

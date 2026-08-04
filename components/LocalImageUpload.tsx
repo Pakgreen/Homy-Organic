@@ -11,6 +11,8 @@ import {
 } from "react-icons/fi";
 import axios from "axios";
 
+import { toast } from "sonner";
+
 interface LocalImageUploadProps {
   value?: string;
   onChange?: (value: string) => void;
@@ -33,19 +35,33 @@ export default function LocalImageUpload(props: LocalImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [sizeErrorModal, setSizeErrorModal] = useState<{
+    show: boolean;
+    fileName: string;
+    fileSizeMB: string;
+  }>({
+    show: false,
+    fileName: "",
+    fileSizeMB: "",
+  });
 
   const handleUpload = async (file: File) => {
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      toast.error("Please select a valid image file");
       return;
     }
 
-    // Validate file size (max 4MB)
-    if (file.size > 4 * 1024 * 1024) {
-      alert(
-        "Image size is too large. Please upload an image with a reduced size (Max 4MB)",
-      );
+    // Validate file size (max 3MB)
+    const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+    if (file.size > MAX_FILE_SIZE) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      setSizeErrorModal({
+        show: true,
+        fileName: file.name,
+        fileSizeMB,
+      });
+      toast.error(`Image size (${fileSizeMB}MB) exceeds 3MB limit!`, { duration: 5000 });
       return;
     }
 
@@ -216,6 +232,44 @@ export default function LocalImageUpload(props: LocalImageUploadProps) {
           </div>
         )}
       </div>
+
+      {/* Custom Size Limit Exceeded Modal Popup */}
+      {sizeErrorModal.show && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}
+          onClick={() => setSizeErrorModal({ show: false, fileName: "", fileSizeMB: "" })}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full text-center space-y-4 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto border border-red-100 shadow-2xs">
+              <FiAlertTriangle className="w-8 h-8 text-red-600" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
+                File Size Limit Exceeded!
+              </h3>
+              <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                Image size <span className="font-bold text-red-600">({sizeErrorModal.fileSizeMB} MB)</span> exceeds the <span className="font-bold text-gray-900">3MB</span> maximum limit.
+              </p>
+              <p className="text-[11px] text-gray-400 font-normal">
+                Please compress or decrease the image resolution before uploading.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSizeErrorModal({ show: false, fileName: "", fileSizeMB: "" })}
+              className="w-full bg-black hover:bg-neutral-800 text-white font-bold py-3.5 rounded-2xl text-xs tracking-wider transition-all cursor-pointer shadow-md active:scale-95"
+            >
+              Understood
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

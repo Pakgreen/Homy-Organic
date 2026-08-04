@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
 // @ts-ignore
 import "swiper/css";
 // @ts-ignore
@@ -13,11 +13,13 @@ import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
 import { isCloudinaryUrl, getOptimizedImageUrl } from "@/lib/image";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 interface SliderItem {
   _id: string;
   title: string;
   image: string;
+  desktopImage?: string;
   buttonText: string;
   buttonLink: string;
 }
@@ -31,18 +33,12 @@ export default function HeroSlider({
 }: HeroSliderProps) {
   const [sliders, setSliders] = useState<SliderItem[]>(initialSliders);
   const [isLoading, setIsLoading] = useState(initialSliders.length === 0);
-  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Only fetch client-side if no initial sliders were provided by SSR
     if (initialSliders.length === 0) {
       fetchSliders(true);
     }
   }, [initialSliders.length]);
-
-  const handleImageLoad = (id: string) => {
-    setLoadedImages((prev) => ({ ...prev, [id]: true }));
-  };
 
   const fetchSliders = async (showLoader = true) => {
     try {
@@ -62,8 +58,8 @@ export default function HeroSlider({
 
   if (isLoading) {
     return (
-      <section className="relative overflow-hidden w-full bg-gray-100/70">
-        <div className="w-full h-44 sm:h-72 md:h-96 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+      <section className="relative overflow-hidden w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-5">
+        <div className="w-full h-44 sm:h-72 md:h-[350px] lg:h-[400px] rounded-none md:rounded-3xl bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
           <div className="w-8 h-8 border-3 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
         </div>
       </section>
@@ -75,10 +71,32 @@ export default function HeroSlider({
   }
 
   return (
-    <section className="relative overflow-hidden w-full">
-      <div>
+    <section className="relative w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-5">
+      <div className="relative group rounded-none md:rounded-3xl overflow-hidden md:shadow-md border-0 md:border md:border-gray-100/80 bg-gray-50">
+        
+        {/* Desktop & Tablet Left/Right Navigation Buttons */}
+        {sliders.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="hero-prev-btn hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/85 hover:bg-white text-gray-900 border border-gray-200/80 shadow-md items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+              aria-label="Previous Banner"
+            >
+              <FiChevronLeft className="w-6 h-6 text-gray-800 -ml-0.5" />
+            </button>
+
+            <button
+              type="button"
+              className="hero-next-btn hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/85 hover:bg-white text-gray-900 border border-gray-200/80 shadow-md items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+              aria-label="Next Banner"
+            >
+              <FiChevronRight className="w-6 h-6 text-gray-800 -mr-0.5" />
+            </button>
+          </>
+        )}
+
         <Swiper
-          modules={[Autoplay, Pagination]}
+          modules={[Autoplay, Pagination, Navigation]}
           autoplay={{
             delay: 5000,
             disableOnInteraction: false,
@@ -87,34 +105,54 @@ export default function HeroSlider({
             clickable: true,
             dynamicBullets: true,
           }}
-          navigation={false}
+          navigation={{
+            prevEl: ".hero-prev-btn",
+            nextEl: ".hero-next-btn",
+          }}
           loop={sliders.length > 1}
           key={sliders.map((s) => s._id).join("-")}
-          className="w-full h-auto bg-gray-100"
+          className="w-full h-auto rounded-none md:rounded-3xl overflow-hidden"
           slidesPerView={1}
           spaceBetween={0}
-          autoHeight={true}
         >
-          {sliders.map((slider, idx) => (
-            <SwiperSlide key={slider._id}>
-              <div className="relative w-full">
-                <img
-                  src={getOptimizedImageUrl(slider.image, 1200, "auto")}
-                  alt={slider.title || "Banner"}
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  // @ts-ignore
-                  fetchPriority={idx === 0 ? "high" : "auto"}
-                  decoding="async"
-                  className="w-full h-auto block object-contain"
-                />
-                <Link
-                  href={slider.buttonLink || "#"}
-                  aria-label={slider.title || "Slide"}
-                  className="absolute inset-0"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
+          {sliders.map((slider, idx) => {
+            const mobileImg = getOptimizedImageUrl(slider.image, 800, "auto");
+            const desktopImg = getOptimizedImageUrl(slider.desktopImage || slider.image, 1400, "auto");
+
+            return (
+              <SwiperSlide key={slider._id}>
+                <div className="relative w-full overflow-hidden rounded-none md:rounded-3xl">
+                  {/* Mobile Image View (Edge to Edge, No Rounded Corners) */}
+                  <img
+                    src={mobileImg}
+                    alt={slider.title || "Mobile Banner"}
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    // @ts-ignore
+                    fetchPriority={idx === 0 ? "high" : "auto"}
+                    decoding="async"
+                    className="w-full h-auto block object-contain md:hidden rounded-none"
+                  />
+
+                  {/* Desktop & Tablet Banner View (Rounded 3xl & Reduced Height) */}
+                  <img
+                    src={desktopImg}
+                    alt={slider.title || "Desktop Banner"}
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    // @ts-ignore
+                    fetchPriority={idx === 0 ? "high" : "auto"}
+                    decoding="async"
+                    className="hidden md:block w-full h-[320px] lg:h-[380px] xl:h-[420px] object-cover rounded-3xl"
+                  />
+
+                  <Link
+                    href={slider.buttonLink || "#"}
+                    aria-label={slider.title || "Slide"}
+                    className="absolute inset-0 z-10"
+                  />
+                </div>
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
       </div>
 

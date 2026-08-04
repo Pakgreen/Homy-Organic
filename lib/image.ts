@@ -4,21 +4,23 @@ export function isCloudinaryUrl(src?: string | null) {
 
 export function getOptimizedImageUrl(
   src?: string | null,
-  width = 400,
+  width = 380,
   quality = "auto:eco"
 ): string {
-  if (!src || typeof src !== "string") return "/homyorganic.png";
-  
-  // Handle Cloudinary URLs for auto WebP/AVIF format and auto quality + scaling
+  if (!src || typeof src !== "string" || !src.trim()) return "/homyorganic.png";
+
   if (src.includes("res.cloudinary.com") && src.includes("/upload/")) {
-    if (src.includes("/f_auto,q_")) {
-      return src;
+    const uploadIndex = src.indexOf("/upload/");
+    const prefix = src.substring(0, uploadIndex + 8);
+    let rest = src.substring(uploadIndex + 8);
+
+    // Clean up existing transformation parameters to apply the requested width and quality
+    while (/^(f_|q_|w_|c_|h_|dpr_)[^/]+\//.test(rest)) {
+      rest = rest.replace(/^[^/]+\//, "");
     }
-    return src.replace(
-      "/upload/",
-      `/upload/f_auto,q_${quality},w_${width},c_limit/`
-    );
+
+    return `${prefix}f_auto,q_${quality},w_${width},c_limit/${rest}`;
   }
-  
+
   return src;
 }

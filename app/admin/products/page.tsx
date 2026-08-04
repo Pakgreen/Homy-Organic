@@ -60,8 +60,6 @@ export default function AdminProductsPage() {
     isFeatured: boolean;
     isBestSeller: boolean;
     isDisabled: boolean;
-    isValuePack: boolean;
-    whichIncluded: Array<{ name: string; quantity: number | ""; price: number | "" }>;
     keyBenefits: string;
     naturalIngredients: string;
     howToUse: string;
@@ -85,8 +83,6 @@ export default function AdminProductsPage() {
     isFeatured: false,
     isBestSeller: false,
     isDisabled: false,
-    isValuePack: false,
-    whichIncluded: [{ name: "", quantity: 1, price: "" }],
     keyBenefits: "",
     naturalIngredients: "",
     howToUse: "",
@@ -324,19 +320,6 @@ export default function AdminProductsPage() {
       isFeatured: product.isFeatured || false,
       isBestSeller: product.isBestSeller || false,
       isDisabled: product.isDisabled || false,
-      isValuePack: product.isValuePack || false,
-      whichIncluded:
-        Array.isArray(product.whichIncluded) && product.whichIncluded.length > 0
-          ? product.whichIncluded.map((item: any) =>
-              typeof item === "object" && item !== null
-                ? {
-                    name: item.name || "",
-                    quantity: typeof item.quantity === "number" ? item.quantity : 1,
-                    price: typeof item.price === "number" ? item.price : "",
-                  }
-                : { name: String(item), quantity: 1, price: "" }
-            )
-          : [{ name: "", quantity: 1, price: "" }],
       keyBenefits: Array.isArray(product.keyBenefits)
         ? product.keyBenefits.join("\n")
         : product.keyBenefits || "",
@@ -392,6 +375,14 @@ export default function AdminProductsPage() {
       for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) {
           toast.error(`${file.name} is not an image file`);
+          continue;
+        }
+
+        if (file.size > 3 * 1024 * 1024) {
+          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          const msg = `⚠️ Image "${file.name}" (${fileSizeMB}MB) exceeds the 3MB limit! Please compress or reduce image size.`;
+          toast.error(msg, { duration: 6000 });
+          alert(msg);
           continue;
         }
 
@@ -1129,207 +1120,81 @@ export default function AdminProductsPage() {
                 )}
               </div>
 
-              {/* Value Pack Included Items Form OR Standard Organic Highlights */}
-              {formData.isValuePack ? (
-                <div className="border-t border-amber-200/60 pt-6 space-y-5 bg-amber-50/40 p-5 sm:p-6 rounded-2xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-[#B9853A]">
-                      <span className="text-lg">🎁</span>
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900">
-                          Items Included in Value Pack *
-                        </h4>
-                        <p className="text-[11px] text-gray-500 font-medium">
-                          Add item name, quantity (number 123), and item price/value.
-                        </p>
-                      </div>
-                    </div>
+              {/* Standard Organic Highlights */}
+              <div className="border-t border-gray-100 pt-6 space-y-6">
+                <p className="text-xs font-bold text-[#B9853A] uppercase tracking-wider">
+                  Organic Product Highlights & Usage
+                </p>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          whichIncluded: [
-                            ...prev.whichIncluded,
-                            { name: "", quantity: 1, price: "" },
-                          ],
-                        }))
-                      }
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#B9853A] hover:bg-[#9a6d2f] text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                    >
-                      <FiPlus size={14} /> Add Item
-                    </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Key Benefits <span className="text-gray-400 font-normal">(Enter each benefit on a new line)</span>
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={formData.keyBenefits}
+                      onChange={(e) => setFormData({ ...formData, keyBenefits: e.target.value })}
+                      placeholder="e.g.&#10;100% Pure & Unrefined&#10;Boosts Natural Immunity & Energy&#10;Rich in Essential Vitamins & Antioxidants&#10;No Added Sugar or Preservatives"
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
                   </div>
 
-                  {/* Dynamic List of Included Item Form Rows */}
-                  <div className="space-y-3 pt-2">
-                    {formData.whichIncluded.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white p-3 rounded-xl border border-amber-200/80 shadow-2xs"
-                      >
-                        {/* Row Number Badge */}
-                        <span className="w-6 h-6 rounded-full bg-amber-100 text-[#B9853A] font-bold text-xs flex items-center justify-center shrink-0">
-                          {index + 1}
-                        </span>
-
-                        {/* Item Name */}
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={item.name}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setFormData((prev) => ({
-                                ...prev,
-                                whichIncluded: prev.whichIncluded.map((it, i) =>
-                                  i === index ? { ...it, name: val } : it
-                                ),
-                              }));
-                            }}
-                            placeholder="Item Name (e.g. Organic Hair Growth Oil 100ml)"
-                            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:border-[#B9853A] focus:outline-none font-medium text-gray-900 placeholder:text-gray-300"
-                          />
-                        </div>
-
-                        {/* Quantity Number 123 */}
-                        <div className="w-full sm:w-28 shrink-0">
-                          <input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const val = e.target.value === "" ? "" : Number(e.target.value);
-                              setFormData((prev) => ({
-                                ...prev,
-                                whichIncluded: prev.whichIncluded.map((it, i) =>
-                                  i === index ? { ...it, quantity: val } : it
-                                ),
-                              }));
-                            }}
-                            placeholder="Qty (123)"
-                            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:border-[#B9853A] focus:outline-none font-bold text-gray-900 placeholder:text-gray-300"
-                          />
-                        </div>
-
-                        {/* Price / Value */}
-                        <div className="w-full sm:w-32 shrink-0">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.price}
-                            onChange={(e) => {
-                              const val = e.target.value === "" ? "" : Number(e.target.value);
-                              setFormData((prev) => ({
-                                ...prev,
-                                whichIncluded: prev.whichIncluded.map((it, i) =>
-                                  i === index ? { ...it, price: val } : it
-                                ),
-                              }));
-                            }}
-                            placeholder="Price (Rs)"
-                            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:border-[#B9853A] focus:outline-none font-semibold text-gray-900 placeholder:text-gray-300"
-                          />
-                        </div>
-
-                        {/* Delete Row Button */}
-                        {formData.whichIncluded.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                whichIncluded: prev.whichIncluded.filter((_, i) => i !== index),
-                              }))
-                            }
-                            className="p-2 text-gray-400 hover:text-red-600 transition-colors cursor-pointer self-end sm:self-center"
-                            title="Remove Item"
-                          >
-                            <FiTrash2 size={15} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Selected Natural Ingredients <span className="text-gray-400 font-normal">(Enter each ingredient on a new line)</span>
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={formData.naturalIngredients}
+                      onChange={(e) => setFormData({ ...formData, naturalIngredients: e.target.value })}
+                      placeholder="e.g.&#10;Raw Wildflower Honey Extract&#10;Organic Cold-Pressed Seed Oil&#10;Natural Herbal Essences&#10;Vitamin E & Minerals"
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
                   </div>
                 </div>
-              ) : (
-                <div className="border-t border-gray-100 pt-6 space-y-6">
-                  <p className="text-xs font-bold text-[#B9853A] uppercase tracking-wider">
-                    Organic Product Highlights & Usage
-                  </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                        Key Benefits <span className="text-gray-400 font-normal">(Enter each benefit on a new line)</span>
-                      </label>
-                      <textarea
-                        rows={5}
-                        value={formData.keyBenefits}
-                        onChange={(e) => setFormData({ ...formData, keyBenefits: e.target.value })}
-                        placeholder="e.g.&#10;100% Pure & Unrefined&#10;Boosts Natural Immunity & Energy&#10;Rich in Essential Vitamins & Antioxidants&#10;No Added Sugar or Preservatives"
-                        className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                        Selected Natural Ingredients <span className="text-gray-400 font-normal">(Enter each ingredient on a new line)</span>
-                      </label>
-                      <textarea
-                        rows={5}
-                        value={formData.naturalIngredients}
-                        onChange={(e) => setFormData({ ...formData, naturalIngredients: e.target.value })}
-                        placeholder="e.g.&#10;Raw Wildflower Honey Extract&#10;Organic Cold-Pressed Seed Oil&#10;Natural Herbal Essences&#10;Vitamin E & Minerals"
-                        className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
-                      />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      How to Use
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.howToUse}
+                      onChange={(e) => setFormData({ ...formData, howToUse: e.target.value })}
+                      placeholder="e.g. Take 1 tablespoon daily with warm water..."
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                        How to Use
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formData.howToUse}
-                        onChange={(e) => setFormData({ ...formData, howToUse: e.target.value })}
-                        placeholder="e.g. Take 1 tablespoon daily with warm water..."
-                        className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Precautions
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.precautions}
+                      onChange={(e) => setFormData({ ...formData, precautions: e.target.value })}
+                      placeholder="e.g. Keep out of reach of children under 1 year. Store in a cool dry place."
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
+                  </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                        Precautions
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formData.precautions}
-                        onChange={(e) => setFormData({ ...formData, precautions: e.target.value })}
-                        placeholder="e.g. Keep out of reach of children under 1 year. Store in a cool dry place."
-                        className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                        Our Quality Commitment
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formData.ourQuality}
-                        onChange={(e) => setFormData({ ...formData, ourQuality: e.target.value })}
-                        placeholder="e.g. 100% Lab Tested, No Chemicals, Unrefined Organic Product."
-                        className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Our Quality Commitment
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.ourQuality}
+                      onChange={(e) => setFormData({ ...formData, ourQuality: e.target.value })}
+                      placeholder="e.g. 100% Lab Tested, No Chemicals, Unrefined Organic Product."
+                      className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:border-[#B9853A] focus:bg-white transition-all placeholder:text-gray-300 resize-y"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
 
               <div className="flex flex-col gap-3">
                 <label className="text-sm font-semibold text-gray-700">

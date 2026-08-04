@@ -18,6 +18,7 @@ import { formatPrice } from "@/lib/utils";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import ProductCard from "@/components/ProductCard";
+import { getOptimizedImageUrl } from "@/lib/image";
 
 function ProductSkeleton() {
   return (
@@ -232,12 +233,14 @@ export default function ProductClient({ productId }: ProductClientProps) {
     fetchSuggestions();
   }, [product]);
 
-  const heroImage =
+  const rawHeroImage =
     productImageVariants[selectedImage]?.url ||
     productImageVariants[0]?.url ||
     (typeof product?.image === "string" && product.image.trim().length > 0 ? product.image : null) ||
     (Array.isArray(product?.images) && product.images.find((img: any) => typeof img === "string" && img.trim().length > 0)) ||
     "/logo.png";
+
+  const heroImage = getOptimizedImageUrl(rawHeroImage, 800, "auto");
 
   const currentPrice = selectedSize?.price ?? product?.price ?? 0;
   const currentOriginalPrice = selectedSize?.originalPrice ?? product?.originalPrice;
@@ -442,7 +445,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
                         selectedImage === idx ? "border-black opacity-100" : "border-gray-200 opacity-50 hover:opacity-100"
                       }`}
                     >
-                      <img src={img.url} alt="" className="w-full h-full object-contain p-0.5" />
+                      <img src={getOptimizedImageUrl(img.url, 140, "auto:eco")} alt="" className="w-full h-full object-contain p-0.5" />
                     </button>
                   ))}
                 </div>

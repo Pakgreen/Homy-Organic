@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
     const slider = await Slider.create({
       title: data.title,
       image: data.image,
+      desktopImage: data.desktopImage || "",
       buttonText: data.buttonText,
       buttonLink: data.buttonLink,
       position: data.position || "top",

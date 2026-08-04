@@ -35,8 +35,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const addItem = useCartStore((state) => state.addItem);
   const rawPrimary = product.images?.[0] || "";
   const rawHover = product.images?.[1] || rawPrimary;
-  const primaryImage = getOptimizedImageUrl(rawPrimary, 600);
-  const hoverImage = getOptimizedImageUrl(rawHover, 600);
+  const primaryImage = getOptimizedImageUrl(rawPrimary, 380);
+  const hoverImage = getOptimizedImageUrl(rawHover, 380);
   const hasHoverImage = Boolean(product.images?.[1]);
 
   const currentPrice =
