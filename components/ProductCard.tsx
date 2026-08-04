@@ -23,6 +23,9 @@ interface ProductCardProps {
     category?: any;
     brand?: string;
     badge?: string;
+    inStock?: boolean;
+    stock?: number;
+    weight?: string;
   };
   priority?: boolean;
 }
@@ -68,9 +71,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const cardPrice = firstSize ? firstSize.price : currentPrice;
   const cardOriginalPrice = firstSize && firstSize.originalPrice ? firstSize.originalPrice : previousPrice;
 
+  const isOutOfStock =
+    (product as any).inStock === false ||
+    (typeof (product as any).stock === "number" && (product as any).stock <= 0);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) {
+      toast.error("Sorry, this item is currently out of stock!");
+      return;
+    }
     addItem({
       _id: product._id,
       name: product.name,
@@ -99,12 +110,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </div>
         )}
 
-        {/* Top-Right Discount Pill Badge (-25%) */}
-        {showOldPrice && discountPercent > 0 && (
+        {/* Top-Right Out of Stock / Discount Pill Badge */}
+        {isOutOfStock ? (
+          <div className="absolute top-3 right-3 z-10 bg-red-600 text-white font-extrabold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-full shadow-xs">
+            OUT OF STOCK
+          </div>
+        ) : showOldPrice && discountPercent > 0 ? (
           <div className="absolute top-3 right-3 z-10 bg-[#EA6925] text-white font-bold text-[10px] px-2.5 py-1 rounded-full shadow-2xs">
             -{discountPercent}%
           </div>
-        )}
+        ) : null}
 
         <Link href={`/products/${product.slug || product._id}`} className="absolute inset-0">
           {primaryImage && (
@@ -140,8 +155,13 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
           <button
             onClick={handleAddToCart}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-gray-900 flex items-center justify-center shadow-md sm:shadow-sm hover:bg-black hover:text-white transition-colors cursor-pointer"
-            title="Add to Cart"
+            disabled={isOutOfStock}
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-md sm:shadow-sm transition-colors ${
+              isOutOfStock
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed opacity-60"
+                : "bg-white text-gray-900 hover:bg-black hover:text-white cursor-pointer"
+            }`}
+            title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
             aria-label={`Add ${product.name} to cart`}
           >
             <FiShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
@@ -161,16 +181,23 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* Content Details Below Image */}
       <div className="flex flex-1 flex-col pt-3 pb-1 text-left space-y-1">
         
-        {/* Category Label */}
-        <div className="flex items-center justify-between gap-1">
+        {/* Category & Weight Labels */}
+        <div className="flex items-center justify-between gap-1 flex-wrap">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
             {categoryName}
           </span>
-          {hasSizes && (
-            <span className="text-[9px] font-bold text-[#B9853B] bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 uppercase">
-              {(product as any).sizes.length} Options
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {(product as any).weight && (
+              <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200/80 uppercase">
+                {(product as any).weight}
+              </span>
+            )}
+            {hasSizes && (
+              <span className="text-[9px] font-bold text-[#B9853B] bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 uppercase">
+                {(product as any).sizes.length} Options
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Title */}
@@ -180,23 +207,35 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </h3>
         </Link>
 
-        {/* Rating Stars & Reviews */}
-        <div className="flex items-center gap-1.5 pt-0.5">
-          <div className="flex text-amber-400 text-xs">
-            ★★★★★
+        {/* Rating Stars (Only shown if rating is configured in admin / > 0) */}
+        {typeof product.ratings === "number" && product.ratings > 0 ? (
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="flex text-amber-400 text-xs">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span key={star}>
+                  {star <= Math.round(product.ratings!) ? "★" : "☆"}
+                </span>
+              ))}
+            </div>
+            <span className="text-xs text-gray-500 font-medium">
+              {Number(product.ratings).toFixed(1)}
+            </span>
           </div>
-          <span className="text-xs text-gray-500 font-normal">
-            4 reviews
-          </span>
-        </div>
+        ) : null}
 
         {/* Price Row */}
         <div className="flex items-baseline gap-2 pt-1 font-semibold text-sm">
-          <span className="text-[#E55353]  text-base">
+          <span
+            className="text-[#E55353] text-base font-price-syne"
+            style={{ fontFamily: "var(--font-syne), 'Syne', sans-serif", fontWeight: 600, fontStyle: "italic" }}
+          >
             {formatPrice(cardPrice)}
           </span>
           {cardOriginalPrice && cardOriginalPrice > cardPrice && (
-            <span className="text-xs text-gray-400 line-through font-normal">
+            <span
+              className="text-xs text-gray-400 line-through font-normal font-price-syne"
+              style={{ fontFamily: "var(--font-syne), 'Syne', sans-serif", fontWeight: 600, fontStyle: "italic" }}
+            >
               {formatPrice(cardOriginalPrice)}
             </span>
           )}

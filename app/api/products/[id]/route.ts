@@ -4,7 +4,7 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, generateUniqueSlug } from "@/lib/utils";
 import { deleteMultipleFromCloudinary } from "@/lib/cloudinary";
 import { buildProductImageVariants } from "@/lib/productImages";
 import { hasPermission } from "@/lib/rolePermissions";
@@ -34,6 +34,9 @@ const withPriceAliases = (product: any) => {
     howToUse: plain?.howToUse || "",
     precautions: plain?.precautions || "",
     ourQuality: plain?.ourQuality || "",
+    inStock: plain?.inStock !== false && (typeof plain?.stock !== "number" || plain.stock > 0),
+    stock: typeof plain?.stock === "number" ? plain.stock : 100,
+    weight: plain?.weight || "",
     imageVariants: buildProductImageVariants(plain),
   };
 };
@@ -216,18 +219,10 @@ export async function PUT(
       );
     }
 
-    if (data.name && data.name.trim() !== existingProduct.name) {
-      const newSlug = generateSlug(data.name);
-      if (newSlug !== existingProduct.slug) {
-        const slugExists = await Product.findOne({ slug: newSlug, _id: { $ne: id } });
-        if (slugExists) {
-          data.slug = `${newSlug}-${Math.random().toString(36).substring(2, 6)}`;
-        } else {
-          data.slug = newSlug;
-        }
-      } else {
-        delete data.slug;
-      }
+    if (data.slug && data.slug.trim() !== existingProduct.slug) {
+      data.slug = await generateUniqueSlug(Product, existingProduct.name, id, data.slug);
+    } else if (data.name && data.name.trim() !== existingProduct.name) {
+      data.slug = await generateUniqueSlug(Product, data.name, id);
     } else {
       delete data.slug;
     }

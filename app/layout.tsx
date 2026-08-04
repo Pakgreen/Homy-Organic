@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Jost } from "next/font/google";
+import { Jost, Syne } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ConditionalFooterAndSlider from "@/components/ConditionalFooterAndSlider";
@@ -34,6 +34,12 @@ const logoUrl = new URL(logoPath, siteUrl).toString();
 const jost = Jost({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["600"],
+  variable: "--font-syne",
 });
 
 export const metadata: Metadata = {
@@ -167,6 +173,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Syne:ital,wght@1,600&display=swap" rel="stylesheet" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -197,7 +206,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${jost.className} overflow-x-hidden`}
+        className={`${jost.className} ${syne.variable} overflow-x-hidden`}
         suppressHydrationWarning
       >
         <GoogleAnalytics />

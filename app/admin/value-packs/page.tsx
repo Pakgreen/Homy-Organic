@@ -50,11 +50,15 @@ export default function AdminValuePacksPage() {
     originalPrice: number | "";
     brand: string;
     badge: string;
+    ratings: number | "";
     images: string[];
     imageLabels: string[];
     isFeatured: boolean;
     isDisabled: boolean;
     whichIncluded: ValuePackItem[];
+    weight: string;
+    inStock: boolean;
+    stock: number | "";
   }>({
     name: "",
     description: "",
@@ -62,11 +66,15 @@ export default function AdminValuePacksPage() {
     originalPrice: "",
     brand: "Homy Organic",
     badge: "VALUE PACK",
+    ratings: "",
     images: [],
     imageLabels: [],
     isFeatured: false,
     isDisabled: false,
     whichIncluded: [{ name: "", quantity: 1, price: "" }],
+    weight: "",
+    inStock: true,
+    stock: 100,
   });
 
   useEffect(() => {
@@ -110,6 +118,7 @@ export default function AdminValuePacksPage() {
 
     const payload = {
       ...formData,
+      ratings: formData.ratings !== "" ? Number(formData.ratings) : 0,
       isValuePack: true,
       price: priceNumber,
       originalPrice:
@@ -120,6 +129,9 @@ export default function AdminValuePacksPage() {
           ? label.trim()
           : `Design ${index + 1}`;
       }),
+      weight: formData.weight.trim(),
+      inStock: formData.inStock,
+      stock: formData.stock !== "" ? Number(formData.stock) : 100,
       whichIncluded: cleanedItems,
     };
 
@@ -216,6 +228,7 @@ export default function AdminValuePacksPage() {
       originalPrice: pack.originalPrice || pack.oldPrice || "",
       brand: pack.brand || "Homy Organic",
       badge: pack.badge || "VALUE PACK",
+      ratings: typeof pack.ratings === "number" && pack.ratings > 0 ? pack.ratings : "",
       images: pack.images || [],
       imageLabels:
         Array.isArray(pack.imageLabels) && pack.imageLabels.length > 0
@@ -237,6 +250,9 @@ export default function AdminValuePacksPage() {
                 : { name: String(item), quantity: 1, price: "" }
             )
           : [{ name: "", quantity: 1, price: "" }],
+      weight: pack.weight || "",
+      inStock: pack.inStock !== false && (typeof pack.stock !== "number" || pack.stock > 0),
+      stock: typeof pack.stock === "number" ? pack.stock : 100,
     });
     setShowModal(true);
   };
@@ -249,11 +265,15 @@ export default function AdminValuePacksPage() {
       originalPrice: "",
       brand: "Homy Organic",
       badge: "VALUE PACK",
+      ratings: "",
       images: [],
       imageLabels: [],
       isFeatured: false,
       isDisabled: false,
       whichIncluded: [{ name: "", quantity: 1, price: "" }],
+      weight: "",
+      inStock: true,
+      stock: 100,
     });
   };
 
@@ -728,6 +748,24 @@ export default function AdminValuePacksPage() {
                     }
                     className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-[#B9853A] transition-colors px-0 font-medium"
                     placeholder="E.g., BEST VALUE, -30% OFF"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
+                    Rating Stars (0.0 to 5.0)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={formData.ratings}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ratings: e.target.value === "" ? "" : Number(e.target.value) })
+                    }
+                    className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-[#B9853A] transition-colors px-0 font-medium"
+                    placeholder="Optional rating (e.g. 4.8). Leave empty to hide on card."
                   />
                 </div>
               </div>

@@ -3,7 +3,7 @@ import connectDB from "@/lib/mongodb";
 import Category from "@/models/Category";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, generateUniqueSlug } from "@/lib/utils";
 import { hasPermission } from "@/lib/rolePermissions";
 
 // GET all categories
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const slug = generateSlug(name);
+    const slug = await generateUniqueSlug(Category, name, undefined, data.slug);
 
     const category = await Category.create({
       name,

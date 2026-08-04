@@ -4,7 +4,7 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, generateUniqueSlug } from "@/lib/utils";
 import { buildProductImageVariants } from "@/lib/productImages";
 import { hasPermission } from "@/lib/rolePermissions";
 
@@ -33,6 +33,9 @@ const withPriceAliases = (product: any) => {
     howToUse: plain?.howToUse || "",
     precautions: plain?.precautions || "",
     ourQuality: plain?.ourQuality || "",
+    inStock: plain?.inStock !== false && (typeof plain?.stock !== "number" || plain.stock > 0),
+    stock: typeof plain?.stock === "number" ? plain.stock : 100,
+    weight: plain?.weight || "",
     imageVariants: buildProductImageVariants(plain),
   };
 };
@@ -64,17 +67,11 @@ export async function GET(req: NextRequest) {
       query.isValuePack = true;
     } else if (valuePack === "false" || regularOnly) {
       query.isValuePack = { $ne: true };
-    } else if (bestSeller !== "true") {
-      // By default exclude Value Packs unless valuePack=true is explicitly requested
-      query.isValuePack = { $ne: true };
     }
 
     if (bestSeller === "true") {
       query.isBestSeller = true;
-    } else if (bestSeller === "false" || regularOnly) {
-      query.isBestSeller = { $ne: true };
-    } else if (valuePack !== "true") {
-      // By default exclude Best Sellers unless bestSeller=true is explicitly requested
+    } else if (bestSeller === "false") {
       query.isBestSeller = { $ne: true };
     }
 
@@ -230,7 +227,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const slug = generateSlug(data.name);
+    const slug = await generateUniqueSlug(Product, data.name, undefined, data.slug);
 
     if (typeof data.order !== "number") {
       const maxProduct = await Product.findOne().sort("-order");
@@ -247,6 +244,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(withPriceAliases(product), { status: 201 });
   } catch (error: any) {
     console.error("Create product error:", error);
+
+    if (error?.code === 11000) {
+      try {
+        const fallbackSlug = `${generateSlug(data.name || "product")}-${Date.now().toString(36)}`;
+        const product = await Product.create({
+          ...data,
+          slug: fallbackSlug,
+          images: normalizedImages,
+          imageLabels: Array.isArray(data.imageLabels) ? data.imageLabels : [],
+        });
+        return NextResponse.json(withPriceAliases(product), { status: 201 });
+      } catch (fallbackError) {
+        console.error("Fallback product creation error:", fallbackError);
+      }
+    }
 
     // Handle specific errors
     let statusCode = 500;

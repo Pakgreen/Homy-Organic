@@ -9,12 +9,46 @@ export function formatPrice(price: number): string {
 }
 
 export function generateSlug(text: string): string {
-  return text
+  if (!text || typeof text !== "string") return "item";
+  const slug = text
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .trim();
+
+  return slug || "item";
+}
+
+export async function generateUniqueSlug(
+  model: any,
+  rawText: string,
+  excludeId?: string,
+  customSlug?: string
+): Promise<string> {
+  const baseInput = customSlug && customSlug.trim() ? customSlug : rawText;
+  const baseSlug = generateSlug(baseInput);
+
+  let currentSlug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const query: any = { slug: currentSlug };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+
+    const existing = await model.findOne(query).select("_id").lean();
+    if (!existing) {
+      return currentSlug;
+    }
+
+    counter++;
+    currentSlug = `${baseSlug}-${counter}`;
+  }
 }
 
 export function formatDate(date: Date | string): string {

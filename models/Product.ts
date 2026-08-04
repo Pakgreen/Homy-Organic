@@ -36,6 +36,9 @@ export interface IProduct extends Document {
   ourQuality?: string;
   badge?: string;
   whichIncluded?: string[];
+  inStock?: boolean;
+  stock?: number;
+  weight?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -137,6 +140,20 @@ const ProductSchema: Schema = new Schema(
     badge: {
       type: String,
       default: "",
+    },
+    inStock: {
+      type: Boolean,
+      default: true,
+    },
+    stock: {
+      type: Number,
+      default: 100,
+      min: 0,
+    },
+    weight: {
+      type: String,
+      default: "",
+      trim: true,
     },
     whichIncluded: {
       type: [Schema.Types.Mixed],

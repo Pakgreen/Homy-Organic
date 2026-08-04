@@ -53,6 +53,7 @@ export default function AdminProductsPage() {
     category: string;
     brand: string;
     badge: string;
+    ratings: number | "";
     images: string[];
     imageLabels: string[];
     sizes: Array<{ name: string; price: number | ""; originalPrice: number | "" }>;
@@ -66,6 +67,9 @@ export default function AdminProductsPage() {
     howToUse: string;
     precautions: string;
     ourQuality: string;
+    weight: string;
+    inStock: boolean;
+    stock: number | "";
   }>({
     name: "",
     description: "",
@@ -74,6 +78,7 @@ export default function AdminProductsPage() {
     category: "",
     brand: "",
     badge: "",
+    ratings: "",
     images: [],
     imageLabels: [],
     sizes: [],
@@ -87,6 +92,9 @@ export default function AdminProductsPage() {
     howToUse: "",
     precautions: "",
     ourQuality: "",
+    weight: "",
+    inStock: true,
+    stock: 100,
   });
 
   useEffect(() => {
@@ -168,6 +176,7 @@ export default function AdminProductsPage() {
 
     const payload = {
       ...formData,
+      ratings: formData.ratings !== "" ? Number(formData.ratings) : 0,
       price: priceNumber,
       originalPrice:
         formData.originalPrice === "" ? undefined : originalPriceNumber,
@@ -200,15 +209,10 @@ export default function AdminProductsPage() {
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean),
-      whichIncluded: formData.isValuePack
-        ? formData.whichIncluded
-            .filter((item) => typeof item.name === "string" && item.name.trim().length > 0)
-            .map((item) => ({
-              name: item.name.trim(),
-              quantity: Number(item.quantity) || 1,
-              price: item.price !== "" ? Number(item.price) : undefined,
-            }))
-        : [],
+      weight: formData.weight.trim(),
+      inStock: formData.inStock,
+      stock: formData.stock !== "" ? Number(formData.stock) : 100,
+      isValuePack: false,
     };
 
     try {
@@ -302,6 +306,7 @@ export default function AdminProductsPage() {
       category: product.category?._id || product.category || "",
       brand: product.brand || "",
       badge: product.badge || "",
+      ratings: typeof product.ratings === "number" && product.ratings > 0 ? product.ratings : "",
       images: product.images || [],
       imageLabels:
         Array.isArray(product.imageLabels) && product.imageLabels.length > 0
@@ -341,6 +346,9 @@ export default function AdminProductsPage() {
       howToUse: product.howToUse || "",
       precautions: product.precautions || "",
       ourQuality: product.ourQuality || "",
+      weight: product.weight || "",
+      inStock: product.inStock !== false && (typeof product.stock !== "number" || product.stock > 0),
+      stock: typeof product.stock === "number" ? product.stock : 100,
     });
     setShowModal(true);
   };
@@ -354,6 +362,7 @@ export default function AdminProductsPage() {
       category: "",
       brand: "",
       badge: "",
+      ratings: "",
       images: [],
       imageLabels: [],
       sizes: [],
@@ -367,6 +376,9 @@ export default function AdminProductsPage() {
       howToUse: "",
       precautions: "",
       ourQuality: "",
+      weight: "",
+      inStock: true,
+      stock: 100,
     });
   };
 
@@ -937,6 +949,37 @@ export default function AdminProductsPage() {
                     placeholder="E.g. NEW, HOT SALE, BESTSELLER"
                   />
                 </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
+                    Rating Stars (0.0 to 5.0)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={formData.ratings}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ratings: e.target.value === "" ? "" : Number(e.target.value) })
+                    }
+                    className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 placeholder:text-gray-300 font-light"
+                    placeholder="Optional rating (e.g. 4.8). Leave empty to hide on card."
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-900 uppercase tracking-widest">
+                    Weight / Net Volume
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.weight}
+                    onChange={(e) =>
+                      setFormData({ ...formData, weight: e.target.value })
+                    }
+                    className="w-full bg-transparent border-0 border-b border-gray-200 py-3 text-sm focus:ring-0 focus:border-black transition-colors px-0 placeholder:text-gray-300 font-light"
+                    placeholder="E.g., 500g, 1 kg, 250 ml"
+                  />
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -1378,26 +1421,6 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 rounded-lg border border-orange-200/80 bg-orange-50/50 px-4 py-3">
-                <input
-                  type="checkbox"
-                  id="isBestSeller"
-                  checked={formData.isBestSeller}
-                  onChange={(e) =>
-                    setFormData({ ...formData, isBestSeller: e.target.checked })
-                  }
-                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 rounded cursor-pointer"
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-gray-900">
-                    Best Seller Product
-                  </span>
-                  <span className="text-xs text-gray-500 font-medium">
-                    Displays in the &quot;Our Best Selling Products&quot; section right after Hero Slider.
-                  </span>
-                </div>
-              </div>
-
               <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
                 <input
                   type="checkbox"
@@ -1418,22 +1441,22 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 rounded-lg border border-amber-200/80 bg-amber-50/50 px-4 py-3">
+              <div className="flex items-center gap-3 rounded-lg border border-red-200/80 bg-red-50/50 px-4 py-3">
                 <input
                   type="checkbox"
-                  id="isValuePack"
-                  checked={formData.isValuePack}
+                  id="outOfStockToggle"
+                  checked={!formData.inStock}
                   onChange={(e) =>
-                    setFormData({ ...formData, isValuePack: e.target.checked })
+                    setFormData({ ...formData, inStock: !e.target.checked })
                   }
-                  className="h-4 w-4 text-[#B9853A] focus:ring-[#B9853A] rounded cursor-pointer"
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 rounded cursor-pointer"
                 />
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-gray-900">
-                    Add to Value Pack 
+                  <span className="text-sm font-bold text-red-900">
+                    Mark as Out of Stock
                   </span>
-                  <span className="text-xs text-gray-500 font-medium">
-                    Renders exclusively in the Value Packs section (hidden from standard product catalog).
+                  <span className="text-xs text-red-600 font-medium">
+                    Displays &quot;Out of Stock&quot; badge on storefront and disables Add to Cart / WhatsApp order buttons.
                   </span>
                 </div>
               </div>

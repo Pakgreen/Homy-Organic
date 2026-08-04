@@ -3,7 +3,7 @@ import connectDB from "@/lib/mongodb";
 import Category from "@/models/Category";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, generateUniqueSlug } from "@/lib/utils";
 import { hasPermission } from "@/lib/rolePermissions";
 
 // GET single category
@@ -96,9 +96,11 @@ export async function PUT(
     const data = await req.json();
     const updateData: Record<string, any> = {};
 
-    if (data.name) {
+    if (data.slug) {
+      updateData.slug = await generateUniqueSlug(Category, data.name || "category", id, data.slug);
+    } else if (data.name) {
       updateData.name = data.name;
-      updateData.slug = generateSlug(data.name);
+      updateData.slug = await generateUniqueSlug(Category, data.name, id);
     }
     if (typeof data.description === "string") {
       updateData.description = data.description;

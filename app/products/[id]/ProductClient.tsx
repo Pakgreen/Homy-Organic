@@ -12,6 +12,7 @@ import {
   FiShare2,
   FiTruck,
 } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import axios from "axios";
@@ -62,6 +63,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
   const [sharePopup, setSharePopup] = useState<string | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("923023735860");
   const shareTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Reviews state
@@ -96,8 +98,22 @@ export default function ProductClient({ productId }: ProductClientProps) {
 
   useEffect(() => {
     fetchProduct();
+    fetchWhatsappSetting();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
+
+  const fetchWhatsappSetting = async () => {
+    try {
+      const res = await axios.get("/api/settings/site");
+      if (res.data?.whatsappNumber) {
+        setWhatsappNumber(res.data.whatsappNumber);
+      } else if (res.data?.contact?.phone) {
+        setWhatsappNumber(res.data.contact.phone);
+      }
+    } catch (e) {
+      // Keep default
+    }
+  };
 
   useEffect(() => {
     setSelectedImage(0);
@@ -232,7 +248,15 @@ export default function ProductClient({ productId }: ProductClientProps) {
     setSelectedImage(index);
   };
 
+  const isOutOfStock =
+    product?.inStock === false ||
+    (typeof product?.stock === "number" && product.stock <= 0);
+
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error("Sorry, this product is currently out of stock!");
+      return;
+    }
     addItem({
       _id: product._id,
       name: product.name,
@@ -242,6 +266,37 @@ export default function ProductClient({ productId }: ProductClientProps) {
       size: selectedSize?.name,
     });
     toast.success(`Added ${quantity} item(s) to cart!`);
+  };
+
+  const handleWhatsAppOrder = () => {
+    if (isOutOfStock) {
+      toast.error("Sorry, this product is currently out of stock!");
+      return;
+    }
+    const cleanPhone = (whatsappNumber || "923023735860").replace(/[^0-9]/g, "");
+    const priceToUse = selectedSize?.price
+      ? selectedSize.price
+      : typeof product?.newPrice === "number"
+      ? product.newPrice
+      : product?.price || 0;
+
+    const pageUrl = typeof window !== "undefined"
+      ? window.location.href
+      : `https://homyorganic.store/products/${product?.slug || product?._id}`;
+
+    let message = `Hello Homy Organic! 👋\n\nI want to place an order for this product:\n\n`;
+    message += `🛍️ *Product:* ${product?.name || "Product"}\n`;
+    if (selectedSize?.name) {
+      message += `🏷️ *Size / Option:* ${selectedSize.name}\n`;
+    }
+    message += `💰 *Unit Price:* ${formatPrice(priceToUse)}\n`;
+    message += `🔢 *Quantity:* ${quantity}\n`;
+    message += `💵 *Total Amount:* ${formatPrice(priceToUse * quantity)}\n`;
+    message += `🔗 *Product Link:* ${pageUrl}\n\n`;
+    message += `Please confirm my order. Thank you!`;
+
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const handleShare = async () => {
@@ -363,7 +418,7 @@ export default function ProductClient({ productId }: ProductClientProps) {
         {/* Main Product Hero Grid - Frameless No-Card Design */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Column: Product Image (Auto Size, No Card Box, No Border) */}
+          {/* Left Column: Product Image */}
           <div className="lg:col-span-6 flex flex-col items-center justify-center">
             <div className="w-full flex flex-col items-center justify-center">
               {heroImage && (
@@ -398,9 +453,21 @@ export default function ProductClient({ productId }: ProductClientProps) {
           {/* Right Column: Product Title, Price & Description (SEO Optimized) */}
           <div className="lg:col-span-6 flex flex-col justify-between space-y-6 pt-2">
             <div className="space-y-4">
-              <p className="text-xs tracking-[0.25em] font-bold text-[#B9853A] uppercase">
-                {product.isValuePack ? (product.badge || "VALUE PACK") : (product.category?.name || "ORGANIC")} {product.brand ? `• ${product.brand}` : ""}
-              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs tracking-[0.25em] font-bold text-[#B9853A] uppercase">
+                  {product.isValuePack ? (product.badge || "VALUE PACK") : (product.category?.name || "ORGANIC")} {product.brand ? `• ${product.brand}` : ""}
+                </p>
+                {product.weight && (
+                  <span className="text-[10px] font-bold text-gray-700 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200/80 uppercase">
+                    ⚖️ {product.weight}
+                  </span>
+                )}
+                {isOutOfStock && (
+                  <span className="text-[10px] font-extrabold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full border border-red-200 uppercase tracking-wider">
+                    Out of Stock
+                  </span>
+                )}
+              </div>
 
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight leading-snug">
                 {product.name}
@@ -503,14 +570,19 @@ export default function ProductClient({ productId }: ProductClientProps) {
                 </div>
               </div>
 
-              {/* Action Buttons (Minimal, Smooth & Sleek) */}
+              {/* Action Buttons (Add to Cart & Share) */}
               <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 inline-flex items-center justify-center gap-2.5 bg-black hover:bg-neutral-900 active:scale-[0.97] text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider transition-all duration-200 shadow-md cursor-pointer text-center"
+                  disabled={isOutOfStock}
+                  className={`flex-1 inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider transition-all duration-200 shadow-md text-center ${
+                    isOutOfStock
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none opacity-80"
+                      : "bg-black hover:bg-neutral-900 active:scale-[0.97] text-white cursor-pointer"
+                  }`}
                 >
                   <FiShoppingCart className="w-4 h-4 text-white" />
-                  <span>Add to Cart</span>
+                  <span>{isOutOfStock ? "Out of Stock" : "Add to Cart"}</span>
                 </button>
 
                 <div className="relative inline-block">
@@ -527,9 +599,36 @@ export default function ProductClient({ productId }: ProductClientProps) {
                     title="Share / Copy Product Link"
                   >
                     <FiShare2 className="w-3.5 h-3.5 text-gray-600" />
-                    <span className="hidden sm:inline">Share / Copy Link</span>
+                    <span className="hidden sm:inline">Share Link</span>
                     <span className="sm:hidden">Share</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Simple WhatsApp Direct Order Button */}
+              <div className="space-y-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleWhatsAppOrder}
+                  disabled={isOutOfStock}
+                  className={`w-full px-5 py-3.5 rounded-xs font-bold text-sm tracking-wide transition-colors shadow-2xs flex items-center justify-center gap-2.5 ${
+                    isOutOfStock
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none opacity-80"
+                      : "bg-[#25D366] hover:bg-[#1fb855] active:scale-[0.98] text-white cursor-pointer"
+                  }`}
+                >
+                  <FaWhatsapp className="w-5 h-5 text-white" />
+                  <span>{isOutOfStock ? "Out of Stock" : "Order via WhatsApp"}</span>
+                </button>
+
+                {/* High-Visibility Clean Light Guarantee Box */}
+                <div className="bg-neutral-900 text-gray-900 p-4 sm:p-4.5 rounded-xl text-center space-y-1 border-2  shadow-xs" style={{ backgroundColor: "#FAF6F0", color: "#000000" }}>
+                  <h4 className="text-sm sm:text-base font-black uppercase tracking-wider text-gray-100" style={{ color: "#000000", fontWeight: 900 }}>
+                    15 DAYS MONEY BACK GUARANTEE
+                  </h4>
+                  <p className="text-xs text-gray-100 font-semibold leading-relaxed" style={{ color: "#1F2937" }}>
+                    100% Risk-Free Purchase. If you are not satisfied, get an easy return & full refund within 15 days.
+                  </p>
                 </div>
               </div>
             </div>
@@ -541,9 +640,8 @@ export default function ProductClient({ productId }: ProductClientProps) {
           Array.isArray(product.whichIncluded) &&
           product.whichIncluded.length > 0 && (
             <div className="pt-6 border-t border-amber-200/80">
-              <div className="bg-[#FAF6F0] p-6 sm:p-7 rounded-2xl border border-[#EADBCC] shadow-md hover:shadow-lg transition-all space-y-4">
+              <div className="p-6 sm:p-7 rounded-2xl  transition-all space-y-4">
                 <h3 className="text-sm sm:text-base font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                  <span className="text-lg sm:text-xl">🎁</span>
                   <span>Items Included in this Value Pack</span>
                 </h3>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -554,15 +652,15 @@ export default function ProductClient({ productId }: ProductClientProps) {
                     const itemPrice = isObject && typeof item.price === "number" ? item.price : undefined;
 
                     return (
-                      <li key={idx} className="flex items-center justify-between gap-3 text-sm sm:text-base text-gray-800 font-semibold bg-white p-3.5 sm:p-4 rounded-xl border border-amber-200/80 shadow-sm hover:shadow-md transition-all">
+                      <li key={idx} className="flex items-center justify-between gap-3 text-sm sm:text-base text-gray-800 font-semiboldp-3.5 sm:p-4 rounded-xl ">
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-[#B9853A] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                          <span className="w-6 h-6 rounded-full bg-[#B9853A] text-black flex items-center justify-center text-xs font-bold shrink-0">
                             {itemQty}x
                           </span>
                           <span className="font-bold text-gray-900">{itemName}</span>
                         </div>
                         {itemPrice !== undefined && (
-                          <span className="text-xs sm:text-sm font-semibold text-[#B9853A] bg-amber-50 px-3 py-1 rounded-md border border-amber-200/60 shrink-0">
+                          <span className="text-xs sm:text-sm font-semibold   ">
                             {formatPrice(itemPrice)}
                           </span>
                         )}
