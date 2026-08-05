@@ -358,16 +358,40 @@ export default function Navbar() {
           </div>
 
           <Link
-            href="/products"
-            className="block py-2 text-black hover:text-gray-600 border-b border-gray-50"
+            href="/products?bestSeller=true"
+            className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            Products
+            Best Selling
+          </Link>
+
+          <Link
+            href="/products?valuePack=true"
+            className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Bundles & Deals
+          </Link>
+
+          <Link
+            href="/products"
+            className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Premium Collection
+          </Link>
+
+          <Link
+            href="/track-order"
+            className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Trace Order
           </Link>
 
           <Link
             href="/about"
-            className="block py-2  text-black hover:text-gray-600 border-b border-gray-50"
+            className="block py-2 text-black hover:text-gray-600 border-b border-gray-50"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             About Us

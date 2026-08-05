@@ -176,7 +176,7 @@ export default function AdminProductsPage() {
 
     const payload = {
       ...formData,
-      ratings: formData.ratings !== "" ? Number(formData.ratings) : 0,
+      ratings: formData.ratings !== "" ? Math.min(5, Math.max(0, Number(formData.ratings))) : 5,
       price: priceNumber,
       originalPrice:
         formData.originalPrice === "" ? undefined : originalPriceNumber,
@@ -313,7 +313,7 @@ export default function AdminProductsPage() {
       category: product.category?._id || product.category || "",
       brand: product.brand || "",
       badge: product.badge || "",
-      ratings: typeof product.ratings === "number" && product.ratings > 0 ? product.ratings : "",
+      ratings: typeof product.ratings === "number" && product.ratings > 0 ? product.ratings : 5,
       images: product.images || [],
       imageLabels:
         Array.isArray(product.imageLabels) && product.imageLabels.length > 0

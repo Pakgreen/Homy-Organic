@@ -23,14 +23,21 @@ interface ProductCardProps {
     category?: any;
     brand?: string;
     badge?: string;
+    isBestSeller?: boolean;
+    isFeatured?: boolean;
     inStock?: boolean;
     stock?: number;
     weight?: string;
   };
   priority?: boolean;
+  isBestSellerSection?: boolean;
 }
 
-export default function ProductCard({ product, priority = false }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  priority = false,
+  isBestSellerSection = false,
+}: ProductCardProps) {
   const [isPrimaryLoaded, setIsPrimaryLoaded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const rawPrimary = product.images?.[0] || "";
@@ -48,12 +55,20 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         ? product.originalPrice
         : undefined;
 
+  const hasSizes = Array.isArray((product as any).sizes) && (product as any).sizes.length > 0;
+  const firstSize = hasSizes ? (product as any).sizes[0] : null;
+  const cardPrice = firstSize && typeof firstSize.price === "number" ? firstSize.price : currentPrice;
+  const cardOriginalPrice =
+    firstSize && typeof firstSize.originalPrice === "number" && firstSize.originalPrice > 0
+      ? firstSize.originalPrice
+      : previousPrice;
+
   const showOldPrice =
-    typeof previousPrice === "number" && previousPrice > currentPrice;
+    typeof cardOriginalPrice === "number" && cardOriginalPrice > cardPrice;
 
   const discountPercent =
-    showOldPrice && previousPrice
-      ? Math.round(((previousPrice - currentPrice) / previousPrice) * 100)
+    showOldPrice && cardOriginalPrice && cardOriginalPrice > cardPrice
+      ? Math.round(((cardOriginalPrice - cardPrice) / cardOriginalPrice) * 100)
       : 0;
 
   const categoryName = (product as any).isValuePack
@@ -65,11 +80,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     : product.brand || "ORGANIC";
 
   const customBadge = product.badge?.trim() || "";
-
-  const hasSizes = Array.isArray((product as any).sizes) && (product as any).sizes.length > 0;
-  const firstSize = hasSizes ? (product as any).sizes[0] : null;
-  const cardPrice = firstSize ? firstSize.price : currentPrice;
-  const cardOriginalPrice = firstSize && firstSize.originalPrice ? firstSize.originalPrice : previousPrice;
 
   const isOutOfStock =
     (product as any).inStock === false ||
@@ -99,16 +109,19 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* Image Container */}
       <div className="relative aspect-4/5 w-full overflow-hidden bg-[#F4F1EA]">
         
-        {/* Top-Left Custom Badge (e.g. NEW, HOT SALE from admin or custom) */}
-        {customBadge ? (
+        {/* Top-Left Admin Tag (Shown everywhere EXCEPT inside Best Selling section) */}
+        {customBadge && !isBestSellerSection ? (
           <div className="absolute top-3 left-3 z-10 bg-white text-black font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
             {customBadge}
           </div>
-        ) : (
-          <div className="absolute top-3 left-3 z-10 bg-white text-black font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
-            NEW
+        ) : null}
+
+        {/* Small Hardcoded Best Seller Badge (ONLY displayed inside Best Selling Section) */}
+        {isBestSellerSection ? (
+          <div className="absolute top-3 left-3 z-10 bg-[#B9853B] text-white font-extrabold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-full shadow-2xs">
+            BEST SELLER
           </div>
-        )}
+        ) : null}
 
         {/* Top-Right Out of Stock / Discount Pill Badge */}
         {isOutOfStock ? (
@@ -116,7 +129,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             OUT OF STOCK
           </div>
         ) : showOldPrice && discountPercent > 0 ? (
-          <div className="absolute top-3 right-3 z-10 bg-[#EA6925] text-white font-bold text-[10px] px-2.5 py-1 rounded-full shadow-2xs">
+          <div className="absolute top-3 right-3 z-10 bg-[#EA6925] text-white font-extrabold text-[10px] px-2.5 py-1 rounded-full shadow-2xs">
             -{discountPercent}%
           </div>
         ) : null}
@@ -207,21 +220,27 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </h3>
         </Link>
 
-        {/* Rating Stars (Only shown if rating is configured in admin / > 0) */}
-        {typeof product.ratings === "number" && product.ratings > 0 ? (
-          <div className="flex items-center gap-1.5 pt-0.5">
-            <div className="flex text-amber-400 text-xs">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span key={star}>
-                  {star <= Math.round(product.ratings!) ? "★" : "☆"}
-                </span>
-              ))}
+        {/* Rating Stars (Shows rating if set, default 5.0 stars) */}
+        {(() => {
+          const ratingVal =
+            typeof product.ratings === "number" && product.ratings > 0
+              ? product.ratings
+              : 5.0;
+          return (
+            <div className="flex items-center gap-1.5 pt-0.5">
+              <div className="flex text-amber-400 text-xs">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star}>
+                    {star <= Math.round(ratingVal) ? "★" : "☆"}
+                  </span>
+                ))}
+              </div>
+              <span className="text-xs text-gray-500 font-medium">
+                {Number(ratingVal).toFixed(1)}
+              </span>
             </div>
-            <span className="text-xs text-gray-500 font-medium">
-              {Number(product.ratings).toFixed(1)}
-            </span>
-          </div>
-        ) : null}
+          );
+        })()}
 
         {/* Price Row */}
         <div className="flex items-baseline gap-2 pt-1 font-semibold text-sm">
