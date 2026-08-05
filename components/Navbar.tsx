@@ -364,7 +364,13 @@ export default function Navbar() {
           >
             Best Selling
           </Link>
-
+ <Link
+            href="/products"
+            className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Premium Collection
+          </Link>
           <Link
             href="/products?valuePack=true"
             className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
@@ -373,13 +379,7 @@ export default function Navbar() {
             Bundles & Deals
           </Link>
 
-          <Link
-            href="/products"
-            className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Premium Collection
-          </Link>
+         
 
           <Link
             href="/track-order"
