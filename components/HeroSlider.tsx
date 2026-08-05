@@ -58,8 +58,8 @@ export default function HeroSlider({
 
   if (isLoading) {
     return (
-      <section className="relative overflow-hidden w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-5">
-        <div className="w-full h-44 sm:h-72 md:h-[350px] lg:h-[400px] rounded-none md:rounded-3xl bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+      <section className="relative overflow-hidden w-full max-w-[1920px] 3xl:max-w-[2200px] mx-auto px-0 md:px-4 lg:px-6 xl:px-8 2xl:px-10 py-0 md:py-4">
+        <div className="w-full h-44 sm:h-72 md:h-[480px] lg:h-[560px] xl:h-[650px] 2xl:h-[760px] 3xl:h-[860px] rounded-none md:rounded-3xl bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
           <div className="w-8 h-8 border-3 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
         </div>
       </section>
@@ -71,7 +71,7 @@ export default function HeroSlider({
   }
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-5">
+    <section className="relative w-full max-w-[1920px] 3xl:max-w-[2200px] mx-auto px-0 md:px-4 lg:px-6 xl:px-8 2xl:px-10 py-0 md:py-4">
       <div className="relative group rounded-none md:rounded-3xl overflow-hidden md:shadow-md border-0 md:border md:border-gray-100/80 bg-gray-50">
         
         {/* Desktop & Tablet Left/Right Navigation Buttons */}
@@ -79,18 +79,18 @@ export default function HeroSlider({
           <>
             <button
               type="button"
-              className="hero-prev-btn hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/85 hover:bg-white text-gray-900 border border-gray-200/80 shadow-md items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className="hero-prev-btn hidden md:flex absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/85 hover:bg-white text-gray-900 border border-gray-200/80 shadow-lg items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
               aria-label="Previous Banner"
             >
-              <FiChevronLeft className="w-6 h-6 text-gray-800 -ml-0.5" />
+              <FiChevronLeft className="w-7 h-7 lg:w-8 lg:h-8 text-gray-800 -ml-0.5" />
             </button>
 
             <button
               type="button"
-              className="hero-next-btn hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/85 hover:bg-white text-gray-900 border border-gray-200/80 shadow-md items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className="hero-next-btn hidden md:flex absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/85 hover:bg-white text-gray-900 border border-gray-200/80 shadow-lg items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
               aria-label="Next Banner"
             >
-              <FiChevronRight className="w-6 h-6 text-gray-800 -mr-0.5" />
+              <FiChevronRight className="w-7 h-7 lg:w-8 lg:h-8 text-gray-800 -mr-0.5" />
             </button>
           </>
         )}
@@ -117,7 +117,7 @@ export default function HeroSlider({
         >
           {sliders.map((slider, idx) => {
             const mobileImg = getOptimizedImageUrl(slider.image, 800, "auto");
-            const desktopImg = getOptimizedImageUrl(slider.desktopImage || slider.image, 1400, "auto");
+            const desktopImg = getOptimizedImageUrl(slider.desktopImage || slider.image, 2560, "auto");
 
             return (
               <SwiperSlide key={slider._id}>
@@ -133,7 +133,7 @@ export default function HeroSlider({
                     className="w-full h-auto block object-contain md:hidden rounded-none"
                   />
 
-                  {/* Desktop & Tablet Banner View (Rounded 3xl & Reduced Height) */}
+                  {/* Desktop & Tablet Banner View (Extra Large Responsive Height for Laptops & Widescreen Monitors) */}
                   <img
                     src={desktopImg}
                     alt={slider.title || "Desktop Banner"}
@@ -141,7 +141,7 @@ export default function HeroSlider({
                     // @ts-ignore
                     fetchPriority={idx === 0 ? "high" : "auto"}
                     decoding="async"
-                    className="hidden md:block w-full h-[320px] lg:h-[380px] xl:h-[420px] object-cover rounded-3xl"
+                    className="hidden md:block w-full h-[420px] md:h-[480px] lg:h-[560px] xl:h-[650px] 2xl:h-[760px] 3xl:h-[860px] object-cover rounded-3xl"
                   />
 
                   <Link
