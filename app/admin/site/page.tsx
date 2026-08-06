@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import LocalImageUpload from "@/components/LocalImageUpload";
 import { FiGlobe, FiMail, FiPhone, FiMapPin, FiCreditCard, FiTruck, FiSave, FiCheckCircle } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 
 export default function SiteSettingsPage() {
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,8 @@ export default function SiteSettingsPage() {
     contactUsText: string;
     contactEmail: string;
     contactPhone: string;
+    whatsappNumber: string;
+    whatsappMessage: string;
     contactAddress: string;
     paymentAccountDetails: string;
     allowedPaymentMethods: "both" | "cod" | "prepaid";
@@ -28,6 +31,8 @@ export default function SiteSettingsPage() {
     contactUsText: "",
     contactEmail: "",
     contactPhone: "",
+    whatsappNumber: "",
+    whatsappMessage: "",
     contactAddress: "",
     paymentAccountDetails: "",
     allowedPaymentMethods: "both",
@@ -46,6 +51,8 @@ export default function SiteSettingsPage() {
           contactUsText: data.contactUsText || "",
           contactEmail: data.contactEmail || "",
           contactPhone: data.contactPhone || "",
+          whatsappNumber: data.whatsappNumber || "",
+          whatsappMessage: data.whatsappMessage || "",
           contactAddress: data.contactAddress || "",
           paymentAccountDetails:
             data.paymentAccountDetails ||
@@ -253,6 +260,37 @@ export default function SiteSettingsPage() {
                   placeholder="+92 300 1234567"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <FaWhatsapp className="text-green-600" size={14} />
+                WhatsApp Widget Number
+              </label>
+              <div className="relative">
+                <FaWhatsapp className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600" size={15} />
+                <input
+                  type="text"
+                  value={formData.whatsappNumber}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, whatsappNumber: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#25D366] focus:bg-white transition-all placeholder:text-gray-300"
+                  placeholder="+92 300 1234567 (Leaves blank to use Contact Phone)"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <FaWhatsapp className="text-green-600" size={14} />
+                WhatsApp Welcome Message
+              </label>
+              <input
+                type="text"
+                value={formData.whatsappMessage}
+                onChange={(e) => setFormData((prev) => ({ ...prev, whatsappMessage: e.target.value }))}
+                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#25D366] focus:bg-white transition-all placeholder:text-gray-300"
+                placeholder="Hello! 👋 Welcome to Homy Organic. How can we help you today?"
+              />
             </div>
           </div>
 

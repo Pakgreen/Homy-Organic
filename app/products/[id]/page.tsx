@@ -129,7 +129,7 @@ export default async function ProductDetailPage({
           }}
         />
       )}
-      <ProductClient productId={id} />
+      <ProductClient productId={id} initialProduct={productData} />
     </>
   );
 }

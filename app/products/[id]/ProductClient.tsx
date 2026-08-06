@@ -47,26 +47,32 @@ function ProductSkeleton() {
 
 interface ProductClientProps {
   productId: string;
+  initialProduct?: any;
 }
 
-export default function ProductClient({ productId }: ProductClientProps) {
+export default function ProductClient({
+  productId,
+  initialProduct,
+}: ProductClientProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
-  const [product, setProduct] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [product, setProduct] = useState<any>(initialProduct || null);
+  const [isLoading, setIsLoading] = useState(!initialProduct);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [valuePacks, setValuePacks] = useState<any[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<any>(null);
+  const [selectedSize, setSelectedSize] = useState<any>(
+    initialProduct?.sizes?.[0] || null
+  );
   const [isMainImageLoaded, setIsMainImageLoaded] = useState(false);
   const [sharePopup, setSharePopup] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState<string>("923023735860");
   const shareTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -98,7 +104,9 @@ export default function ProductClient({ productId }: ProductClientProps) {
           : [];
 
   useEffect(() => {
-    fetchProduct();
+    if (!initialProduct || (product && (product._id !== productId && product.slug !== productId))) {
+      fetchProduct();
+    }
     fetchWhatsappSetting();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);

@@ -15,6 +15,7 @@ import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import TopProgressBar from "@/components/TopProgressBar";
 import PagePreloader from "@/components/PagePreloader";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 // Disable Next.js caching across the app so every request fetches fresh data.
 export const fetchCache = "force-no-store";
@@ -240,6 +241,7 @@ export default async function RootLayout({
             <ConditionalFooterAndSlider />
           </div>
           <BottomNav />
+          <WhatsAppWidget />
         </AuthProvider>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}

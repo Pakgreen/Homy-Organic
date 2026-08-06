@@ -71,15 +71,26 @@ export default function ProductCard({
       ? Math.round(((cardOriginalPrice - cardPrice) / cardOriginalPrice) * 100)
       : 0;
 
-  const categoryName = (product as any).isValuePack
-    ? product.badge || "VALUE PACK"
-    : typeof product.category === "object" && product.category?.name
-    ? product.category.name
-    : typeof product.category === "string"
-    ? product.category
-    : product.brand || "ORGANIC";
+  const rawCategoryName =
+    typeof product.category === "object" && product.category?.name
+      ? product.category.name
+      : typeof product.category === "string" && product.category
+      ? product.category
+      : product.badge && !["value pack", "value packs", "valuepack"].includes(product.badge.trim().toLowerCase())
+      ? product.badge
+      : "";
+
+  // If category name matches "ORGANIC", "HOMY ORGANIC", "VALUE PACK", or empty, don't show it
+  const isExcludedCategory =
+    !rawCategoryName ||
+    ["organic", "homy organic", "homyorganic", "value pack", "value packs", "valuepack"].includes(
+      rawCategoryName.trim().toLowerCase()
+    );
+
+  const categoryName = isExcludedCategory ? "" : rawCategoryName;
 
   const customBadge = product.badge?.trim() || "";
+  const isValuePackBadge = ["value pack", "value packs", "valuepack"].includes(customBadge.toLowerCase());
 
   const isOutOfStock =
     (product as any).inStock === false ||
@@ -109,7 +120,7 @@ export default function ProductCard({
       {/* Image Container */}
       <div className="relative aspect-4/5 w-full overflow-hidden bg-[#F4F1EA]">
         
-        {/* Top-Left Admin Tag (Shown everywhere EXCEPT inside Best Selling section) */}
+        {/* Top-Left Admin Tag from Backend */}
         {customBadge && !isBestSellerSection ? (
           <div className="absolute top-3 left-3 z-10 bg-white text-black font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
             {customBadge}
@@ -118,7 +129,7 @@ export default function ProductCard({
 
         {/* Small Hardcoded Best Seller Badge (ONLY displayed inside Best Selling Section) */}
         {isBestSellerSection ? (
-          <div className="absolute top-3 left-3 z-10 bg-[#B9853B] text-white font-extrabold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-full shadow-2xs">
+          <div className="absolute top-3 left-3 z-10 bg-white text-black font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-2xs">
             BEST SELLER
           </div>
         ) : null}
@@ -196,15 +207,12 @@ export default function ProductCard({
         
         {/* Category & Weight Labels */}
         <div className="flex items-center justify-between gap-1 flex-wrap">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-            {categoryName}
-          </span>
+          {categoryName ? (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              {categoryName}
+            </span>
+          ) : null}
           <div className="flex items-center gap-1.5">
-            {(product as any).weight && (
-              <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200/80 uppercase">
-                {(product as any).weight}
-              </span>
-            )}
             {hasSizes && (
               <span className="text-[9px] font-bold text-[#B9853B] bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 uppercase">
                 {(product as any).sizes.length} Options
