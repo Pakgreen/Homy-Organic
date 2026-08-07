@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { FiEdit, FiTrash2, FiPlus, FiX, FiUserCheck, FiShield } from "react-icons/fi";
 import { roleDescriptions } from "@/lib/rolePermissions";
+import AdminDeleteModal from "@/components/AdminDeleteModal";
 
 type UserRole = "admin" | "moderator" | "manager" | "support";
 
@@ -19,6 +20,8 @@ export default function AdminStaffPage() {
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<StaffUser | null>(null);
+  const [deletingStaff, setDeletingStaff] = useState<StaffUser | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -51,7 +54,6 @@ export default function AdminStaffPage() {
       return;
     }
 
-    setIsLoading(true);
     try {
       if (editingUser) {
         await axios.put(`/api/admin/staff/${editingUser._id}`, formData);
@@ -66,19 +68,21 @@ export default function AdminStaffPage() {
       fetchStaffUsers();
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to save staff member");
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this staff member?")) return;
+  const confirmDeleteStaff = async () => {
+    if (!deletingStaff) return;
+    setIsDeleting(true);
     try {
-      await axios.delete(`/api/admin/staff/${id}`);
+      await axios.delete(`/api/admin/staff/${deletingStaff._id}`);
       toast.success("Staff member deleted successfully");
+      setDeletingStaff(null);
       fetchStaffUsers();
     } catch (error) {
       toast.error("Failed to delete staff member");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -220,7 +224,7 @@ export default function AdminStaffPage() {
                     <FiEdit size={11} /> Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(user._id)}
+                    onClick={() => setDeletingStaff(user)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-red-400 hover:text-red-600 border border-red-100 hover:border-red-300 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
                   >
                     <FiTrash2 size={11} /> Delete
@@ -385,6 +389,16 @@ export default function AdminStaffPage() {
           </div>
         </div>
       )}
+
+      <AdminDeleteModal
+        isOpen={!!deletingStaff}
+        title="Delete Staff Member?"
+        description="Are you sure you want to delete this staff account? They will lose administrative access."
+        itemName={deletingStaff?.name ? `${deletingStaff.name} (${deletingStaff.email})` : "Staff Account"}
+        isDeleting={isDeleting}
+        onConfirm={confirmDeleteStaff}
+        onClose={() => setDeletingStaff(null)}
+      />
     </div>
   );
 }

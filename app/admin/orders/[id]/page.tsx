@@ -18,8 +18,11 @@ import {
   FiClock,
   FiXCircle,
   FiMaximize2,
+  FiPrinter,
   FiX,
 } from "react-icons/fi";
+import { openOrderWhatsApp } from "@/lib/whatsapp";
+import CourierShippingSlip from "@/components/CourierShippingSlip";
 import {
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
@@ -36,6 +39,7 @@ export default function AdminOrderDetailPage() {
   const [isPaid, setIsPaid] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSlipOpen, setIsSlipOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -159,11 +163,20 @@ export default function AdminOrderDetailPage() {
 
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setIsSlipOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+            title="Generate & Print Courier Shipping Slip PDF"
+          >
+            <FiPrinter size={15} />
+            <span>Print Shipping Slip (PDF)</span>
+          </button>
+
+          <button
             onClick={() => {
               navigator.clipboard.writeText(order._id);
               toast.success("Order ID copied!");
             }}
-            className="px-3.5 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer"
           >
             <FiCopy size={14} />
             Copy Order ID
@@ -201,13 +214,7 @@ export default function AdminOrderDetailPage() {
                   <span className="font-semibold text-gray-900">{order.shippingAddress?.phone || "N/A"}</span>
                   {order.shippingAddress?.phone && (
                     <button
-                      onClick={() => {
-                        let num = order.shippingAddress.phone.replace(/[^0-9]/g, "");
-                        if (num.startsWith("0")) num = "92" + num.slice(1);
-                        else if (!num.startsWith("92")) num = "92" + num;
-                        const msg = `Hi ${order.shippingAddress.fullName}, regarding your order #${order._id.substring(0, 8)} at Homy Organic...`;
-                        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
-                      }}
+                      onClick={() => openOrderWhatsApp(order)}
                       className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer border border-emerald-200"
                       title="Send WhatsApp Message"
                     >
@@ -481,6 +488,12 @@ export default function AdminOrderDetailPage() {
           </div>
         </div>
       )}
+
+      <CourierShippingSlip
+        order={order}
+        isOpen={isSlipOpen}
+        onClose={() => setIsSlipOpen(false)}
+      />
     </div>
   );
 }

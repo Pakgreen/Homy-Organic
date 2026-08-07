@@ -13,7 +13,7 @@ export async function GET() {
         brandName: "Homy Orgaic",
         tagline: "Where Beauty Meets Wellness",
         contact: {
-          email: "info@homyorganic.store",
+          email: "info@homyorganic.com",
           phone: "+92302 3735860",
           address: "Multan, Pakistan",
         },

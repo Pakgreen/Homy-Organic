@@ -11,7 +11,7 @@ export async function GET() {
     if (!settings) {
       return NextResponse.json({
         logo: "/homyorganic.png",
-        favicon: "/logo.png",
+        favicon: "",
       });
     }
     return NextResponse.json(settings.value);

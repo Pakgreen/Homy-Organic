@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 
+import AdminDeleteModal from "@/components/AdminDeleteModal";
+import { toast } from "sonner";
+
 interface ActiveUser {
   _id: string;
   name: string;
@@ -11,14 +14,16 @@ interface ActiveUser {
   role: string;
   lastLogin: string;
   lastActive: string;
-  lastIp: string;
-  lastDevice: string;
+  lastIp?: string;
+  lastDevice?: string;
 }
 
 export default function ActiveSessionsPage() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<ActiveUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [terminatingUser, setTerminatingUser] = useState<ActiveUser | null>(null);
+  const [isTerminating, setIsTerminating] = useState(false);
 
   useEffect(() => {
     fetchActiveUsers();
@@ -36,23 +41,18 @@ export default function ActiveSessionsPage() {
     }
   };
 
-  const handleTerminateSession = async (userId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to terminate this user's session? They will be logged out immediately.",
-      )
-    )
-      return;
-
+  const confirmTerminateSession = async () => {
+    if (!terminatingUser) return;
+    setIsTerminating(true);
     try {
-      // Optimistic update: temporarily remove or mark the user visually.
-      // But a clean refresh is safer since we have no complex state machine.
-      await axios.post("/api/admin/active-sessions/terminate", { userId });
-      setUsers((prev) => prev.filter((u) => u._id !== userId));
-      alert("Session terminated successfully.");
+      await axios.post("/api/admin/active-sessions/terminate", { userId: terminatingUser._id });
+      setUsers((prev) => prev.filter((u) => u._id !== terminatingUser._id));
+      toast.success("Session terminated successfully");
+      setTerminatingUser(null);
     } catch (error) {
-      console.error("Failed to terminate session", error);
-      alert("Failed to terminate session.");
+      toast.error("Failed to terminate session");
+    } finally {
+      setIsTerminating(false);
     }
   };
 
@@ -168,7 +168,7 @@ export default function ActiveSessionsPage() {
                       <td className="py-5 pr-6 text-right whitespace-nowrap">
                         {!isCurrentSession && (
                           <button
-                            onClick={() => handleTerminateSession(user._id)}
+                            onClick={() => setTerminatingUser(user)}
                             className="text-xs font-medium text-red-500 hover:text-red-700 cursor-pointer px-3 py-1.5 rounded transition-colors"
                           >
                             Terminate
@@ -188,6 +188,16 @@ export default function ActiveSessionsPage() {
           </table>
         </div>
       </div>
+
+      <AdminDeleteModal
+        isOpen={!!terminatingUser}
+        title="Terminate User Session?"
+        description="Are you sure you want to terminate this user's active session? They will be immediately logged out."
+        itemName={terminatingUser?.name ? `${terminatingUser.name} (${terminatingUser.email})` : "Active User Session"}
+        isDeleting={isTerminating}
+        onConfirm={confirmTerminateSession}
+        onClose={() => setTerminatingUser(null)}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
-import { useSession } from "next-auth/react";
+import AdminDeleteModal from "@/components/AdminDeleteModal";
 
 export default function AdminCategoriesPage() {
   const { data: session } = useSession();
@@ -12,6 +12,8 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [deletingCategory, setDeletingCategory] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -53,15 +55,18 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure? This will affect products in this category!"))
-      return;
+  const confirmDeleteCategory = async () => {
+    if (!deletingCategory) return;
+    setIsDeleting(true);
     try {
-      await axios.delete(`/api/categories/${id}`);
+      await axios.delete(`/api/categories/${deletingCategory._id}`);
       toast.success("Category deleted successfully");
+      setDeletingCategory(null);
       fetchCategories();
     } catch (error) {
       toast.error("Failed to delete category");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -193,7 +198,7 @@ export default function AdminCategoriesPage() {
                   </button>
                   {isAdmin && (
                     <button
-                      onClick={() => handleDelete(category._id)}
+                      onClick={() => setDeletingCategory(category)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-red-400 hover:text-red-600 border border-red-100 hover:border-red-300 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
                     >
                       <FiTrash2 size={11} /> Delete
@@ -309,6 +314,16 @@ export default function AdminCategoriesPage() {
           </div>
         </div>
       )}
+
+      <AdminDeleteModal
+        isOpen={!!deletingCategory}
+        title="Delete Category?"
+        description="Are you sure you want to delete this category? This will affect products assigned to it."
+        itemName={deletingCategory?.name}
+        isDeleting={isDeleting}
+        onConfirm={confirmDeleteCategory}
+        onClose={() => setDeletingCategory(null)}
+      />
     </div>
   );
 }

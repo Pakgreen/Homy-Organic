@@ -127,10 +127,10 @@ export async function GET(req: NextRequest) {
     const pageParam = url.searchParams.get("page");
     const limitParam = url.searchParams.get("limit");
     let page = Number(pageParam) || 1;
-    let limit = Number(limitParam) || 10;
+    let limit = limitParam ? Number(limitParam) : 1000;
     if (page < 1) page = 1;
-    if (limit < 1) limit = 10;
-    if (limit > 100) limit = 100;
+    if (limit < 1) limit = 1000;
+    if (limit > 1000) limit = 1000;
 
     const totalCount = await Order.countDocuments(query);
     const totalPages = Math.max(1, Math.ceil(totalCount / limit));

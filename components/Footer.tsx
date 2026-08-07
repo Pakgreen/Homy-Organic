@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiFacebook, FiInstagram, FiMail, FiSend } from "react-icons/fi";
+import { FiFacebook, FiInstagram, FiMail, FiSend, FiCheckCircle, FiAward, FiShield } from "react-icons/fi";
 import { FaTiktok } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -17,7 +17,7 @@ export default function Footer() {
     brandName: "Homy Organic",
     tagline: "Where Beauty Meets Wellness",
     contact: {
-      email: "info@homyorganic.store",
+      email: "info@homyorganic.com",
       phone: "+92302 3735860",
       address: "Multan, Pakistan",
     },
@@ -101,9 +101,55 @@ export default function Footer() {
   if (!loaded) return null;
 
   return (
-    <footer className="mx-3 sm:mx-6 lg:mx-8 mb-20 sm:mb-6 overflow-hidden rounded-3xl sm:rounded-4xl bg-white text-gray-700 border border-gray-100 shadow-[0_-12px_40px_rgba(15,23,42,0.04)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+    <div className="mx-3 sm:mx-6 lg:mx-8 mb-20 sm:mb-6 space-y-8 sm:space-y-12">
+      {/* Feature Highlights Section (No Icon BG, Modern Clean Typography) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+          {/* Feature 1: Premium Quality */}
+          <div className="group flex flex-col items-center text-center">
+            <div className="text-[#B9853B] mb-2 group-hover:scale-110 transition-transform duration-300">
+              <FiAward size={38} />
+            </div>
+            <h4 className="text-sm sm:text-base font-bold uppercase tracking-wider text-gray-900">
+              Premium Quality
+            </h4>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed max-w-xs mx-auto mt-1">
+              No compromise on quality, ever.
+            </p>
+          </div>
+
+          {/* Feature 2: 100% Organic & Pure */}
+          <div className="group flex flex-col items-center text-center">
+            <div className="text-[#B9853B] mb-2 group-hover:scale-110 transition-transform duration-300">
+              <FiCheckCircle size={38} />
+            </div>
+            <h4 className="text-sm sm:text-base font-bold uppercase tracking-wider text-gray-900">
+              100% Organic & Pure
+            </h4>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed max-w-xs mx-auto mt-1">
+              Pure, natural ingredients only.
+            </p>
+          </div>
+
+          {/* Feature 3: Hand-Blended In Small Batches */}
+          <div className="group flex flex-col items-center text-center">
+            <div className="text-[#B9853B] mb-2 group-hover:scale-110 transition-transform duration-300">
+              <FiShield size={38} />
+            </div>
+            <h4 className="text-sm sm:text-base font-bold uppercase tracking-wider text-gray-900">
+              Hand-Blended In Small Batches
+            </h4>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed max-w-xs mx-auto mt-1">
+              Crafted fresh for freshness & potency.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Container */}
+      <footer className="overflow-hidden rounded-3xl sm:rounded-4xl bg-white text-gray-700 border border-gray-100 shadow-[0_-12px_40px_rgba(15,23,42,0.04)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="space-y-3">
             <div className="flex items-center gap-3 -mt-2">
@@ -246,11 +292,12 @@ export default function Footer() {
 
         <div className="border-t border-gray-100 mt-10 pt-6 text-center text-gray-500 text-sm">
           <p>
-            &copy; {new Date().getFullYear()} {footerData.brandName}. All rights
+            © {new Date().getFullYear()} {footerData.brandName}. All rights
             reserved.
           </p>
         </div>
       </div>
     </footer>
-  );
+  </div>
+);
 }

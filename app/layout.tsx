@@ -29,7 +29,7 @@ const companyTagline =
 const companyDescription =
   "Homy Organic is your trusted destination for quality organic products, clothing, lawn suits, and wellness items in Pakistan.";
 const logoPath = "/homyorganic.png";
-const faviconPath = "/homyorganic.png";
+const faviconPath = "/favicon.ico";
 const logoUrl = new URL(logoPath, siteUrl).toString();
 
 const jost = Jost({
@@ -105,12 +105,9 @@ export const metadata: Metadata = {
     images: [logoUrl],
   },
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/homyorganic.png", type: "image/png" },
-    ],
+    icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/homyorganic.png",
+    apple: "/favicon.ico",
   },
 };
 
@@ -147,7 +144,9 @@ export default async function RootLayout({
     console.error("Failed to load layout theme & site settings", error);
   }
 
-  const dynamicFavicon = siteSettings?.favicon || siteSettings?.logo || "/homyorganic.png";
+  const dynamicFavicon = (siteSettings?.favicon && siteSettings.favicon.trim() !== "") 
+    ? siteSettings.favicon 
+    : "/favicon.ico";
 
   const primaryColor = themeData?.primaryColor || "#000000";
   const headingColor = themeData?.headingColor || "#000000";
@@ -189,7 +188,6 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href={dynamicFavicon} sizes="any" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="shortcut icon" href={dynamicFavicon} />
         <link rel="apple-touch-icon" href={dynamicFavicon} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

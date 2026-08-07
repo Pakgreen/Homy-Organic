@@ -24,7 +24,7 @@ export const siteConfig = {
     logo: "/logo.png", // Path to your logo image (place in /public folder)
       logoWidth: 110, // Logo width in pixels
       logoHeight: 110, // Logo height in pixels
-    favicon: "/logo.png", // Path to favicon
+    favicon: "/favicon.ico", // Path to favicon
   },
 
   // ============================================
@@ -96,9 +96,9 @@ export const siteConfig = {
   // CONTACT & SOCIAL
   // ============================================
   contact: {
-    email: "info@momscollections.shop",
-    phone: "+92 323 8137537",
-    address: "Moms Collections,waliyatabad #1 Multan",
+    email: "info@homyorganic.com",
+    phone: "+92 302 3735860",
+    address: "Homy Organic Store, Multan, Pakistan",
     hours: "Everyday: 7:00 AM - 11:00 PM",
   },
 

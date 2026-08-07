@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FiArrowRight, FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
+import { canAccessAdminPanel } from "@/lib/rolePermissions";
 
 export default function AdminSignInPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,6 +20,15 @@ export default function AdminSignInPage() {
     type: "error" | "success";
     text: string;
   } | null>(null);
+
+  // Auto-redirect if already logged in as admin
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      if (canAccessAdminPanel(session.user.role)) {
+        router.replace("/admin");
+      }
+    }
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,10 +48,8 @@ export default function AdminSignInPage() {
           type: "success",
           text: "Admin securely signed in! Redirecting...",
         });
-        setTimeout(() => {
-          router.replace("/admin");
-          router.refresh();
-        }, 1000);
+        router.replace("/admin");
+        router.refresh();
       } else if (result?.error) {
         setStatusMessage({ type: "error", text: result.error });
       }
@@ -53,6 +62,23 @@ export default function AdminSignInPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading indicator while session is checking or redirecting
+  if (status === "loading" || (status === "authenticated" && canAccessAdminPanel(session?.user?.role))) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#EEF3EC]">
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className="animate-spin rounded-full h-9 w-9 border-b-2"
+            style={{ borderColor: "#B9853A" }}
+          />
+          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+            Checking Admin Credentials...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex bg-[#EEF3EC] min-h-screen w-full flex-col md:flex-row overflow-x-hidden">

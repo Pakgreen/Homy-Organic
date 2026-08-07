@@ -920,41 +920,55 @@ export default function CheckoutPage() {
                 </p>
                 {paymentMethod === "Prepaid" ? (
                   <div className="space-y-4">
-                    <div className="text-[11px] font-medium leading-relaxed max-w-[280px] mx-auto space-y-4">
-                      <p className="text-gray-500">
-                        Transfer the exact amount to the account below, then
-                        enter the Transaction ID and upload your screenshot{" "}
-                        <span className="hidden lg:inline font-bold text-black">
-                          on the left.
-                        </span>
-                        <span className="inline lg:hidden font-bold text-black">
-                          below.
-                        </span>
-                      </p>
-                      <div className="flex bg-gray-50 border border-gray-200 p-3 rounded-xl gap-3 text-right">
-                        <p
-                          className="text-black font-urdu font-bold leading-loose text-sm flex-1 pr-1"
-                          dir="rtl"
-                        >
-                          نیچے دیئے گئے اکاؤنٹ میں درست رقم منتقل کریں، پھر
-                          ٹرانزیکشن آئی ڈی درج کریں اور اپنا رسید کا اسکرین شاٹ{" "}
-                          <span className="hidden lg:inline underline decoration-gray-300 underline-offset-4">
-                            بائیں جانب
-                          </span>
-                          <span className="inline lg:hidden underline decoration-gray-300 underline-offset-4">
-                            نیچے
-                          </span>{" "}
-                          اپ لوڈ کریں۔
-                        </p>
-                        <div className="shrink-0 pt-1 text-black">
-                          <FiInfo size={16} className="text-black" />
+                    <div className="text-xs font-medium leading-relaxed max-w-[320px] mx-auto space-y-3">
+                      <div className="flex bg-amber-50/80 border border-amber-200/80 p-3.5 rounded-xl gap-3 text-left">
+                        <div className="shrink-0 pt-0.5 text-amber-700">
+                          <FiInfo size={16} />
                         </div>
+                        <p className="text-amber-950 font-semibold leading-relaxed text-xs flex-1">
+                          Transfer the exact amount to the account below, then
+                          enter the Transaction ID and upload your payment receipt screenshot{" "}
+                          <span className="hidden lg:inline font-bold underline underline-offset-2">
+                            on the left.
+                          </span>
+                          <span className="inline lg:hidden font-bold underline underline-offset-2">
+                            below.
+                          </span>
+                        </p>
                       </div>
                     </div>
-                    <div className="bg-gray-50 border border-gray-100 p-4">
-                      <p className="text-xs text-black whitespace-pre-wrap font-bold leading-relaxed mx-auto text-left">
-                        {paymentDetails || "No payment details configured yet."}
-                      </p>
+                    {/* Minimal White Shade ATM Card Container for Payment Details */}
+                    <div className="relative w-full max-w-[340px] mx-auto aspect-[1.586/1] rounded-2xl p-5 shadow-sm bg-gradient-to-br from-white via-slate-50 to-blue-50/50 text-gray-900 overflow-hidden border border-gray-200 flex flex-col justify-between">
+                      {/* Top Bar: Golden EMV Chip (No Homy Organic text) */}
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-2">
+                          {/* Golden EMV Chip */}
+                      
+                        </div>
+                      </div>
+
+                      {/* Middle: Payment Details */}
+                      <div className="relative z-10 space-y-1 my-auto">
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+                          ACCOUNT DETAILS
+                        </p>
+                        <div className="font-mono text-xs sm:text-sm font-semibold tracking-wider text-gray-900 bg-white/90 p-2.5 rounded-xl border border-gray-200 whitespace-pre-wrap leading-relaxed shadow-2xs">
+                          {paymentDetails || "No payment details configured yet."}
+                        </div>
+                      </div>
+
+                      {/* Bottom Bar: Transfer Info & Logo */}
+                      <div className="flex items-end justify-between relative z-10">
+                        <div>
+                          <p className="text-[9px] text-gray-400 uppercase font-bold tracking-wider">TRANSFER VIA</p>
+                          <p className="text-[10px] font-bold tracking-wide text-gray-700 uppercase">ONLINE BANK TRANSFER</p>
+                        </div>
+                        {/* Master/Visa Overlapping Circles Icon */}
+                        <div className="flex -space-x-2 shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-red-500/90" />
+                          <div className="w-5 h-5 rounded-full bg-amber-400/90" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (

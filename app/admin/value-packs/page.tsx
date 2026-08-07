@@ -294,7 +294,6 @@ export default function AdminValuePacksPage() {
           const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
           const msg = `⚠️ Image "${file.name}" (${fileSizeMB}MB) exceeds the 3MB limit! Please compress or reduce image size.`;
           toast.error(msg, { duration: 6000 });
-          alert(msg);
           continue;
         }
 

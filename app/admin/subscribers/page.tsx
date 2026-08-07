@@ -14,10 +14,11 @@ import {
 } from "react-icons/fi";
 import { format } from "date-fns";
 
+import AdminDeleteModal from "@/components/AdminDeleteModal";
+
 interface Subscriber {
   _id: string;
   email: string;
-  status: string;
   createdAt: string;
 }
 
@@ -25,50 +26,45 @@ export default function AdminSubscribersPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [deletingSub, setDeletingSub] = useState<Subscriber | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchSubscribers();
   }, []);
 
-  const fetchSubscribers = async (search = searchQuery) => {
-    setIsLoading(true);
+  const fetchSubscribers = async (query = "") => {
     try {
-      const res = await axios.get(
-        `/api/newsletter${search ? `?search=${encodeURIComponent(search)}` : ""}`
-      );
-      setSubscribers(res.data.subscribers || []);
+      setIsLoading(true);
+      const url = query
+        ? `/api/newsletter?search=${encodeURIComponent(query)}`
+        : "/api/newsletter";
+      const res = await axios.get(url);
+      setSubscribers(res.data.subscribers || res.data || []);
     } catch (error) {
-      console.error("Error fetching subscribers:", error);
-      toast.error("Failed to load subscribers");
+      toast.error("Failed to fetch subscribers");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchSubscribers(searchQuery);
   };
 
-  const handleDelete = async (id: string, email: string) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to remove ${email} from the subscribers list?`
-      )
-    ) {
-      return;
-    }
-
-    setIsDeleting(id);
+  const confirmDeleteSubscriber = async () => {
+    if (!deletingSub) return;
+    setIsDeleting(true);
     try {
-      await axios.delete(`/api/newsletter?id=${id}`);
-      toast.success("Subscriber removed");
-      setSubscribers((prev) => prev.filter((s) => s._id !== id));
+      await axios.delete(`/api/newsletter?id=${deletingSub._id}`);
+      toast.success("Subscriber removed successfully");
+      setSubscribers((prev) => prev.filter((s) => s._id !== deletingSub._id));
+      setDeletingSub(null);
     } catch (error) {
       toast.error("Failed to remove subscriber");
     } finally {
-      setIsDeleting(null);
+      setIsDeleting(false);
     }
   };
 
@@ -246,8 +242,8 @@ export default function AdminSubscribersPage() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <button
-                        onClick={() => handleDelete(subscriber._id, subscriber.email)}
-                        disabled={isDeleting === subscriber._id}
+                        onClick={() => setDeletingSub(subscriber)}
+                        disabled={isDeleting}
                         className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
                         title="Delete Subscriber"
                       >
@@ -261,6 +257,16 @@ export default function AdminSubscribersPage() {
           </div>
         )}
       </div>
+
+      <AdminDeleteModal
+        isOpen={!!deletingSub}
+        title="Remove Subscriber?"
+        description="Are you sure you want to remove this email address from the newsletter subscribers list?"
+        itemName={deletingSub?.email}
+        isDeleting={isDeleting}
+        onConfirm={confirmDeleteSubscriber}
+        onClose={() => setDeletingSub(null)}
+      />
     </div>
   );
 }

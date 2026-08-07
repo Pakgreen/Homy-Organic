@@ -6,6 +6,8 @@ import { FiEdit, FiTrash2, FiPlus, FiMenu } from "react-icons/fi";
 import { toast } from "sonner";
 import LocalImageUpload from "@/components/LocalImageUpload";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import AdminDeleteModal from "@/components/AdminDeleteModal";
 
 interface Slider {
   _id: string;
@@ -20,10 +22,14 @@ interface Slider {
 }
 
 export default function AdminSlidersPage() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
   const [sliders, setSliders] = useState<Slider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingSlider, setEditingSlider] = useState<Slider | null>(null);
+  const [deletingSlider, setDeletingSlider] = useState<Slider | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     image: "",
@@ -33,6 +39,18 @@ export default function AdminSlidersPage() {
     buttonLink: "",
     isActive: true,
   });
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      image: "",
+      desktopImage: "",
+      position: "top",
+      buttonText: "",
+      buttonLink: "",
+      isActive: true,
+    });
+  };
 
   useEffect(() => {
     fetchSliders();
@@ -141,16 +159,18 @@ export default function AdminSlidersPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this slider?")) return;
-    setIsLoading(true);
+  const confirmDeleteSlider = async () => {
+    if (!deletingSlider) return;
+    setIsDeleting(true);
     try {
-      await axios.delete(`/api/sliders/${id}`);
-
+      await axios.delete(`/api/sliders/${deletingSlider._id}`);
+      toast.success("Slider deleted successfully");
+      setDeletingSlider(null);
       await fetchSliders();
     } catch (error) {
+      toast.error("Failed to delete slider");
     } finally {
-      setIsLoading(false);
+      setIsDeleting(false);
     }
   };
 
@@ -166,18 +186,6 @@ export default function AdminSlidersPage() {
       isActive: slider.isActive ?? true,
     });
     setShowModal(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      image: "",
-      desktopImage: "",
-      position: "top",
-      buttonText: "",
-      buttonLink: "",
-      isActive: true,
-    });
   };
 
   if (isLoading) {
@@ -292,7 +300,7 @@ export default function AdminSlidersPage() {
                   <FiEdit className="mr-2" size={12} /> Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(slider._id)}
+                  onClick={() => setDeletingSlider(slider)}
                   className="flex flex-1 items-center justify-center py-2 text-[10px] font-medium text-red-500 hover:text-red-700 border border-red-100 hover:border-red-200 hover:bg-red-50 transition-colors uppercase tracking-widest cursor-pointer"
                 >
                   <FiTrash2 className="mr-2" size={12} /> Delete
@@ -466,6 +474,16 @@ export default function AdminSlidersPage() {
           </div>
         </div>
       )}
+
+      <AdminDeleteModal
+        isOpen={!!deletingSlider}
+        title="Delete Slider?"
+        description="Are you sure you want to delete this slider? It will be removed from homepage banner."
+        itemName={deletingSlider?.title || "Homepage Banner Slider"}
+        isDeleting={isDeleting}
+        onConfirm={confirmDeleteSlider}
+        onClose={() => setDeletingSlider(null)}
+      />
     </div>
   );
 }

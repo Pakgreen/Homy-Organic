@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Review from "@/models/Review";
 import Product from "@/models/Product";
+import mongoose from "mongoose";
+
+async function findProductByIdOrSlug(idOrSlug: string) {
+  if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
+    const product = await Product.findById(idOrSlug);
+    if (product) return product;
+  }
+  return await Product.findOne({ slug: idOrSlug });
+}
 
 // GET all reviews for a specific product
 export async function GET(
@@ -10,20 +19,23 @@ export async function GET(
 ) {
   try {
     await connectDB();
-    const { id: productId } = await params;
+    const { id: productIdOrSlug } = await params;
 
-    if (!productId) {
+    if (!productIdOrSlug) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
-    const reviews = await Review.find({ product: productId }).sort({ createdAt: -1 });
+    const product = await findProductByIdOrSlug(productIdOrSlug);
+    if (!product) {
+      return NextResponse.json([]);
+    }
+
+    const reviews = await Review.find({ product: product._id }).sort({ createdAt: -1 });
+
     return NextResponse.json(reviews);
   } catch (error: any) {
     console.error("Fetch reviews error:", error);
-    return NextResponse.json(
-      { error: error?.message || "Failed to fetch reviews" },
-      { status: 500 },
-    );
+    return NextResponse.json([]);
   }
 }
 
@@ -34,14 +46,14 @@ export async function POST(
 ) {
   try {
     await connectDB();
-    const { id: productId } = await params;
+    const { id: productIdOrSlug } = await params;
 
-    if (!productId) {
+    if (!productIdOrSlug) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
-    // Verify product exists
-    const product = await Product.findById(productId);
+    // Verify product exists by _id or slug
+    const product = await findProductByIdOrSlug(productIdOrSlug);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
@@ -64,20 +76,23 @@ export async function POST(
       );
     }
 
-    // Create review
+    // Create review referencing valid product._id
     const review = await Review.create({
-      product: productId,
+      product: product._id,
       name: name.trim(),
       rating: parsedRating,
       comment: comment.trim(),
     });
 
     // Recalculate average rating of the product
-    const reviews = await Review.find({ product: productId });
+    const reviews = await Review.find({ product: product._id });
     const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
     const avgRating = reviews.length > 0 ? parseFloat((totalRating / reviews.length).toFixed(1)) : 0;
 
-    await Product.findByIdAndUpdate(productId, { ratings: avgRating });
+    await Product.findByIdAndUpdate(product._id, {
+      ratings: avgRating,
+      numReviews: reviews.length,
+    });
 
     return NextResponse.json({ success: true, review }, { status: 201 });
   } catch (error: any) {

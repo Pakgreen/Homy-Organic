@@ -291,15 +291,10 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    try {
-      await axios.delete(`/api/products/${id}`);
-      toast.success("Product deleted successfully");
-
-      fetchProducts();
-    } catch (error) {
-      toast.error("Failed to delete product");
+  const handleDelete = (id: string) => {
+    const prod = products.find((p) => p._id === id);
+    if (prod) {
+      triggerDelete(prod);
     }
   };
 
@@ -402,7 +397,6 @@ export default function AdminProductsPage() {
           const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
           const msg = `⚠️ Image "${file.name}" (${fileSizeMB}MB) exceeds the 3MB limit! Please compress or reduce image size.`;
           toast.error(msg, { duration: 6000 });
-          alert(msg);
           continue;
         }
 
@@ -1281,21 +1275,6 @@ export default function AdminProductsPage() {
                                     Cover
                                   </span>
                                 )}
-                              </div>
-
-                              <div className="border-t border-gray-100 p-3 space-y-2">
-                                <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-                                  Design Name
-                                </label>
-                                <input
-                                  type="text"
-                                  value={label}
-                                  onChange={(e) =>
-                                    updateImageLabel(index, e.target.value)
-                                  }
-                                  className="w-full rounded-md border border-gray-200 px-2.5 py-2 text-xs text-gray-800 focus:border-black focus:ring-0"
-                                  placeholder={`Design ${index + 1}`}
-                                />
                               </div>
                             </div>
                           );

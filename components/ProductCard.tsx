@@ -205,21 +205,14 @@ export default function ProductCard({
       {/* Content Details Below Image */}
       <div className="flex flex-1 flex-col pt-3 pb-1 text-left space-y-1">
         
-        {/* Category & Weight Labels */}
-        <div className="flex items-center justify-between gap-1 flex-wrap">
-          {categoryName ? (
+        {/* Category Label */}
+        {categoryName && (
+          <div>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
               {categoryName}
             </span>
-          ) : null}
-          <div className="flex items-center gap-1.5">
-            {hasSizes && (
-              <span className="text-[9px] font-bold text-[#B9853B] bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 uppercase">
-                {(product as any).sizes.length} Options
-              </span>
-            )}
           </div>
-        </div>
+        )}
 
         {/* Title */}
         <Link href={`/products/${product.slug || product._id}`}>
