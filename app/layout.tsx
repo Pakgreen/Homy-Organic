@@ -13,6 +13,7 @@ import connectDB from "@/lib/mongodb";
 import Setting from "@/models/Setting";
 import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import MetaPixel from "@/components/MetaPixel";
 import TopProgressBar from "@/components/TopProgressBar";
 import PagePreloader from "@/components/PagePreloader";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
@@ -227,6 +228,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <GoogleAnalytics />
+        <MetaPixel />
         <AuthProvider>
           <TopProgressBar />
           <ThemeProvider />

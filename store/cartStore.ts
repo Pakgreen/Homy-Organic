@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { event as trackPixelEvent } from '@/lib/metaPixel';
 
 export interface CartItem {
   _id: string;
@@ -37,6 +38,18 @@ export const useCartStore = create<CartStore>()(
       addItem: (item: CartItem) => {
         const items = get().items;
         const existingItem = items.find((i) => i._id === item._id && i.size === item.size);
+
+        // Track Meta Pixel AddToCart Event
+        try {
+          trackPixelEvent('AddToCart', {
+            content_name: item.name,
+            content_ids: [item._id],
+            value: item.price * item.quantity,
+            currency: 'PKR',
+          });
+        } catch (e) {
+          // ignore tracking errors
+        }
 
         if (existingItem) {
           set({

@@ -12,6 +12,7 @@ import { FiCheckCircle, FiX, FiDownload, FiCopy, FiTag, FiShoppingBag, FiLock, F
 import { FaWhatsapp } from "react-icons/fa";
 import CountryPhoneInput from "@/components/CountryPhoneInput";
 import Link from "next/link";
+import { event as trackPixelEvent } from "@/lib/metaPixel";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -72,6 +73,16 @@ export default function CheckoutPage() {
     setMounted(true);
     if (items.length === 0 && !showSuccessPopup) {
       router.push("/cart");
+    } else if (items.length > 0) {
+      try {
+        trackPixelEvent('InitiateCheckout', {
+          num_items: items.length,
+          value: getTotalPrice(),
+          currency: 'PKR',
+        });
+      } catch (e) {
+        // ignore tracking errors
+      }
     }
   }, [items, router, showSuccessPopup]);
 
@@ -382,6 +393,20 @@ export default function CheckoutPage() {
       toast.success("Order placed successfully!");
       setPlacedOrder(res.data);
       setPlacedOrderId(res.data._id || res.data.id);
+
+      // Track Meta Pixel Purchase Event
+      try {
+        trackPixelEvent("Purchase", {
+          value: total,
+          currency: "PKR",
+          content_type: "product",
+          num_items: items.length,
+          order_id: res.data._id || res.data.id,
+        });
+      } catch (e) {
+        // ignore tracking error
+      }
+
       clearCart();
       setShowSuccessPopup(true);
     } catch (error: any) {
