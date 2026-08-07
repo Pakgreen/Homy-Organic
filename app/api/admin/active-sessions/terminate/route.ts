@@ -23,10 +23,13 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    // Find the user and increment their sessionVersion to invalidate existing tokens
+    // Find the user and increment their sessionVersion to invalidate existing tokens & reset lastLogin
     const user = await User.findByIdAndUpdate(
       userId,
-      { $inc: { sessionVersion: 1 } },
+      { 
+        $inc: { sessionVersion: 1 },
+        $set: { lastLogin: null, lastActive: null }
+      },
       { new: true },
     );
 

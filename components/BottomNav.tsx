@@ -14,13 +14,14 @@ export default function BottomNav() {
   const isAuthPage = pathname?.startsWith("/auth");
   const isAdminPage = pathname?.startsWith("/admin");
   const isSearchPage = pathname?.startsWith("/search");
+  const isCheckoutPage = pathname?.startsWith("/checkout");
   const totalItems = useCartStore((state) => state.getTotalItems());
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  if (!isMounted || isAuthPage || isAdminPage || isSearchPage) return null;
+  if (!isMounted || isAuthPage || isAdminPage || isSearchPage || isCheckoutPage) return null;
 
   return (
     <>

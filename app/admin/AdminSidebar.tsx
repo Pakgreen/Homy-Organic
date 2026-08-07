@@ -23,6 +23,7 @@ import {
   FiGift,
   FiAward,
   FiMail,
+  FiTag,
 } from "react-icons/fi";
 
 interface MenuItem {
@@ -30,6 +31,7 @@ interface MenuItem {
   label: string;
   href: string;
   requiredPermission?: string;
+  badge?: number;
 }
 
 const menuItems: MenuItem[] = [
@@ -52,22 +54,16 @@ const menuItems: MenuItem[] = [
     requiredPermission: "manage_products",
   },
   {
-    icons: <FiGift size={22} />,
-    label: "Value Packs",
-    href: "/admin/value-packs",
-    requiredPermission: "manage_products",
-  },
-  {
-    icons: <FiAward size={22} />,
-    label: "Best Sellers",
-    href: "/admin/best-sellers",
-    requiredPermission: "manage_products",
-  },
-  {
     icons: <FiPackage size={22} />,
     label: "Orders",
     href: "/admin/orders",
     requiredPermission: "manage_orders",
+  },
+  {
+    icons: <FiTag size={22} />,
+    label: "Tokens & Coupons",
+    href: "/admin/coupons",
+    requiredPermission: "manage_products",
   },
   {
     icons: <FiMessageCircle size={22} />,

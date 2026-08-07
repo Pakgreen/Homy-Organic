@@ -44,6 +44,7 @@ export default function Navbar() {
   const isAuthPage = pathname?.startsWith("/auth");
   const isAdminPage = pathname?.startsWith("/admin");
   const isSearchPage = pathname?.startsWith("/search");
+  const isCheckoutPage = pathname?.startsWith("/checkout");
 
   useEffect(() => {
     setIsMounted(true);
@@ -78,7 +79,7 @@ export default function Navbar() {
     }
   };
 
-  if (isAdminPage || isSearchPage || isAuthPage) return null;
+  if (isAdminPage || isSearchPage || isAuthPage || isCheckoutPage) return null;
 
   const flatCategories = categories
     .filter((c) => c.showInNav !== false)
@@ -386,7 +387,7 @@ export default function Navbar() {
             className="block py-2 text-black hover:text-[#B9853B] font-medium border-b border-gray-100"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            Trace Order
+           Track your Order
           </Link>
 
           <Link

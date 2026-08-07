@@ -92,7 +92,8 @@ export default function Footer() {
   if (
     pathname?.startsWith("/auth") ||
     pathname?.startsWith("/admin") ||
-    pathname?.startsWith("/search")
+    pathname?.startsWith("/search") ||
+    pathname?.startsWith("/checkout")
   ) {
     return null;
   }

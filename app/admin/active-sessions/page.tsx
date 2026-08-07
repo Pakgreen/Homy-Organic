@@ -46,9 +46,17 @@ export default function ActiveSessionsPage() {
     setIsTerminating(true);
     try {
       await axios.post("/api/admin/active-sessions/terminate", { userId: terminatingUser._id });
-      setUsers((prev) => prev.filter((u) => u._id !== terminatingUser._id));
+      const terminatedId = terminatingUser._id;
+      setUsers((prev) => prev.filter((u) => u._id !== terminatedId));
       toast.success("Session terminated successfully");
       setTerminatingUser(null);
+
+      // If admin terminated their own session, force logout immediately
+      if (session?.user && (session.user as any).id === terminatedId) {
+        toast.info("Logging out terminated session...");
+        const { signOut } = await import("next-auth/react");
+        signOut({ callbackUrl: "/auth/signin" });
+      }
     } catch (error) {
       toast.error("Failed to terminate session");
     } finally {

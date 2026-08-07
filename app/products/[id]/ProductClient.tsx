@@ -960,8 +960,8 @@ export default function ProductClient({
                 {/* Precautions */}
                 {typeof product.precautions === "string" &&
                   product.precautions.trim().length > 0 && (
-                    <div className="relative z-10 bg-[#D1FAE5] p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#6EE7B7] transition-all duration-300 space-y-4 sm:space-y-5">
-                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#065F46] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
+                    <div className="relative z-10 bg-[#A3B57B] p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#6EE7B7] transition-all duration-300 space-y-4 sm:space-y-5">
+                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#A3B57B] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
                         04
                       </span>
                       <div className="text-center border-b border-dashed border-[#A7F3D0] pb-2.5">
