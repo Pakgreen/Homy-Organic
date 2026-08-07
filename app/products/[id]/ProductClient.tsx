@@ -890,22 +890,22 @@ export default function ProductClient({
 
                 {/* Key Benefits */}
                 {benefitsList.length > 0 && (
-                  <div className="relative z-10 bg-white p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-5">
-                    <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
+                  <div className="relative z-10 bg-white p-7 sm:p-9 pt-10 sm:pt-11 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-6">
+                    <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 border-2 border-white z-20">
                       01
                     </span>
-                    <div className="text-center border-b border-dashed border-gray-200 pb-2.5">
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 font-serif italic">
+                    <div className="text-center border-b border-dashed border-gray-200 pb-3">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif italic">
                         Key Benefits
                       </h3>
                     </div>
-                    <ul className="space-y-3.5 pt-1">
+                    <ul className="space-y-4 pt-1">
                       {benefitsList.map((b: string, i: number) => (
                         <li
                           key={i}
-                          className="flex items-start gap-3.5 text-sm sm:text-base text-gray-700 font-normal leading-relaxed"
+                          className="flex items-start gap-4 text-base sm:text-lg text-gray-800 font-medium leading-relaxed"
                         >
-                          <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#FAF3E8] text-[#B9853A] flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 mt-0.5 border border-[#EADBCC]">
+                          <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#FAF3E8] text-[#B9853A] flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 mt-0.5 border border-[#EADBCC]">
                             ✓
                           </span>
                           <span>{b}</span>
@@ -917,20 +917,20 @@ export default function ProductClient({
 
                 {/* Natural Ingredients */}
                 {ingredientsList.length > 0 && (
-                  <div className="relative z-10 bg-white p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-5">
-                    <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
+                  <div className="relative z-10 bg-white p-7 sm:p-9 pt-10 sm:pt-11 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-6">
+                    <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 border-2 border-white z-20">
                       02
                     </span>
-                    <div className="text-center border-b border-dashed border-gray-200 pb-2.5">
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 font-serif italic">
+                    <div className="text-center border-b border-dashed border-gray-200 pb-3">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif italic">
                         Natural Ingredients
                       </h3>
                     </div>
-                    <div className="space-y-3 pt-1">
+                    <div className="space-y-3.5 pt-1">
                       {ingredientsList.map((ing: string, i: number) => (
                         <p
                           key={i}
-                          className="text-sm sm:text-base text-gray-700 font-normal leading-relaxed sm:leading-loose"
+                          className="text-base sm:text-lg text-gray-800 font-medium leading-relaxed sm:leading-loose"
                         >
                           {ing}
                         </p>
@@ -942,16 +942,16 @@ export default function ProductClient({
                 {/* How to Use */}
                 {typeof product.howToUse === "string" &&
                   product.howToUse.trim().length > 0 && (
-                    <div className="relative z-10 bg-white p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-5">
-                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
+                    <div className="relative z-10 bg-white p-7 sm:p-9 pt-10 sm:pt-11 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-6">
+                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 border-2 border-white z-20">
                         03
                       </span>
-                      <div className="text-center border-b border-dashed border-gray-200 pb-2.5">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 font-serif italic">
+                      <div className="text-center border-b border-dashed border-gray-200 pb-3">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif italic">
                           How to Use
                         </h3>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-700 font-normal leading-relaxed sm:leading-loose whitespace-pre-line pt-1">
+                      <p className="text-base sm:text-lg text-gray-800 font-medium leading-relaxed sm:leading-loose whitespace-pre-line pt-1">
                         {product.howToUse}
                       </p>
                     </div>
@@ -960,16 +960,16 @@ export default function ProductClient({
                 {/* Precautions */}
                 {typeof product.precautions === "string" &&
                   product.precautions.trim().length > 0 && (
-                    <div className="relative z-10 bg-[#A3B57B] p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#6EE7B7] transition-all duration-300 space-y-4 sm:space-y-5">
-                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#A3B57B] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
+                    <div className="relative z-10 bg-[#BDE1CC] p-7 sm:p-9 pt-10 sm:pt-11 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-6">
+                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#BDE1CC] text-white font-bold text-xs flex items-center justify-center shrink-0 border-2 border-white z-20">
                         04
                       </span>
-                      <div className="text-center border-b border-dashed border-[#A7F3D0] pb-2.5">
-                        <h3 className="text-lg sm:text-xl font-semibold text-[#065F46] font-serif italic">
+                      <div className="text-center border-b border-dashed border-gray-200 pb-3">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif italic">
                           Precautions & Safety
                         </h3>
                       </div>
-                      <p className="text-sm sm:text-base text-[#044E39] font-medium leading-relaxed sm:leading-loose whitespace-pre-line pt-1">
+                      <p className="text-base sm:text-lg text-gray-800 font-medium leading-relaxed sm:leading-loose whitespace-pre-line pt-1">
                         {product.precautions}
                       </p>
                     </div>
@@ -978,16 +978,16 @@ export default function ProductClient({
                 {/* Quality Assurance */}
                 {typeof product.ourQuality === "string" &&
                   product.ourQuality.trim().length > 0 && (
-                    <div className="relative z-10 bg-white p-7 sm:p-8 pt-9 sm:pt-10 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-5 md:col-span-2">
-                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md border-2 border-white z-20">
+                    <div className="relative z-10 bg-white p-7 sm:p-9 pt-10 sm:pt-11 rounded-3xl border border-dashed border-[#EADBCC] hover:border-[#B9853A] transition-all duration-300 space-y-4 sm:space-y-6 md:col-span-2">
+                      <span className="absolute -top-4.5 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-[#B9853A] text-white font-bold text-xs flex items-center justify-center shrink-0 border-2 border-white z-20">
                         05
                       </span>
-                      <div className="text-center border-b border-dashed border-gray-200 pb-2.5">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 font-serif italic">
+                      <div className="text-center border-b border-dashed border-gray-200 pb-3">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif italic">
                           Our Quality Assurance
                         </h3>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-700 font-normal leading-relaxed sm:leading-loose whitespace-pre-line pt-1">
+                      <p className="text-base sm:text-lg text-gray-800 font-medium leading-relaxed sm:leading-loose whitespace-pre-line pt-1">
                         {product.ourQuality}
                       </p>
                     </div>

@@ -52,6 +52,7 @@ export default function CheckoutPage() {
   // Coupon State
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
     discountAmount: number;
@@ -188,8 +189,11 @@ export default function CheckoutPage() {
   // Apply Coupon Code Handler
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCouponError(null);
     if (!couponCodeInput.trim()) {
-      toast.error("Please enter a discount code");
+      const msg = "Please enter a discount code";
+      setCouponError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -208,10 +212,17 @@ export default function CheckoutPage() {
           discountValue: res.data.discountValue,
           influencerName: res.data.influencerName,
         });
-        toast.success(res.data.message || "Coupon applied successfully!");
+        setCouponError(null);
+        toast.success(res.data.message || "Token applied successfully!");
+      } else {
+        const errMsg = res.data.error || "Invalid discount code or token";
+        setCouponError(errMsg);
+        toast.error(errMsg);
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Invalid coupon code");
+      const errMsg = error?.response?.data?.error || "Invalid discount code or token";
+      setCouponError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsApplyingCoupon(false);
     }
@@ -220,7 +231,8 @@ export default function CheckoutPage() {
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponCodeInput("");
-    toast.success("Coupon code removed");
+    setCouponError(null);
+    toast.success("Token code removed");
   };
 
   const validateForm = () => {
@@ -883,8 +895,15 @@ export default function CheckoutPage() {
                 type="text"
                 placeholder="Discount code"
                 value={couponCodeInput}
-                onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 bg-white focus:border-black focus:outline-none uppercase font-mono font-medium"
+                onChange={(e) => {
+                  setCouponCodeInput(e.target.value.toUpperCase());
+                  if (couponError) setCouponError(null);
+                }}
+                className={`flex-1 rounded-xl border px-4 py-3 text-sm text-gray-900 bg-white uppercase font-mono font-medium transition-colors ${
+                  couponError
+                    ? "border-red-500 bg-red-50/20 focus:border-red-600 focus:outline-none"
+                    : "border-gray-300 focus:border-black focus:outline-none"
+                }`}
               />
               <button
                 type="submit"
@@ -894,6 +913,11 @@ export default function CheckoutPage() {
                 {isApplyingCoupon ? "..." : "Apply"}
               </button>
             </div>
+            {couponError && (
+              <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1 animate-in fade-in">
+                <span>•</span> {couponError}
+              </p>
+            )}
           </form>
 
           {/* Applied Coupon Badge */}
