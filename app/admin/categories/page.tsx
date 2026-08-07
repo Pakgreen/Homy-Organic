@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
 import AdminDeleteModal from "@/components/AdminDeleteModal";
+import { useSession } from "next-auth/react";
 
 export default function AdminCategoriesPage() {
   const { data: session } = useSession();

@@ -20,6 +20,7 @@ interface Subscriber {
   _id: string;
   email: string;
   createdAt: string;
+  status?: string;
 }
 
 export default function AdminSubscribersPage() {
@@ -87,7 +88,7 @@ export default function AdminSubscribersPage() {
     const headers = ["Email", "Status", "Subscribed Date"];
     const rows = subscribers.map((s) => [
       `"${s.email}"`,
-      `"${s.status}"`,
+      `"${s.status || "Active"}"`,
       `"${format(new Date(s.createdAt), "yyyy-MM-dd HH:mm:ss")}"`,
     ]);
 
@@ -159,7 +160,7 @@ export default function AdminSubscribersPage() {
         </div>
 
         {/* Search bar */}
-        <form onSubmit={handleSearchSubmit} className="md:col-span-8 flex items-center gap-2">
+        <form onSubmit={handleSearch} className="md:col-span-8 flex items-center gap-2">
           <div className="relative flex-1">
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -232,7 +233,7 @@ export default function AdminSubscribersPage() {
                     <td className="py-4 px-6">
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        {subscriber.status}
+                        {subscriber.status || "Active"}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-gray-500 text-xs">
